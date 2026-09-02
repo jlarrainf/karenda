@@ -1,14 +1,28 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { DatesSetArg } from '@fullcalendar/core'
 import type { CalendarEvent, PersonalGroup } from '../../../types/domain.ts'
 import { useCalendarStore } from '../../../stores/calendarStore.ts'
 import { useCatalogStore } from '../../../stores/catalogStore.ts'
+import { useHabitStore } from '../../../stores/habitStore.ts'
+import { useRecurringTaskStore } from '../../../stores/recurringTaskStore.ts'
 import { requestAiEventDrafts } from '../../../services/aiEventService.ts'
 import { CalendarPage } from './CalendarPage.tsx'
 
+type FullCalendarMockProps = {
+  datesSet?: (info: DatesSetArg) => void
+}
+
+const fullCalendarMock = vi.hoisted(() => ({
+  props: null as FullCalendarMockProps | null,
+}))
+
 vi.mock('@fullcalendar/react', () => ({
-  default: () => <div data-testid="full-calendar" />,
+  default: (props: FullCalendarMockProps) => {
+    fullCalendarMock.props = props
+    return <div data-testid="full-calendar" />
+  },
 }))
 
 vi.mock('../../../services/aiEventService.ts', () => ({
@@ -57,7 +71,62 @@ describe('CalendarPage', () => {
   beforeEach(() => {
     useCalendarStore.getState().reset()
     useCatalogStore.getState().reset()
+    useHabitStore.getState().reset()
+    useRecurringTaskStore.getState().reset()
+    fullCalendarMock.props = null
     vi.resetAllMocks()
+  })
+
+  it('loads a visible range once when FullCalendar reports it repeatedly', () => {
+    const loadEvents = vi.fn().mockResolvedValue(undefined)
+    const loadHabitRange = vi.fn().mockResolvedValue(undefined)
+    const loadRecurringTasks = vi.fn().mockResolvedValue(undefined)
+    const loadCatalog = vi.fn().mockResolvedValue(undefined)
+    const originalLoadEvents = useCalendarStore.getState().load
+    const originalLoadHabitRange = useHabitStore.getState().loadRange
+    const originalLoadRecurringTasks = useRecurringTaskStore.getState().load
+    const originalLoadCatalog = useCatalogStore.getState().load
+
+    useCalendarStore.setState({ load: loadEvents })
+    useHabitStore.setState({ loadRange: loadHabitRange })
+    useRecurringTaskStore.setState({ load: loadRecurringTasks })
+    useCatalogStore.setState({ load: loadCatalog })
+
+    try {
+      render(<CalendarPage />)
+
+      expect(loadHabitRange).not.toHaveBeenCalled()
+      expect(loadRecurringTasks).not.toHaveBeenCalled()
+
+      const datesSet = fullCalendarMock.props?.datesSet
+      expect(datesSet).toEqual(expect.any(Function))
+
+      const info = {
+        endStr: '2026-10-12T00:00:00-03:00',
+        startStr: '2026-08-31T00:00:00-03:00',
+        view: { type: 'dayGridMonth' },
+      } as DatesSetArg
+
+      datesSet?.(info)
+      datesSet?.(info)
+
+      expect(loadEvents).toHaveBeenCalledOnce()
+      expect(loadEvents).toHaveBeenCalledWith({
+        endAt: info.endStr,
+        startAt: info.startStr,
+      })
+      expect(loadHabitRange).toHaveBeenCalledOnce()
+      expect(loadHabitRange).toHaveBeenCalledWith({
+        endDate: '2026-10-11',
+        startDate: '2026-08-31',
+      })
+      expect(loadRecurringTasks).toHaveBeenCalledOnce()
+    } finally {
+      useCalendarStore.setState({ load: originalLoadEvents })
+      useHabitStore.setState({ loadRange: originalLoadHabitRange })
+      useRecurringTaskStore.setState({ load: originalLoadRecurringTasks })
+      useCatalogStore.setState({ load: originalLoadCatalog })
+    }
   })
 
   it('shares search and filters with the Agenda view', async () => {

@@ -3,7 +3,12 @@ import type {
   CreateUserRequest,
   UserSchema,
 } from '@insforge/sdk'
-import { insforge } from '../lib/insforge/client.ts'
+import {
+  clearPersistedAuthSession,
+  insforge,
+  persistAuthSession,
+  persistCurrentAccessToken,
+} from '../lib/insforge/client.ts'
 import {
   AppError,
   notifySessionExpired,
@@ -33,11 +38,13 @@ export interface SignUpResult {
   user: UserSchema | null
   requiresEmailVerification: boolean
   accessToken: string | null
+  refreshToken: string | null
 }
 
 export interface SignInResult {
   user: UserSchema
   accessToken: string
+  refreshToken: string | null
 }
 
 export interface ResetPasswordToken {
@@ -73,11 +80,18 @@ export async function register(input: RegisterInput): Promise<SignUpResult> {
     'No se pudo crear la cuenta.',
   )
 
-  return {
+  const result = {
     user: data.user ?? null,
     requiresEmailVerification: data.requireEmailVerification ?? false,
     accessToken: data.accessToken,
+    refreshToken: data.refreshToken ?? null,
   }
+
+  if (result.user && result.accessToken && !result.requiresEmailVerification) {
+    persistAuthSession(result.accessToken, result.refreshToken)
+  }
+
+  return result
 }
 
 export async function signIn(input: SignInInput): Promise<SignInResult> {
@@ -91,10 +105,15 @@ export async function signIn(input: SignInInput): Promise<SignInResult> {
     'No se pudo iniciar sesión.',
   )
 
-  return {
+  const result = {
     user: data.user,
     accessToken: data.accessToken,
+    refreshToken: data.refreshToken ?? null,
   }
+
+  persistAuthSession(result.accessToken, result.refreshToken)
+
+  return result
 }
 
 export async function getCurrentUser(): Promise<UserSchema | null> {
@@ -105,6 +124,7 @@ export async function getCurrentUser(): Promise<UserSchema | null> {
       const appError = toAppError(error, 'No se pudo comprobar la sesión.')
 
       if (isInvalidSessionError(appError)) {
+        clearPersistedAuthSession()
         notifySessionExpired()
         return null
       }
@@ -112,11 +132,18 @@ export async function getCurrentUser(): Promise<UserSchema | null> {
       throw appError
     }
 
+    if (!data.user) {
+      clearPersistedAuthSession()
+      return null
+    }
+
+    persistCurrentAccessToken()
     return data.user
   } catch (error) {
     const appError = toAppError(error, 'No se pudo comprobar la sesión.')
 
     if (isInvalidSessionError(appError)) {
+      clearPersistedAuthSession()
       notifySessionExpired()
       return null
     }
@@ -141,10 +168,19 @@ export async function requireCurrentUserId(): Promise<string> {
 
 export async function signOut(): Promise<void> {
   await runInsForgeAction(() => insforge.auth.signOut(), 'No se pudo cerrar la sesión.')
+  clearPersistedAuthSession()
 }
 
 export function onAuthStateChange(callback: AuthStateChangeCallback): () => void {
-  return insforge.auth.onAuthStateChange(callback)
+  return insforge.auth.onAuthStateChange((event) => {
+    if (event === 'signedOut') {
+      clearPersistedAuthSession()
+    } else if (event === 'signedIn' || event === 'tokenRefreshed') {
+      persistCurrentAccessToken()
+    }
+
+    callback(event)
+  })
 }
 
 export async function resendVerificationEmail(
@@ -174,10 +210,15 @@ export async function verifyEmail(
     'No se pudo verificar el correo electrónico.',
   )
 
-  return {
+  const result = {
     user: data.user,
     accessToken: data.accessToken,
+    refreshToken: data.refreshToken ?? null,
   }
+
+  persistAuthSession(result.accessToken, result.refreshToken)
+
+  return result
 }
 
 export async function sendPasswordResetEmail(

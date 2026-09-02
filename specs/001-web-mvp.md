@@ -86,7 +86,11 @@ La autenticación y la sesión pertenecen a InsForge Auth. La aplicación no cre
 un sistema de cuentas alternativo. Cuando la configuración de InsForge exige
 verificación, la interfaz solicitará el código enviado al correo antes de abrir
 la sesión. Cada registro de dominio debe quedar asociado al identificador de la
-cuenta propietaria.
+cuenta propietaria. Para reconstruir el cliente después de una recarga, el
+navegador puede conservar temporalmente los tokens de la sesión en
+`sessionStorage`; no se guardan datos de dominio ni se reemplaza InsForge como
+fuente de verdad. Si la sesión deja de ser válida, ese material se elimina y se
+aplica RF-02.
 
 ### Asignatura
 
@@ -156,7 +160,8 @@ notas no se asocian directamente a eventos en este MVP.
 
 - **RF-01 [EARS: evento]:** Cuando una persona se registre o inicie sesión, el
   sistema deberá delegar la operación a InsForge Auth y, si las credenciales
-  son válidas, deberá abrir una sesión individual.
+  son válidas, deberá abrir una sesión individual que pueda reconstruirse tras
+  una recarga de la misma pestaña.
 - **RF-02 [EARS: estado]:** Mientras no exista una sesión válida, el sistema
   deberá impedir el acceso a las vistas y datos protegidos del calendario y
   deberá mostrar una interfaz de autenticación en español. Si una sesión
@@ -352,9 +357,10 @@ La funcionalidad se considerará terminada únicamente cuando se cumplan todos
 los criterios siguientes:
 
 - **CA-01:** Una persona puede registrarse, iniciar sesión y cerrar sesión; una
-  sesión no autenticada no puede consultar el calendario protegido y, si la
-  sesión expira durante una vista protegida, la aplicación vuelve a `/login`
-  conservando el destino solicitado.
+  sesión autenticada se conserva tras recargar la misma pestaña; una sesión no
+  autenticada no puede consultar el calendario protegido y, si la sesión expira
+  durante una vista protegida, la aplicación vuelve a `/login` conservando el
+  destino solicitado.
 - **CA-02:** Una cuenta puede crear, editar y consultar asignaturas con nombre,
   sigla, abreviación y color; los cambios se reflejan en el calendario y en los
   filtros.

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { DatesSetArg, EventClickArg } from '@fullcalendar/core'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import spanishLocale from '@fullcalendar/core/locales/es'
 import listPlugin from '@fullcalendar/list'
@@ -90,6 +91,15 @@ function getCalendarView(viewType: string): CalendarView | null {
   return null
 }
 
+const calendarButtonText = { today: 'Hoy' }
+const calendarHeaderToolbar = {
+  center: 'title',
+  left: 'prev,next today',
+  right: '',
+}
+const calendarLocales = [spanishLocale]
+const calendarPlugins = [dayGridPlugin, timeGridPlugin, listPlugin]
+
 export function CalendarPage({
   events,
   isEventSaving = false,
@@ -99,6 +109,17 @@ export function CalendarPage({
   personalGroups,
   subjects,
 }: CalendarPageProps) {
+  const todayDate = useMemo(() => getTodayDateValue(), [])
+  const [initialCalendarDate] = useState(() => new Date())
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
+  const [selectedDisplayItemId, setSelectedDisplayItemId] = useState<string | null>(null)
+  const [formKind, setFormKind] = useState<EventKind | null>(null)
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
+  const [isAiPromptOpen, setIsAiPromptOpen] = useState(false)
+  const [areFiltersOpen, setAreFiltersOpen] = useState(false)
+  const [localAgendaStartDate, setLocalAgendaStartDate] = useState(todayDate)
+  const calendarRef = useRef<FullCalendar | null>(null)
+  const lastRequestedCalendarRangeKey = useRef<string | null>(null)
   const storeEvents = useCalendarStore((state) => state.events)
   const calendarView = useCalendarStore((state) => state.view)
   const filters = useCalendarStore((state) => state.filters)
@@ -142,47 +163,69 @@ export function CalendarPage({
   const resolvedEvents = events ?? storeEvents
   const resolvedSubjects = subjects ?? storeSubjects
   const resolvedPersonalGroups = personalGroups ?? storePersonalGroups
-  const filteredEvents = filterCalendarEvents(
-    resolvedEvents,
-    filters,
-    resolvedSubjects,
-    resolvedPersonalGroups,
+  const catalog = useMemo<CalendarEventCatalog>(
+    () => ({
+      personalGroups: resolvedPersonalGroups,
+      subjects: resolvedSubjects,
+    }),
+    [resolvedPersonalGroups, resolvedSubjects],
   )
-  const catalog: CalendarEventCatalog = {
-    personalGroups: resolvedPersonalGroups,
-    subjects: resolvedSubjects,
-  }
-  const calendarDisplayItems: CalendarDisplayItem[] =
-    events === undefined
-      ? getCalendarDisplayItems({
-          habits,
-          habitLogs,
-          habitOccurrences,
-          habitScheduleVersions,
-          rangeEnd: habitRange.endDate,
-          rangeStart: habitRange.startDate,
-          recurringTasks,
-          today: getTodayDateValue(),
-        })
-      : []
-  const calendarEvents = [
-    ...mapDomainEventsToCalendarEvents(filteredEvents, catalog),
-    ...mapDisplayItemsToCalendarEvents(calendarDisplayItems),
-  ]
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
-  const [selectedDisplayItemId, setSelectedDisplayItemId] = useState<string | null>(null)
-  const [formKind, setFormKind] = useState<EventKind | null>(null)
-  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
-  const [isAiPromptOpen, setIsAiPromptOpen] = useState(false)
-  const [areFiltersOpen, setAreFiltersOpen] = useState(false)
-  const [localAgendaStartDate, setLocalAgendaStartDate] = useState(getTodayDateValue)
-  const calendarRef = useRef<FullCalendar | null>(null)
-  const selectedEvent =
-    filteredEvents.find((event) => event.id === selectedEventId) ?? null
-  const selectedDisplayItem =
-    calendarDisplayItems.find((item) => item.id === selectedDisplayItemId) ?? null
-  const selectedCalendarEvent = calendarEvents.find(
-    (event) => event.id === selectedEventId,
+  const filteredEvents = useMemo(
+    () =>
+      filterCalendarEvents(
+        resolvedEvents,
+        filters,
+        resolvedSubjects,
+        resolvedPersonalGroups,
+      ),
+    [filters, resolvedEvents, resolvedPersonalGroups, resolvedSubjects],
+  )
+  const calendarDisplayItems = useMemo<CalendarDisplayItem[]>(
+    () =>
+      events === undefined
+        ? getCalendarDisplayItems({
+            habits,
+            habitLogs,
+            habitOccurrences,
+            habitScheduleVersions,
+            rangeEnd: habitRange.endDate,
+            rangeStart: habitRange.startDate,
+            recurringTasks,
+            today: todayDate,
+          })
+        : [],
+    [
+      events,
+      habitLogs,
+      habitOccurrences,
+      habitRange.endDate,
+      habitRange.startDate,
+      habitScheduleVersions,
+      habits,
+      recurringTasks,
+      todayDate,
+    ],
+  )
+  const calendarEvents = useMemo(
+    () => [
+      ...mapDomainEventsToCalendarEvents(filteredEvents, catalog),
+      ...mapDisplayItemsToCalendarEvents(calendarDisplayItems),
+    ],
+    [calendarDisplayItems, catalog, filteredEvents],
+  )
+  const selectedEvent = useMemo(
+    () => filteredEvents.find((event) => event.id === selectedEventId) ?? null,
+    [filteredEvents, selectedEventId],
+  )
+  const selectedDisplayItem = useMemo(
+    () =>
+      calendarDisplayItems.find((item) => item.id === selectedDisplayItemId) ??
+      null,
+    [calendarDisplayItems, selectedDisplayItemId],
+  )
+  const selectedCalendarEvent = useMemo(
+    () => calendarEvents.find((event) => event.id === selectedEventId),
+    [calendarEvents, selectedEventId],
   )
   const selectedEventColor =
     typeof selectedCalendarEvent?.backgroundColor === 'string'
@@ -212,12 +255,16 @@ export function CalendarPage({
   }, [events, loadCatalog])
 
   useEffect(() => {
-    if (events !== undefined) return
-
-    const startDate = getTodayDateValue()
-    void loadHabitRange({ startDate, endDate: shiftDateKey(startDate, 90) })
-    void loadRecurringTasks()
-  }, [events, loadHabitRange, loadRecurringTasks])
+    if (
+      events === undefined &&
+      !calendarIsLoaded &&
+      !calendarIsLoading &&
+      !habitIsLoading &&
+      !recurringTaskIsLoading
+    ) {
+      lastRequestedCalendarRangeKey.current = null
+    }
+  }, [calendarIsLoaded, calendarIsLoading, events, habitIsLoading, recurringTaskIsLoading])
 
   useEffect(() => {
     if (events === undefined && calendarView === 'agenda') {
@@ -336,21 +383,69 @@ export function CalendarPage({
     }
   }
 
-  const handleSelectEvent = (event: CalendarEvent) => {
+  const handleSelectEvent = useCallback((event: CalendarEvent) => {
     setIsAiPromptOpen(false)
     setFormKind(null)
     setEditingEvent(null)
     setSelectedDisplayItemId(null)
     setSelectedEventId(event.id)
-  }
+  }, [])
 
-  const handleSelectDisplayItem = (item: CalendarDisplayItem) => {
+  const handleSelectDisplayItem = useCallback((item: CalendarDisplayItem) => {
     setIsAiPromptOpen(false)
     setFormKind(null)
     setEditingEvent(null)
     setSelectedEventId(null)
     setSelectedDisplayItemId(item.id)
-  }
+  }, [])
+
+  const handleCalendarDatesSet = useCallback(
+    (info: DatesSetArg) => {
+      const nextView = getCalendarView(info.view.type)
+
+      if (nextView && useCalendarStore.getState().view !== nextView) {
+        setCalendarView(nextView)
+      }
+
+      if (events !== undefined) {
+        return
+      }
+
+      const rangeKey = `${info.view.type}|${info.startStr}|${info.endStr}`
+
+      if (lastRequestedCalendarRangeKey.current === rangeKey) {
+        return
+      }
+
+      lastRequestedCalendarRangeKey.current = rangeKey
+
+      const startDate = info.startStr.slice(0, 10)
+      const endDate = shiftDateKey(info.endStr.slice(0, 10), -1)
+
+      void loadEvents({ startAt: info.startStr, endAt: info.endStr })
+      void loadHabitRange({ endDate, startDate })
+      void loadRecurringTasks()
+    },
+    [events, loadEvents, loadHabitRange, loadRecurringTasks, setCalendarView],
+  )
+
+  const handleCalendarEventClick = useCallback(
+    (info: EventClickArg) => {
+      const displayItem = calendarDisplayItems.find((item) => item.id === info.event.id)
+
+      if (displayItem) {
+        handleSelectDisplayItem(displayItem)
+        return
+      }
+
+      const event = filteredEvents.find((item) => item.id === info.event.id)
+
+      if (event) {
+        handleSelectEvent(event)
+      }
+    },
+    [calendarDisplayItems, filteredEvents, handleSelectDisplayItem, handleSelectEvent],
+  )
 
   const openAiPrompt = () => {
     clearCalendarError()
@@ -646,53 +741,19 @@ export function CalendarPage({
           ) : (
             <div className="calendar-panel overflow-hidden rounded-panel border border-border bg-surface p-3 sm:p-5">
               <FullCalendar
-                buttonText={{ today: 'Hoy' }}
+                buttonText={calendarButtonText}
                 dayMaxEvents
-                datesSet={
-                  events === undefined
-                    ? (info) => {
-                        const nextView = getCalendarView(info.view.type)
-
-                        if (nextView) {
-                          setCalendarView(nextView)
-                        }
-
-                        void loadEvents({ startAt: info.startStr, endAt: info.endStr })
-                        void loadHabitRange({
-                          endDate: shiftDateKey(info.endStr.slice(0, 10), -1),
-                          startDate: info.startStr.slice(0, 10),
-                        })
-                        void loadRecurringTasks()
-                      }
-                    : undefined
-                }
-                eventClick={(info) => {
-                  const displayItem = calendarDisplayItems.find((item) => item.id === info.event.id)
-
-                  if (displayItem) {
-                    handleSelectDisplayItem(displayItem)
-                    return
-                  }
-
-                  const event = filteredEvents.find((item) => item.id === info.event.id)
-
-                  if (event) {
-                    handleSelectEvent(event)
-                  }
-                }}
+                datesSet={events === undefined ? handleCalendarDatesSet : undefined}
+                eventClick={handleCalendarEventClick}
                 expandRows
                 firstDay={1}
-                headerToolbar={{
-                  center: 'title',
-                  left: 'prev,next today',
-                  right: '',
-                }}
+                headerToolbar={calendarHeaderToolbar}
                 height="auto"
-                initialDate={new Date()}
+                initialDate={initialCalendarDate}
                 initialView={getFullCalendarView(calendarView) ?? 'dayGridMonth'}
                 locale={spanishLocale}
-                locales={[spanishLocale]}
-                plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
+                locales={calendarLocales}
+                plugins={calendarPlugins}
                 ref={calendarRef}
                 events={calendarEvents}
               />

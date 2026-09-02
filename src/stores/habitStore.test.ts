@@ -140,6 +140,25 @@ describe('habitStore', () => {
     })
   })
 
+  it('does not start a second request for the same range while loading', async () => {
+    let resolveHabits: ((value: Habit[]) => void) | undefined
+    mockedListHabits.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveHabits = resolve
+        }),
+    )
+
+    const range = { endDate: '2026-09-02', startDate: '2026-09-01' }
+    const firstLoad = useHabitStore.getState().loadRange(range)
+    const forcedLoad = useHabitStore.getState().loadRange(range, true)
+
+    expect(mockedListHabits).toHaveBeenCalledOnce()
+
+    resolveHabits?.([habit])
+    await Promise.all([firstLoad, forcedLoad])
+  })
+
   it('refreshes only after successful mutations and keeps errors translated', async () => {
     mockedSaveHabitLog.mockResolvedValue(log)
     await expect(

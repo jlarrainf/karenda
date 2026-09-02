@@ -162,12 +162,11 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   loadRange: async (range, force = false) => {
     const state = get()
     const rangeKey = `${range.startDate}|${range.endDate}|${state.includeArchived}`
+    const currentRangeKey = `${state.range.startDate}|${state.range.endDate}|${state.includeArchived}`
 
     if (
-      !force &&
-      state.isLoaded &&
-      `${state.range.startDate}|${state.range.endDate}|${state.includeArchived}` ===
-        rangeKey
+      (state.isLoading && currentRangeKey === rangeKey) ||
+      (!force && state.isLoaded && currentRangeKey === rangeKey)
     ) {
       return
     }
@@ -359,7 +358,10 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   setView: (view) => set({ view }),
   setSelectedDate: (selectedDate) => set({ selectedDate }),
   setRange: (range) => set({ range, selectedDate: range.startDate }),
-  setIncludeArchived: (includeArchived) => set({ includeArchived, isLoaded: false }),
+  setIncludeArchived: (includeArchived) => {
+    habitLoadSequence += 1
+    set({ includeArchived, isLoaded: false })
+  },
   setSearch: (search) => set({ search }),
   clearError: () => set({ error: null }),
   reset: () => {

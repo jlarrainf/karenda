@@ -11,7 +11,7 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 
 | Requisito | Implementación | Verificación | Estado |
 | --- | --- | --- | --- |
-| RF-01 | `authService`, `sessionStore`, `AuthPage` | `authService.test.ts`, `sessionStore.test.ts`; login E2E autenticado pendiente | Parcial |
+| RF-01 | `authService`, `sessionStore`, `AuthPage`, `lib/insforge/client` | `authService.test.ts`, `sessionStore.test.ts`; login y recarga autenticados verificados en navegador local | Automatizado + navegador |
 | RF-02 | `routes.tsx`, `ProtectedRoute`, `ProtectedLayout`, `AuthPage` | `public-routes.spec.ts`, `sessionStore.test.ts`, `errors.test.ts`; recorrido E2E autenticado pendiente | Parcial |
 | RF-03 | Servicios con `owner_id`, migración y RLS | Tests de servicios; políticas InsForge verificadas por CLI; prueba runtime de hábitos con dos cuentas aprobada | Parcial |
 | RF-04 | `SubjectForm`, `subjectService`, validación | `SubjectForm.test.tsx`, `validation.test.ts`, `domainServices.test.ts` | Automatizado |
@@ -94,7 +94,7 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 
 | Criterio | Verificación actual | Estado |
 | --- | --- | --- |
-| CA-01 | Auth local, `ProtectedRoute` y redirección pública; credenciales autenticadas pendientes | `authService.test.ts`, `sessionStore.test.ts`, `public-routes.spec.ts`; flujo autenticado pendiente | Parcial |
+| CA-01 | Auth local, persistencia de sesión en `sessionStorage`, `ProtectedRoute` y redirección pública | `authService.test.ts`, `sessionStore.test.ts`, `public-routes.spec.ts`; flujo autenticado y recarga verificados en navegador local | Automatizado + navegador |
 | CA-02 | Formularios, stores y servicios de catálogo | Automatizado |
 | CA-03 | Errores y triggers de asociaciones | Automatizado + estático |
 | CA-04 | Formularios y detalle de eventos; flujo browser pendiente | Parcial |

@@ -114,6 +114,24 @@ describe('recurringTaskStore', () => {
     })
   })
 
+  it('does not start a second request while the task data is loading', async () => {
+    let resolveTasks: ((value: RecurringTask[]) => void) | undefined
+    mockedListTasks.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveTasks = resolve
+        }),
+    )
+
+    const firstLoad = useRecurringTaskStore.getState().load()
+    const forcedLoad = useRecurringTaskStore.getState().load(true)
+
+    expect(mockedListTasks).toHaveBeenCalledOnce()
+
+    resolveTasks?.([task])
+    await Promise.all([firstLoad, forcedLoad])
+  })
+
   it('refreshes after confirmed task mutations', async () => {
     mockedComplete.mockResolvedValue({ ...task, nextDueDate: '2026-09-04' })
     mockedReschedule.mockResolvedValue({ ...task, nextDueDate: '2026-09-05' })

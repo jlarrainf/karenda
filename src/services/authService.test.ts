@@ -13,13 +13,20 @@ const mocks = vi.hoisted(() => ({
     getCurrentUser: vi.fn(),
     signInWithPassword: vi.fn(),
     signUp: vi.fn(),
+    verifyEmail: vi.fn(),
   },
+  clearPersistedAuthSession: vi.fn(),
+  persistAuthSession: vi.fn(),
+  persistCurrentAccessToken: vi.fn(),
 }))
 
 vi.mock('../lib/insforge/client.ts', () => ({
   insforge: {
     auth: mocks.auth,
   },
+  clearPersistedAuthSession: mocks.clearPersistedAuthSession,
+  persistAuthSession: mocks.persistAuthSession,
+  persistCurrentAccessToken: mocks.persistCurrentAccessToken,
 }))
 
 const mockedGetCurrentUser = vi.mocked(insforge.auth.getCurrentUser)
@@ -45,6 +52,7 @@ describe('authService', () => {
       data: {
         accessToken: 'token',
         requireEmailVerification: false,
+        refreshToken: 'refresh-token',
         user,
       },
       error: null,
@@ -58,8 +66,13 @@ describe('authService', () => {
 
     expect(result).toMatchObject({
       accessToken: 'token',
+      refreshToken: 'refresh-token',
       requiresEmailVerification: false,
     })
+    expect(mocks.persistAuthSession).toHaveBeenCalledWith(
+      'token',
+      'refresh-token',
+    )
     expect(mockedSignUp).toHaveBeenCalledWith({
       email: 'student@example.com',
       name: 'Estudiante',
@@ -76,6 +89,7 @@ describe('authService', () => {
     mockedSignInWithPassword.mockResolvedValue({
       data: {
         accessToken: 'token',
+        refreshToken: 'refresh-token',
         user,
       },
       error: null,
@@ -83,7 +97,14 @@ describe('authService', () => {
 
     await expect(
       signIn({ email: 'student@example.com', password: 'secret-password' }),
-    ).resolves.toMatchObject({ accessToken: 'token' })
+    ).resolves.toMatchObject({
+      accessToken: 'token',
+      refreshToken: 'refresh-token',
+    })
+    expect(mocks.persistAuthSession).toHaveBeenCalledWith(
+      'token',
+      'refresh-token',
+    )
     expect(mockedSignInWithPassword).toHaveBeenCalledWith({
       email: 'student@example.com',
       password: 'secret-password',
@@ -94,6 +115,7 @@ describe('authService', () => {
       error: new InsForgeError('Unauthorized', 401, 'unauthorized'),
     })
     await expect(getCurrentUser()).resolves.toBeNull()
+    expect(mocks.clearPersistedAuthSession).toHaveBeenCalled()
     await expect(requireCurrentUserId()).rejects.toMatchObject({
       code: 'unauthenticated',
     })
@@ -108,5 +130,16 @@ describe('authService', () => {
       new InsForgeError('Invalid CSRF token', 403, 'forbidden'),
     )
     await expect(getCurrentUser()).resolves.toBeNull()
+  })
+
+  it('persists the active token after restoring the current user', async () => {
+    mockedGetCurrentUser.mockResolvedValue({
+      data: { user },
+      error: null,
+    })
+
+    await expect(getCurrentUser()).resolves.toBe(user)
+
+    expect(mocks.persistCurrentAccessToken).toHaveBeenCalledOnce()
   })
 })

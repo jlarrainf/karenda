@@ -10,7 +10,7 @@ import {
   type SignInResult,
   type SignUpResult,
 } from '../services/authService.ts'
-import { SESSION_EXPIRED_EVENT, toAppError } from '../services/errors.ts'
+import { AppError, SESSION_EXPIRED_EVENT, toAppError } from '../services/errors.ts'
 import type {
   EmailVerificationInput,
   RegisterInput,
@@ -18,7 +18,9 @@ import type {
 } from '../services/validation.ts'
 import { useCatalogStore } from './catalogStore.ts'
 import { useCalendarStore } from './calendarStore.ts'
+import { useHabitStore } from './habitStore.ts'
 import { useNoteStore } from './noteStore.ts'
+import { useRecurringTaskStore } from './recurringTaskStore.ts'
 
 interface SessionState {
   user: UserSchema | null
@@ -35,14 +37,36 @@ interface SessionState {
   clearError: () => void
 }
 
-let initializationPromise: Promise<void> | null = null
+let sessionCheckPromise: Promise<void> | null = null
 let removeAuthListener: (() => void) | null = null
 let removeSessionExpiredListener: (() => void) | null = null
+const SESSION_CHECK_TIMEOUT_MS = 15_000
+
+function withSessionCheckTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new AppError('network', message))
+    }, SESSION_CHECK_TIMEOUT_MS)
+
+    promise.then(
+      (value) => {
+        clearTimeout(timeoutId)
+        resolve(value)
+      },
+      (error: unknown) => {
+        clearTimeout(timeoutId)
+        reject(error)
+      },
+    )
+  })
+}
 
 function resetDomainStores(): void {
   useCatalogStore.getState().reset()
   useCalendarStore.getState().reset()
+  useHabitStore.getState().reset()
   useNoteStore.getState().reset()
+  useRecurringTaskStore.getState().reset()
 }
 
 export const useSessionStore = create<SessionState>((set, get) => {
@@ -93,15 +117,18 @@ export const useSessionStore = create<SessionState>((set, get) => {
         return
       }
 
-      if (initializationPromise) {
-        return initializationPromise
+      if (sessionCheckPromise) {
+        return sessionCheckPromise
       }
 
       set({ isLoading: true, error: null })
 
-      initializationPromise = (async () => {
+      sessionCheckPromise = (async () => {
         try {
-          const user = await getCurrentUser()
+          const user = await withSessionCheckTimeout(
+            getCurrentUser(),
+            'La comprobación de tu sesión está tardando demasiado. Revisa tu conexión e inténtalo nuevamente.',
+          )
           set({ user, isInitialized: true, error: null })
         } catch (error) {
           const appError = toAppError(error, 'No se pudo comprobar la sesión.')
@@ -114,31 +141,46 @@ export const useSessionStore = create<SessionState>((set, get) => {
           }
         } finally {
           set({ isLoading: false })
-          initializationPromise = null
+          sessionCheckPromise = null
         }
       })()
 
-      return initializationPromise
+      return sessionCheckPromise
     },
 
     refresh: async () => {
+      ensureAuthListener()
+
+      if (sessionCheckPromise) {
+        return sessionCheckPromise
+      }
+
       set({ isLoading: true, error: null })
 
-      try {
-        const user = await getCurrentUser()
-        set({ user, isInitialized: true, error: null })
-      } catch (error) {
-        const appError = toAppError(error, 'No se pudo actualizar la sesión.')
+      sessionCheckPromise = (async () => {
+        try {
+          const user = await withSessionCheckTimeout(
+            getCurrentUser(),
+            'La actualización de tu sesión está tardando demasiado. Revisa tu conexión e inténtalo nuevamente.',
+          )
+          set({ user, isInitialized: true, error: null })
+        } catch (error) {
+          const appError = toAppError(error, 'No se pudo actualizar la sesión.')
 
-        if (appError.code === 'unauthenticated') {
-          resetDomainStores()
-          set({ user: null, isInitialized: true, error: null })
-        } else {
-          set({ error: appError.message })
+          if (appError.code === 'unauthenticated') {
+            resetDomainStores()
+            set({ user: null, isInitialized: true, error: null })
+          } else {
+            set({ error: appError.message, isInitialized: true })
+          }
+        } finally {
+          set({ isLoading: false })
+          sessionCheckPromise = null
         }
-      } finally {
-        set({ isLoading: false })
-      }
+
+      })()
+
+      return sessionCheckPromise
     },
 
     retry: async () => {

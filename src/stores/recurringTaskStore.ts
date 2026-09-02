@@ -69,11 +69,14 @@ export const useRecurringTaskStore = create<RecurringTaskState>((set, get) => ({
   includeArchived: false,
 
   load: async (force = false) => {
-    if (!force && (get().isLoaded || get().isLoading)) return
+    const state = get()
+
+    if (state.isLoading || (!force && state.isLoaded)) return
+
     const requestSequence = ++taskLoadSequence
     set({ error: null, isLoading: true })
     try {
-      const tasks = await listRecurringTasks(get().includeArchived)
+      const tasks = await listRecurringTasks(state.includeArchived)
       const occurrences = await listRecurringTaskOccurrences()
       const scheduleVersions = await listRecurringTaskScheduleVersions()
       if (requestSequence !== taskLoadSequence) return
@@ -196,7 +199,10 @@ export const useRecurringTaskStore = create<RecurringTaskState>((set, get) => ({
     }
   },
 
-  setIncludeArchived: (includeArchived) => set({ includeArchived, isLoaded: false }),
+  setIncludeArchived: (includeArchived) => {
+    taskLoadSequence += 1
+    set({ includeArchived, isLoaded: false })
+  },
   clearError: () => set({ error: null }),
   reset: () => {
     taskLoadSequence += 1
