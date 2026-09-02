@@ -115,9 +115,9 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 ## Seguimiento De Hábitos Y Tareas Recurrentes
 
 La funcionalidad está definida en specs/003-habits-and-recurring-tasks.md.
-La implementación local está en la rama de tarea; la aplicación remota de la
-migración, RLS entre cuentas y el E2E autenticado siguen pendientes por
-limitaciones del entorno InsForge.
+La implementación local está en la rama de tarea y la migración ya fue
+aplicada en el backend aislado `karenda-koreader-backend`; RLS entre cuentas,
+E2E autenticado y promoción al proyecto principal siguen pendientes.
 
 ### Requisitos Funcionales
 
@@ -166,6 +166,8 @@ limitaciones del entorno InsForge.
   cuota de ramas del proyecto; por seguridad no se aplicó directamente sobre
   producción. La migración queda preparada en
   migrations/20260902120000_create-habits-domain.sql.
+- La rama aislada `karenda-koreader-backend` fue respaldada y reutilizada para
+  aplicar la migración; el proyecto principal no fue modificado.
 
 - La ingesta futura de KOReader quedó especificada en
   specs/004-koreader-habit-log-ingestion.md; no se implementó ni se modificó el

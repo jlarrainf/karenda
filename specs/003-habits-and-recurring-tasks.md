@@ -1,8 +1,8 @@
 # Seguimiento De Hábitos Y Tareas Recurrentes Web
 
-Estado: implementación local completada en la rama de tarea; la aplicación de
-la migración en InsForge, las pruebas RLS entre cuentas y el E2E autenticado
-siguen pendientes por depender del entorno remoto.
+Estado: implementación local completada y migración aplicada en el backend
+aislado `karenda-koreader-backend`; las pruebas RLS entre cuentas, el E2E
+autenticado y la promoción al proyecto principal siguen pendientes.
 
 Esta especificación extiende el MVP web definido en
 `specs/001-web-mvp.md`. Solo aplica a Karenda Web. El plugin de KOReader no

@@ -143,7 +143,7 @@ CREATE TABLE public.recurring_task_occurrences (
   owner_id UUID NOT NULL,
   recurring_task_id UUID NOT NULL,
   due_date DATE NOT NULL,
-  status TEXT NOT NULL CHECK (status IN ('completed', 'rescheduled')),
+  status TEXT NOT NULL,
   completed_at TIMESTAMPTZ,
   rescheduled_to DATE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
