@@ -1,6 +1,8 @@
 # Seguimiento De Hábitos Y Tareas Recurrentes Web
 
-Estado: propuesta planificada; todavía no implementada.
+Estado: implementación local completada en la rama de tarea; la aplicación de
+la migración en InsForge, las pruebas RLS entre cuentas y el E2E autenticado
+siguen pendientes por depender del entorno remoto.
 
 Esta especificación extiende el MVP web definido en
 `specs/001-web-mvp.md`. Solo aplica a Karenda Web. El plugin de KOReader no
@@ -222,6 +224,11 @@ Un `RecurringTask` tendrá:
 - `status`: `active`, `paused` o `archived`;
 - `calendar_enabled`, por defecto `false`.
 
+Los cambios futuros de `schedule` se almacenarán en
+`recurring_task_schedule_versions` con `effective_from` y `effective_to`. La
+edición de la próxima ocurrencia seguirá actualizando `next_due_date`, sin
+reescribir esas versiones ni las ocurrencias ya registradas.
+
 Sus ocurrencias se muestran como `Pendiente` o `Vencida` hasta que se
 completan. Al completar una ocurrencia se registra el historial y se calcula la
 siguiente fecha. Completar una tarea no crea una estadística de hábito.
@@ -350,7 +357,9 @@ La fase actual solo prepara el contrato:
   zona horaria, rango y `external_id`, y aceptar reintentos sin duplicar logs.
 - Un snapshot que incluya hábitos o notas de hábitos requerirá una versión de
   contrato posterior y pruebas del plugin; no se modifica el contrato v1 en
-  esta tarea.
+  esta tarea. El contrato futuro de ingesta está documentado en
+  `specs/004-koreader-habit-log-ingestion.md`, pero no autoriza su
+  implementación.
 
 ## 8. Criterios De Aceptación
 

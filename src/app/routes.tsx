@@ -4,6 +4,7 @@ import { ProtectedLayout } from '../components/layout/ProtectedLayout.tsx'
 import { NotFoundPage } from '../components/feedback/NotFoundPage.tsx'
 import { AuthPage } from '../features/auth/components/AuthPage.tsx'
 import { CalendarPage } from '../features/calendar/components/CalendarPage.tsx'
+import { HabitsPage } from '../features/habits/components/HabitsPage.tsx'
 import { NotesPage } from '../features/notes/components/NotesPage.tsx'
 import { PersonalGroupsPage } from '../features/personal-groups/components/PersonalGroupsPage.tsx'
 import { SubjectsPage } from '../features/subjects/components/SubjectsPage.tsx'
@@ -25,6 +26,7 @@ export const appRouter = createBrowserRouter([
             element: <ProtectedLayout />,
             children: [
               { path: 'calendar', element: <CalendarPage /> },
+              { path: 'habits', element: <HabitsPage /> },
               { path: 'subjects', element: <SubjectsPage /> },
               { path: 'personal-groups', element: <PersonalGroupsPage /> },
               { path: 'notes', element: <NotesPage /> },

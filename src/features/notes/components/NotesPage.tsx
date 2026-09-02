@@ -9,6 +9,7 @@ import { EmptyState } from '../../../components/ui/EmptyState.tsx'
 import { MarkdownRenderer } from './MarkdownRenderer.tsx'
 import { NoteEditor } from './NoteEditor.tsx'
 import { NoteTargetNavigation } from './NoteTargetNavigation.tsx'
+import { HabitNotesLibrary } from '../../habits/components/HabitNotesLibrary.tsx'
 
 const updatedDateFormatter = new Intl.DateTimeFormat('es-CL', {
   dateStyle: 'medium',
@@ -75,6 +76,7 @@ export function NotesPage() {
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null)
   const [isManagementOpen, setIsManagementOpen] = useState(false)
   const [isEditorOpen, setIsEditorOpen] = useState(false)
+  const [showHabitNotes, setShowHabitNotes] = useState(false)
 
   useEffect(() => {
     void loadCatalog()
@@ -214,12 +216,17 @@ export function NotesPage() {
             personal.
           </p>
         </div>
-        <Button
-          onClick={handleToggleManagement}
-          variant={isManagementOpen ? 'secondary' : 'primary'}
-        >
-          {isManagementOpen ? 'Cerrar configuración' : 'Configurar notas'}
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={() => setShowHabitNotes((visible) => !visible)} variant="secondary">
+            {showHabitNotes ? 'Notas de destinos' : 'Notas de hábitos'}
+          </Button>
+          <Button
+            onClick={handleToggleManagement}
+            variant={isManagementOpen ? 'secondary' : 'primary'}
+          >
+            {isManagementOpen ? 'Cerrar configuración' : 'Configurar notas'}
+          </Button>
+        </div>
       </header>
 
       {catalogError ? (
@@ -248,7 +255,9 @@ export function NotesPage() {
         </p>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+      {showHabitNotes ? <HabitNotesLibrary /> : null}
+
+      {!showHabitNotes ? <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
         <NoteTargetNavigation
           onSelect={handleSelectTarget}
           personalGroups={personalGroups}
@@ -439,7 +448,7 @@ export function NotesPage() {
             </>
           )}
         </div>
-      </div>
+      </div> : null}
 
       <ConfirmDialog
         confirmLabel="Eliminar nota"

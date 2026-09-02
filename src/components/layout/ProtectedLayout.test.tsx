@@ -48,7 +48,7 @@ describe('ProtectedLayout', () => {
     expect(document.body.style.overflow).toBe('')
   })
 
-  it('keeps calendar and notes available as primary destinations', () => {
+  it('keeps calendar, habits, and notes available as primary destinations', () => {
     render(
       <MemoryRouter>
         <ProtectedLayout />
@@ -59,6 +59,7 @@ describe('ProtectedLayout', () => {
       screen.getAllByRole('navigation', { name: 'Áreas principales' }),
     ).toHaveLength(2)
     expect(screen.getAllByRole('link', { name: 'Calendario' })).toHaveLength(2)
+    expect(screen.getAllByRole('link', { name: 'Hábitos' })).toHaveLength(2)
     expect(screen.getAllByRole('link', { name: 'Notas' })).toHaveLength(2)
     expect(screen.getByText('Organización y conexiones')).toBeVisible()
   })

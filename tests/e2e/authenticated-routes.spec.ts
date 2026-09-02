@@ -43,4 +43,10 @@ test('authenticated user can navigate the four calendar views and notes', async 
 
   await page.goto('/notes')
   await expect(page.getByRole('heading', { name: 'Notas Markdown' })).toBeVisible()
+
+  await page.goto('/habits')
+  await expect(page.getByRole('heading', { name: 'Hábitos' })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Tareas recurrentes', exact: true }),
+  ).toBeVisible()
 })

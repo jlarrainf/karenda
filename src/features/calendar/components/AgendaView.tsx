@@ -1,13 +1,20 @@
-import type { PersonalGroup, CalendarEvent, Subject } from '../../../types/domain.ts'
+import type {
+  CalendarDisplayItem,
+  PersonalGroup,
+  CalendarEvent,
+  Subject,
+} from '../../../types/domain.ts'
 import { Button } from '../../../components/ui/Button.tsx'
 import { EmptyState } from '../../../components/ui/EmptyState.tsx'
 import { getLocalDateKey } from '../../../lib/dates/dateUtils.ts'
 
 interface AgendaViewProps {
   events: CalendarEvent[]
+  displayItems?: CalendarDisplayItem[]
   hasFilters: boolean
   onClearFilters: () => void
   onSelect: (event: CalendarEvent) => void
+  onSelectDisplayItem?: (item: CalendarDisplayItem) => void
   personalGroups: Pick<PersonalGroup, 'color' | 'id' | 'name'>[]
   startDate?: string
   subjects: Pick<Subject, 'abbreviation' | 'color' | 'id' | 'name'>[]
@@ -134,22 +141,48 @@ function groupUpcomingEvents(
   )
 }
 
+function groupDisplayItems(
+  items: CalendarDisplayItem[],
+  startDate = getTodayKey(),
+): Map<string, CalendarDisplayItem[]> {
+  const groupedItems = new Map<string, CalendarDisplayItem[]>()
+
+  for (const item of items) {
+    if (item.startDate < startDate) continue
+    const currentItems = groupedItems.get(item.startDate) ?? []
+    currentItems.push(item)
+    groupedItems.set(item.startDate, currentItems)
+  }
+
+  return new Map(
+    [...groupedItems.entries()].sort(([left], [right]) => left.localeCompare(right)),
+  )
+}
+
 export function AgendaView({
   events,
+  displayItems = [],
   hasFilters,
   onClearFilters,
   onSelect,
+  onSelectDisplayItem,
   personalGroups,
   startDate,
   subjects,
 }: AgendaViewProps) {
   const groupedEvents = groupUpcomingEvents(events, startDate)
+  const groupedDisplayItems = groupDisplayItems(displayItems, startDate)
   const visibleEventCount = [...groupedEvents.values()].reduce(
     (count, dateEvents) => count + dateEvents.length,
     0,
   )
+  const visibleDisplayItemCount = [...groupedDisplayItems.values()].reduce(
+    (count, dateItems) => count + dateItems.length,
+    0,
+  )
+  const visibleItemCount = visibleEventCount + visibleDisplayItemCount
 
-  if (groupedEvents.size === 0) {
+  if (groupedEvents.size === 0 && groupedDisplayItems.size === 0) {
     return (
       <section aria-labelledby="agenda-title">
         <div className="mb-5 flex items-center justify-between gap-4">
@@ -185,8 +218,8 @@ export function AgendaView({
             Agenda
           </h2>
           <p className="mt-1 text-sm text-ink-muted">
-            {visibleEventCount}{' '}
-            {visibleEventCount === 1 ? 'evento visible' : 'eventos visibles'} desde{' '}
+            {visibleItemCount}{' '}
+            {visibleItemCount === 1 ? 'evento visible' : 'eventos visibles'} desde{' '}
             {formatDateHeading(startDate ?? getTodayKey())}.
           </p>
         </div>
@@ -217,7 +250,7 @@ export function AgendaView({
                     <li key={event.id}>
                       <button
                         aria-label={`Abrir ${event.title}`}
-                        className="flex min-h-16 w-full items-start gap-3 px-4 py-4 text-left transition-colors duration-state hover:bg-surface-subtle focus-visible:bg-surface-subtle sm:px-5"
+                        className="flex min-h-16 w-full touch-manipulation items-start gap-3 px-4 py-4 text-left transition-colors duration-state focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-soft hover:bg-surface-subtle focus-visible:bg-surface-subtle sm:px-5"
                         onClick={() => onSelect(event)}
                         type="button"
                       >
@@ -250,6 +283,45 @@ export function AgendaView({
                     </li>
                   )
                 })}
+              </ul>
+            </div>
+          </section>
+        ))}
+        {[...groupedDisplayItems.entries()].map(([dateKey, dateItems]) => (
+          <section aria-labelledby={`agenda-display-date-${dateKey}`} key={`display-${dateKey}`}>
+            <h3
+              className="mb-3 border-b border-border pb-2 text-sm font-bold capitalize text-ink"
+              id={`agenda-display-date-${dateKey}`}
+            >
+              {formatDateHeading(dateKey)}
+            </h3>
+            <div className="overflow-hidden rounded-panel border border-brand/20 bg-brand-soft/20">
+              <ul className="divide-y divide-brand/20">
+                {dateItems.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      aria-label={`Abrir ${item.title}`}
+                      className="flex min-h-16 w-full touch-manipulation items-start gap-3 px-4 py-4 text-left transition-colors duration-state focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-soft hover:bg-surface focus-visible:bg-surface sm:px-5"
+                      onClick={() => onSelectDisplayItem?.(item)}
+                      type="button"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="mt-1.5 size-3 shrink-0 rounded-full ring-4 ring-surface-strong"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <span className="break-words font-semibold text-ink">{item.title}</span>
+                          <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-semibold text-brand">{item.statusLabel}</span>
+                        </span>
+                        <span className="mt-1 block text-sm text-ink-muted">
+                          Todo el día · {item.source === 'habit_occurrence' ? 'Hábito' : 'Tarea recurrente'} · Solo lectura
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
           </section>

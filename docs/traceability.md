@@ -114,40 +114,41 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 
 ## Seguimiento De Hábitos Y Tareas Recurrentes
 
-La funcionalidad está planificada en specs/003-habits-and-recurring-tasks.md.
-Las rutas, servicios, tablas y pruebas siguientes son objetivos; todavía no
-representan código implementado.
+La funcionalidad está definida en specs/003-habits-and-recurring-tasks.md.
+La implementación local está en la rama de tarea; la aplicación remota de la
+migración, RLS entre cuentas y el E2E autenticado siguen pendientes por
+limitaciones del entorno InsForge.
 
 ### Requisitos Funcionales
 
 | Requisito | Implementación prevista | Verificación prevista | Estado |
 | --- | --- | --- | --- |
-| RF-H-01 a RF-H-02 | Ruta /habits, ProtectedLayout y navegación primaria | Tests de rutas, layout y E2E responsive | Planificado |
-| RF-H-03 a RF-H-06 | HabitForm, habitValidation y habitService | Tests de formulario, Zod y reglas inválidas | Planificado |
-| RF-H-07 a RF-H-11 | HabitLogForm, habitEvaluation, habitStore | Tests de logs, estados, correcciones y omisiones | Planificado |
-| RF-H-12 a RF-H-15 | Ciclo de vida, reglas versionadas y habitStatistics | Tests de pausa, archivo, cambio futuro y métricas | Planificado |
-| RF-H-16 a RF-H-17 | HabitNoteEditor, habitNoteService, Markdown seguro | Tests de notas generales/diarias y sanitización | Planificado |
-| RF-H-18 a RF-H-20 | calendarDisplayItem y proyección FullCalendar | Tests de rango, visibilidad, solo lectura y navegación | Planificado |
-| RF-H-21 a RF-H-24 | RecurringTaskForm, recurringTaskService y store | Tests de vencimiento, completar, reprogramar e historial | Planificado |
-| RF-H-25 a RF-H-28 | Filtros, feedback, RLS y ausencia de permisos de notificación | Tests de UI, integración de propietario y revisión estática | Planificado |
+| RF-H-01 a RF-H-02 | Ruta /habits, ProtectedLayout y navegación primaria | Typecheck, tests locales; E2E responsive pendiente | Parcial |
+| RF-H-03 a RF-H-06 | HabitForm, habitValidation y habitService | Tests de formulario y Zod | Automatizado |
+| RF-H-07 a RF-H-11 | HabitRow, habitEvaluation y habitStore | Tests del evaluador y formulario; E2E pendiente | Parcial |
+| RF-H-12 a RF-H-15 | Ciclo de vida, reglas versionadas y estadísticas | Tests puros y revisión de código | Automatizado + estático |
+| RF-H-16 a RF-H-17 | HabitNotesPanel, HabitNotesLibrary, habitService y Markdown seguro | Test contextual de carga, render seguro y eliminación; E2E pendiente | Parcial |
+| RF-H-18 a RF-H-20 | CalendarDisplayItem y proyección FullCalendar/Agenda | Tests de rango, visibilidad y solo lectura | Automatizado + parcial |
+| RF-H-21 a RF-H-24 | RecurringTaskForm, recurring_task_schedule_versions, habitService y recurringTaskStore | Tests de servicio, store y formulario; E2E/RLS pendientes | Automatizado + parcial |
+| RF-H-25 a RF-H-28 | Filtros, feedback, RLS y ausencia de permisos de notificación | Tests locales, migración revisada; RLS/E2E pendientes | Parcial |
 
 ### Requisitos No Funcionales
 
 | Requisito | Implementación prevista | Verificación prevista | Estado |
 | --- | --- | --- | --- |
-| RNF-H-01 a RNF-H-03 | React/Vite/Zustand, servicios puros y validaciones | Typecheck, lint y Vitest | Planificado |
-| RNF-H-04 a RNF-H-07 | Fechas civiles, proyección explícita, fuentes e idempotencia | Tests de zona, contratos, migración y revisión de API futura | Planificado |
-| RNF-H-08 a RNF-H-09 | Componentes accesibles y matriz actualizada | Testing Library, Playwright, auditoría UI y trazabilidad | Planificado |
+| RNF-H-01 a RNF-H-03 | React/Vite/Zustand, servicios puros y validaciones | Typecheck, lint y Vitest | Automatizado |
+| RNF-H-04 a RNF-H-07 | Fechas civiles, proyección explícita, fuentes e idempotencia | Tests de fechas, contratos y migración revisada | Automatizado + estático |
+| RNF-H-08 a RNF-H-09 | Componentes accesibles y matriz actualizada | Auditoría estática y Testing Library; E2E pendiente | Parcial |
 
 ### Criterios De Aceptación
 
 | Criterio | Verificación prevista | Estado |
 | --- | --- | --- |
-| CA-H-01 a CA-H-03 | Formulario, relaciones, recurrencias y tres tipos de seguimiento | Planificado |
-| CA-H-04 a CA-H-08 | Evaluador puro, historial, pausas y versiones de regla | Planificado |
-| CA-H-09 a CA-H-11 | Estadísticas, notas y proyección de calendario | Planificado |
-| CA-H-12 a CA-H-13 | Flujos de tareas, filtros, errores y responsive | Planificado |
-| CA-H-14 a CA-H-15 | Integración RLS, revisión de snapshot v1 y alcance web-only | Planificado |
+| CA-H-01 a CA-H-03 | Formulario, relaciones, recurrencias y tres tipos de seguimiento | Tests de formulario/validación y typecheck | Automatizado |
+| CA-H-04 a CA-H-08 | Evaluador puro, historial, pausas y versiones de regla | Tests de recurrencia/evaluación y revisión de flujo | Automatizado + parcial |
+| CA-H-09 a CA-H-11 | Estadísticas, notas y proyección de calendario | Tests de motor/proyección; UI autenticada pendiente | Automatizado + parcial |
+| CA-H-12 a CA-H-13 | Flujos de tareas, filtros, errores y responsive | Tests locales, lint y build; E2E pendiente | Parcial |
+| CA-H-14 a CA-H-15 | Integración RLS, revisión de snapshot v1 y alcance web-only | SQL revisado y snapshot sin cambios; RLS remoto pendiente | Parcial |
 
 ### Brechas Y Riesgos A Vigilar
 
@@ -161,11 +162,22 @@ representan código implementado.
   históricas antes de construir gráficas.
 - No planificar todavía una escritura desde KOReader hasta fijar un contrato
   posterior de scope, vinculación e idempotencia.
+- InsForge no permitió crear una rama adicional para esta migración por la
+  cuota de ramas del proyecto; por seguridad no se aplicó directamente sobre
+  producción. La migración queda preparada en
+  migrations/20260902120000_create-habits-domain.sql.
+
+- La ingesta futura de KOReader quedó especificada en
+  specs/004-koreader-habit-log-ingestion.md; no se implementó ni se modificó el
+  plugin o el snapshot v1.
 
 ## Gaps De Cierre
 
 - Ejecutar pruebas RLS con dos cuentas autorizadas.
 - Completar el flujo E2E autenticado con creación, búsqueda, filtros y notas.
+- Evidencia actual de navegador: el login público pasa en escritorio y móvil;
+  los escenarios autenticados se omiten sin credenciales de prueba y el
+  redirect protegido se omite cuando InsForge no está disponible en el entorno.
 - Completar el smoke test autenticado de producción; el frontend ya está
   publicado en `https://5zz5dxgt.insforge.site` y el smoke test público pasa en
   escritorio y móvil.

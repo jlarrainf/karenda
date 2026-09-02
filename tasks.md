@@ -95,92 +95,93 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
 
 ## Fase 9: Contratos Y Motor Puro De Hábitos
 
-- [ ] **Tarea 56: Crear tipos de dominio de hábitos** (20-30 min). Definir
+- [x] **Tarea 56: Crear tipos de dominio de hábitos** (20-30 min). Definir
   Habit, HabitLog, HabitSchedule, HabitNote, RecurringTask y sus estados sin
   depender de React ni InsForge.
-- [ ] **Tarea 57: Definir validaciones de configuración** (20-30 min).
+- [x] **Tarea 57: Definir validaciones de configuración** (20-30 min).
   Validar tipos de seguimiento, unidades, objetivos, relaciones, reglas,
   fechas efectivas y políticas de evaluación con Zod.
-- [ ] **Tarea 58: Implementar generador de recurrencias** (20-30 min).
+- [x] **Tarea 58: Implementar generador de recurrencias** (20-30 min).
   Calcular ocurrencias locales para diario, días seleccionados, semanal,
   mensual, cada N días, día del mes y cuotas.
-- [ ] **Tarea 59: Implementar evaluador de estados** (20-30 min). Derivar
+- [x] **Tarea 59: Implementar evaluador de estados** (20-30 min). Derivar
   pendiente, completado, parcial, omitido e incumplido sin procesos nocturnos.
-- [ ] **Tarea 60: Implementar estadísticas puras** (20-30 min). Calcular
+- [x] **Tarea 60: Implementar estadísticas puras** (20-30 min). Calcular
   rachas, cumplimiento, totales, promedios, cuotas y periodos pendientes según
   la modalidad.
-- [ ] **Tarea 61: Probar el motor de hábitos** (20-30 min). Cubrir zonas,
+- [x] **Tarea 61: Probar el motor de hábitos** (20-30 min). Cubrir zonas,
   meses cortos, fechas efectivas, pausas, omisiones, correcciones y cuotas.
 
 ## Fase 10: Persistencia Y Seguridad En InsForge
 
-- [ ] **Tarea 62: Crear migración de hábitos y reglas** (20-30 min). Añadir
+- [x] **Tarea 62: Crear migración de hábitos y reglas** (20-30 min). Añadir
   habits y habit_schedule_versions con restricciones e índices.
-- [ ] **Tarea 63: Crear migración de logs y notas de hábitos** (20-30 min).
+- [x] **Tarea 63: Crear migración de logs y notas de hábitos** (20-30 min).
   Añadir habit_logs y habit_notes, fechas locales, fuentes e idempotencia
   futura.
-- [ ] **Tarea 64: Crear migración de tareas recurrentes** (20-30 min). Añadir
-  recurring_tasks y recurring_task_occurrences con sus reglas de dependencia.
-- [ ] **Tarea 65: Crear RLS y validaciones de referencias** (20-30 min).
+- [x] **Tarea 64: Crear migración de tareas recurrentes** (20-30 min). Añadir
+  recurring_tasks, recurring_task_schedule_versions y recurring_task_occurrences
+  con sus reglas de dependencia.
+- [x] **Tarea 65: Crear RLS y validaciones de referencias** (20-30 min).
   Aislar propietario, validar asignaturas/grupos y evitar cambios de owner.
-- [ ] **Tarea 66: Revisar compatibilidad del snapshot v1** (20-30 min).
+- [x] **Tarea 66: Revisar compatibilidad del snapshot v1** (20-30 min).
   Confirmar que las nuevas tablas no alteren el contrato ni la respuesta actual
   de KOReader.
-- [ ] **Tarea 67: Generar y revisar tipos de esquema** (20-30 min). Actualizar
+- [x] **Tarea 67: Generar y revisar tipos de esquema** (20-30 min). Actualizar
   database.types.ts y mapearlo a contratos de dominio independientes.
 
 ## Fase 11: Servicios Y Estado De Cliente
 
-- [ ] **Tarea 68: Implementar habitService** (20-30 min). Añadir CRUD,
+- [x] **Tarea 68: Implementar habitService** (20-30 min). Añadir CRUD,
   consulta por rango, registro/corrección de logs y acciones de pausa/archivo.
-- [ ] **Tarea 69: Implementar habitNoteService** (20-30 min). Añadir CRUD de
+- [x] **Tarea 69: Implementar habitNoteService** (20-30 min). Añadir CRUD de
   notas generales y diarias reutilizando el editor seguro.
-- [ ] **Tarea 70: Implementar recurringTaskService** (20-30 min). Añadir CRUD,
+- [x] **Tarea 70: Implementar recurringTaskService** (20-30 min). Añadir CRUD,
   completar, reprogramar y calcular la próxima ocurrencia.
-- [ ] **Tarea 71: Crear habitStore** (20-30 min). Coordinar fecha, lista,
+- [x] **Tarea 71: Crear habitStore** (20-30 min). Coordinar fecha, lista,
   historial, mutaciones confirmadas, filtros y errores sin persistencia local.
-- [ ] **Tarea 72: Crear recurringTaskStore** (20-30 min). Coordinar pestaña,
+- [x] **Tarea 72: Crear recurringTaskStore** (20-30 min). Coordinar pestaña,
   vencimientos, historial y mutaciones confirmadas.
-- [ ] **Tarea 73: Probar servicios y stores** (20-30 min). Cubrir mapeos,
+- [x] **Tarea 73: Probar servicios y stores** (20-30 min). Cubrir mapeos,
   refresco posterior, errores, aislamiento de relaciones y estados de carga.
 
 ## Fase 12: Superficie Web De Hábitos
 
-- [ ] **Tarea 74: Añadir ruta y navegación de Hábitos** (20-30 min). Integrar
+- [x] **Tarea 74: Añadir ruta y navegación de Hábitos** (20-30 min). Integrar
   /habits como destino principal de escritorio y móvil.
-- [ ] **Tarea 75: Implementar vista Hoy** (20-30 min). Crear lista rápida,
+- [x] **Tarea 75: Implementar vista Hoy** (20-30 min). Crear lista rápida,
   agrupación por estado y controles binarios o cuantitativos.
-- [ ] **Tarea 76: Implementar formulario progresivo** (20-30 min). Crear
+- [x] **Tarea 76: Implementar formulario progresivo** (20-30 min). Crear
   configuración por pasos, presets, campos avanzados y resumen legible.
-- [ ] **Tarea 77: Implementar historial** (20-30 min). Crear cuadrícula de
+- [x] **Tarea 77: Implementar historial** (20-30 min). Crear cuadrícula de
   fechas, revisión, corrección, eliminación y navegación por periodo.
-- [ ] **Tarea 78: Implementar estadísticas** (20-30 min). Mostrar métricas por
+- [x] **Tarea 78: Implementar estadísticas** (20-30 min). Mostrar métricas por
   hábito y resumen filtrable, ocultando agregados desactivados.
-- [ ] **Tarea 79: Implementar pausa, archivo y edición futura** (20-30 min).
+- [x] **Tarea 79: Implementar pausa, archivo y edición futura** (20-30 min).
   Conservar historia y pedir fecha efectiva cuando cambie la regla.
-- [ ] **Tarea 80: Probar componentes de hábitos** (20-30 min). Cubrir
+- [x] **Tarea 80: Probar componentes de hábitos** (20-30 min). Cubrir
   formularios, estados, accesibilidad, notas contextuales y responsive.
 
 ## Fase 13: Notas Y Tareas Recurrentes
 
-- [ ] **Tarea 81: Integrar notas generales y diarias** (20-30 min). Mostrar el
+- [x] **Tarea 81: Integrar notas generales y diarias** (20-30 min). Mostrar el
   vínculo con hábitos desde Hábitos y filtrar notas de hábitos desde Notas.
-- [ ] **Tarea 82: Implementar lista de tareas recurrentes** (20-30 min).
+- [x] **Tarea 82: Implementar lista de tareas recurrentes** (20-30 min).
   Separar pendientes, vencidas, archivadas y completadas.
-- [ ] **Tarea 83: Implementar edición de recurrencias** (20-30 min). Diferenciar
+- [x] **Tarea 83: Implementar edición de recurrencias** (20-30 min). Diferenciar
   próxima ocurrencia, nueva regla futura y conservación del historial.
-- [ ] **Tarea 84: Probar notas y tareas recurrentes** (20-30 min). Cubrir
+- [x] **Tarea 84: Probar notas y tareas recurrentes** (20-30 min). Cubrir
   Markdown, estados, reprogramación, duplicados y errores de InsForge.
 
 ## Fase 14: Proyección De Calendario
 
-- [ ] **Tarea 85: Crear proyección de calendario** (20-30 min). Convertir
+- [x] **Tarea 85: Crear proyección de calendario** (20-30 min). Convertir
   hábitos y tareas activados en elementos FullCalendar de solo lectura.
-- [ ] **Tarea 86: Añadir configuración de visibilidad** (20-30 min). Permitir
+- [x] **Tarea 86: Añadir configuración de visibilidad** (20-30 min). Permitir
   regla del hábito, todos los días activos o selección personalizada.
-- [ ] **Tarea 87: Integrar detalle de solo lectura** (20-30 min). Distinguir
+- [x] **Tarea 87: Integrar detalle de solo lectura** (20-30 min). Distinguir
   origen, relación y estado, y ofrecer navegación a Hábitos.
-- [ ] **Tarea 88: Probar convivencia con eventos** (20-30 min). Verificar
+- [x] **Tarea 88: Probar convivencia con eventos** (20-30 min). Verificar
   colores, filtros, rangos visibles, estados y ausencia de acciones de
   cumplimiento desde el calendario.
 
@@ -194,8 +195,8 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
   etiquetas.
 - [ ] **Tarea 91: Probar aislamiento entre cuentas** (20-30 min). Ejecutar
   pruebas de integración para hábitos, logs, notas y tareas mediante RLS.
-- [ ] **Tarea 92: Ejecutar trazabilidad y calidad** (20-30 min). Actualizar
+- [x] **Tarea 92: Ejecutar trazabilidad y calidad** (20-30 min). Actualizar
   spec, UI, matriz, tests, typecheck, lint y build en el mismo cambio.
-- [ ] **Tarea 93: Documentar ingesta futura de KOReader** (20-30 min).
+- [x] **Tarea 93: Documentar ingesta futura de KOReader** (20-30 min).
   Redactar una spec posterior para el scope write:habit_logs, vinculación,
   agregación local e idempotencia; no modificar el plugin en esta fase.

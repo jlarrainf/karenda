@@ -1,5 +1,10 @@
 import type { EventInput } from '@fullcalendar/core'
-import type { CalendarEvent, PersonalGroup, Subject } from '../../../types/domain.ts'
+import type {
+  CalendarDisplayItem,
+  CalendarEvent,
+  PersonalGroup,
+  Subject,
+} from '../../../types/domain.ts'
 
 export interface CalendarEventCatalog {
   subjects: Pick<Subject, 'id' | 'color'>[]
@@ -102,4 +107,33 @@ export function mapDomainEventsToCalendarEvents(
   catalog: CalendarEventCatalog,
 ): EventInput[] {
   return events.map((event) => mapDomainEventToCalendarEvent(event, catalog))
+}
+
+export function mapDisplayItemToCalendarEvent(item: CalendarDisplayItem): EventInput {
+  return {
+    allDay: item.allDay,
+    backgroundColor: item.color,
+    borderColor: item.color,
+    classNames: [
+      'calendar-event',
+      'calendar-display-item',
+      `calendar-display-${item.source}`,
+    ],
+    end: item.endDate ?? undefined,
+    extendedProps: {
+      description: item.description,
+      displayItem: item,
+      isReadOnly: true,
+      source: item.source,
+      statusLabel: item.statusLabel,
+    },
+    id: item.id,
+    start: item.startDate,
+    textColor: getReadableTextColor(item.color),
+    title: `${item.title} (${item.statusLabel})`,
+  }
+}
+
+export function mapDisplayItemsToCalendarEvents(items: CalendarDisplayItem[]): EventInput[] {
+  return items.map(mapDisplayItemToCalendarEvent)
 }

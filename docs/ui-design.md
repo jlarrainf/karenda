@@ -394,6 +394,9 @@ jerarquía completa en un espacio pequeño.
 - Las tareas recurrentes viven en una pestaña separada de la superficie
   Hábitos. Sus filas distinguen Pendiente, Vencida y Completada, y no muestran
   indicadores de racha.
+- Editar una tarea modifica sus datos y su próxima ocurrencia; `Cambiar regla
+  futura` abre un flujo separado con fecha efectiva y conserva la regla y el
+  historial anteriores.
 - Pausar y archivar son acciones reversibles y deben explicar que el historial
   se conserva. Una confirmación solo será necesaria cuando la acción pueda
   ocultar información activa.
@@ -406,6 +409,33 @@ jerarquía completa en un espacio pequeño.
 - Los estados requeridos son vacío inicial, sin hábitos para hoy, carga, error,
   guardado, guardado parcial, registro corregido, historial vacío, estadística
   desactivada y hábito archivado.
+- La vista de hábitos tendrá filtros visibles por estado, tipo de seguimiento,
+  relación y archivado; los hábitos archivados estarán excluidos inicialmente.
+  La edición de una regla futura se abrirá como un flujo separado con fecha
+  efectiva y confirmará que los periodos anteriores no se reescriben.
+- Las notas de hábitos podrán consultarse también desde `Notas`, pero su
+  edición seguirá siendo contextual dentro de `Hábitos`.
+
+#### Decisiones de implementación de la primera entrega
+
+- La ruta `/habits` usará un selector segmentado con `Hoy`, `Historial`,
+  `Estadísticas` y `Tareas recurrentes`. El estado activo se anunciará con
+  texto y `aria-current`; el cambio de vista no cambiará la fecha seleccionada.
+- `Hoy` mantendrá la fecha civil elegida en la cabecera con `Anterior`, `Hoy` y
+  `Siguiente`. La lista se agrupará por estado y cada fila conservará una acción
+  principal visible, con controles adicionales en un menú accesible.
+- El alta y edición se mostrarán en un diálogo con pasos numerados, un resumen
+  persistente de la configuración y validación por paso. Los campos de notas y
+  la proyección de calendario se revelarán solo al activar sus políticas.
+- Historial y estadísticas usarán paneles desplazables verticalmente sin
+  depender del desplazamiento horizontal. Las celdas de historial incluirán
+  nombre de estado, no solo color, y el detalle de una celda conservará foco.
+- Los estados de carga, error, guardado y vacío ocuparán la misma región de
+  contenido para evitar saltos de layout. Los errores conservarán los datos del
+  formulario y usarán mensajes en español.
+- En móvil, `Calendario`, `Hábitos` y `Notas` permanecerán en la navegación
+  compacta. Los filtros y detalles se abrirán en paneles accesibles; los
+  objetivos táctiles serán de al menos 44 px y el foco será siempre visible.
 
 ### Dispositivos KOReader
 

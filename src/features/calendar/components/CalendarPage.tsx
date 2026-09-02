@@ -5,6 +5,7 @@ import listPlugin from '@fullcalendar/list'
 import FullCalendar from '@fullcalendar/react'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import type {
+  CalendarDisplayItem,
   CalendarEvent,
   EventKind,
   EventStatus,
@@ -16,6 +17,8 @@ import { Button } from '../../../components/ui/Button.tsx'
 import { TextField } from '../../../components/ui/FormField.tsx'
 import { useCalendarStore, type CalendarView } from '../../../stores/calendarStore.ts'
 import { useCatalogStore } from '../../../stores/catalogStore.ts'
+import { useHabitStore } from '../../../stores/habitStore.ts'
+import { useRecurringTaskStore } from '../../../stores/recurringTaskStore.ts'
 import { eventInputSchema, type EventInput } from '../../../services/validation.ts'
 import {
   countActiveCalendarFilters,
@@ -34,8 +37,11 @@ import {
 } from './AiEventPromptPanel.tsx'
 import {
   mapDomainEventsToCalendarEvents,
+  mapDisplayItemsToCalendarEvents,
   type CalendarEventCatalog,
 } from '../utils/calendarEventMapper.ts'
+import { getCalendarDisplayItems } from '../utils/calendarDisplayProjection.ts'
+import { CalendarDisplayDetail } from './CalendarDisplayDetail.tsx'
 import { getLocalDateKey, shiftDateKey } from '../../../lib/dates/dateUtils.ts'
 
 interface CalendarPageProps {
@@ -114,6 +120,20 @@ export function CalendarPage({
   const toggleFilterValue = useCalendarStore((state) => state.toggleFilterValue)
   const clearFilters = useCalendarStore((state) => state.clearFilters)
   const clearCalendarError = useCalendarStore((state) => state.clearError)
+  const habitOccurrences = useHabitStore((state) => state.occurrences)
+  const habitLogs = useHabitStore((state) => state.logs)
+  const habitScheduleVersions = useHabitStore((state) => state.versions)
+  const habits = useHabitStore((state) => state.habits)
+  const habitError = useHabitStore((state) => state.error)
+  const habitIsLoading = useHabitStore((state) => state.isLoading)
+  const habitRange = useHabitStore((state) => state.range)
+  const loadHabitRange = useHabitStore((state) => state.loadRange)
+  const clearHabitError = useHabitStore((state) => state.clearError)
+  const recurringTasks = useRecurringTaskStore((state) => state.tasks)
+  const recurringTaskError = useRecurringTaskStore((state) => state.error)
+  const recurringTaskIsLoading = useRecurringTaskStore((state) => state.isLoading)
+  const loadRecurringTasks = useRecurringTaskStore((state) => state.load)
+  const clearRecurringTaskError = useRecurringTaskStore((state) => state.clearError)
   const storeSubjects = useCatalogStore((state) => state.subjects)
   const storePersonalGroups = useCatalogStore((state) => state.personalGroups)
   const createPersonalGroup = useCatalogStore((state) => state.createPersonalGroup)
@@ -132,8 +152,25 @@ export function CalendarPage({
     personalGroups: resolvedPersonalGroups,
     subjects: resolvedSubjects,
   }
-  const calendarEvents = mapDomainEventsToCalendarEvents(filteredEvents, catalog)
+  const calendarDisplayItems: CalendarDisplayItem[] =
+    events === undefined
+      ? getCalendarDisplayItems({
+          habits,
+          habitLogs,
+          habitOccurrences,
+          habitScheduleVersions,
+          rangeEnd: habitRange.endDate,
+          rangeStart: habitRange.startDate,
+          recurringTasks,
+          today: getTodayDateValue(),
+        })
+      : []
+  const calendarEvents = [
+    ...mapDomainEventsToCalendarEvents(filteredEvents, catalog),
+    ...mapDisplayItemsToCalendarEvents(calendarDisplayItems),
+  ]
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
+  const [selectedDisplayItemId, setSelectedDisplayItemId] = useState<string | null>(null)
   const [formKind, setFormKind] = useState<EventKind | null>(null)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [isAiPromptOpen, setIsAiPromptOpen] = useState(false)
@@ -142,6 +179,8 @@ export function CalendarPage({
   const calendarRef = useRef<FullCalendar | null>(null)
   const selectedEvent =
     filteredEvents.find((event) => event.id === selectedEventId) ?? null
+  const selectedDisplayItem =
+    calendarDisplayItems.find((item) => item.id === selectedDisplayItemId) ?? null
   const selectedCalendarEvent = calendarEvents.find(
     (event) => event.id === selectedEventId,
   )
@@ -151,6 +190,10 @@ export function CalendarPage({
       : '#5E6B65'
   const isFormOpen = formKind !== null
   const isSaving = isEventSaving || calendarIsSaving
+  const projectionIsLoading =
+    events === undefined && (habitIsLoading || recurringTaskIsLoading)
+  const projectionError = events === undefined ? habitError ?? recurringTaskError : null
+  const visibleCalendarItemCount = filteredEvents.length + calendarDisplayItems.length
   const activeFilterCount = countActiveCalendarFilters(filters)
   const hasFilters = hasActiveCalendarFilters(filters)
   const resolvedAgendaStartDate = agendaStartAt ?? localAgendaStartDate
@@ -169,6 +212,14 @@ export function CalendarPage({
   }, [events, loadCatalog])
 
   useEffect(() => {
+    if (events !== undefined) return
+
+    const startDate = getTodayDateValue()
+    void loadHabitRange({ startDate, endDate: shiftDateKey(startDate, 90) })
+    void loadRecurringTasks()
+  }, [events, loadHabitRange, loadRecurringTasks])
+
+  useEffect(() => {
     if (events === undefined && calendarView === 'agenda') {
       void loadAgenda(resolvedAgendaStartDate)
     }
@@ -177,6 +228,7 @@ export function CalendarPage({
   const handleViewChange = (view: CalendarView) => {
     clearCalendarError()
     setSelectedEventId(null)
+    setSelectedDisplayItemId(null)
     setCalendarView(view)
 
     const fullCalendarView = getFullCalendarView(view)
@@ -218,6 +270,7 @@ export function CalendarPage({
     clearCalendarError()
     setIsAiPromptOpen(false)
     setSelectedEventId(null)
+    setSelectedDisplayItemId(null)
     setEditingEvent(null)
     setFormKind(kind)
   }
@@ -287,12 +340,22 @@ export function CalendarPage({
     setIsAiPromptOpen(false)
     setFormKind(null)
     setEditingEvent(null)
+    setSelectedDisplayItemId(null)
     setSelectedEventId(event.id)
+  }
+
+  const handleSelectDisplayItem = (item: CalendarDisplayItem) => {
+    setIsAiPromptOpen(false)
+    setFormKind(null)
+    setEditingEvent(null)
+    setSelectedEventId(null)
+    setSelectedDisplayItemId(item.id)
   }
 
   const openAiPrompt = () => {
     clearCalendarError()
     setSelectedEventId(null)
+    setSelectedDisplayItemId(null)
     setEditingEvent(null)
     setFormKind(null)
     setIsAiPromptOpen(true)
@@ -436,19 +499,23 @@ export function CalendarPage({
         </div>
       </header>
 
-      {calendarError || catalogError ? (
+      {calendarError || catalogError || projectionError ? (
         <div
           aria-live="assertive"
           className="rounded-control border border-danger/30 bg-danger-soft px-4 py-3 text-sm leading-6 text-danger"
           role="alert"
         >
-          {calendarError ?? catalogError}
+          {calendarError ?? catalogError ?? projectionError}
           <Button
             className="mt-3 border-danger/40 text-danger hover:bg-danger/10"
             onClick={() => {
               clearCalendarError()
+              clearHabitError()
+              clearRecurringTaskError()
               void refreshEvents()
               void loadCatalog(true)
+              void loadHabitRange(habitRange, true)
+              void loadRecurringTasks(true)
             }}
             variant="secondary"
           >
@@ -463,9 +530,15 @@ export function CalendarPage({
         </p>
       ) : null}
 
+      {projectionIsLoading ? (
+        <p aria-live="polite" className="text-sm text-ink-muted">
+          Cargando proyecciones de hábitos…
+        </p>
+      ) : null}
+
       <div
         className={
-          selectedEvent || isFormOpen || isAiPromptOpen
+          selectedEvent || selectedDisplayItem || isFormOpen || isAiPromptOpen
             ? 'grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)]'
             : ''
         }
@@ -540,15 +613,15 @@ export function CalendarPage({
               <CalendarViewSelector onChange={handleViewChange} value={calendarView} />
             </div>
             <p aria-live="polite" className="text-sm text-ink-muted">
-              {filteredEvents.length}{' '}
-              {filteredEvents.length === 1 ? 'evento visible' : 'eventos visibles'}
+              {visibleCalendarItemCount}{' '}
+              {visibleCalendarItemCount === 1 ? 'evento visible' : 'eventos visibles'}
             </p>
           </div>
 
           {calendarView !== 'agenda' &&
           calendarIsLoaded &&
           !calendarIsLoading &&
-          filteredEvents.length === 0 ? (
+          visibleCalendarItemCount === 0 ? (
             <p aria-live="polite" className="text-sm text-ink-muted">
               {hasFilters
                 ? 'No hay eventos que coincidan. Cambia o limpia los filtros.'
@@ -559,10 +632,12 @@ export function CalendarPage({
           {calendarView === 'agenda' ? (
             <div className="rounded-panel border border-border bg-surface p-4 sm:p-6">
               <AgendaView
+                displayItems={calendarDisplayItems}
                 events={filteredEvents}
                 hasFilters={hasFilters}
                 onClearFilters={clearFilters}
                 onSelect={handleSelectEvent}
+                onSelectDisplayItem={handleSelectDisplayItem}
                 personalGroups={resolvedPersonalGroups}
                 startDate={resolvedAgendaStartDate}
                 subjects={resolvedSubjects}
@@ -583,10 +658,22 @@ export function CalendarPage({
                         }
 
                         void loadEvents({ startAt: info.startStr, endAt: info.endStr })
+                        void loadHabitRange({
+                          endDate: shiftDateKey(info.endStr.slice(0, 10), -1),
+                          startDate: info.startStr.slice(0, 10),
+                        })
+                        void loadRecurringTasks()
                       }
                     : undefined
                 }
                 eventClick={(info) => {
+                  const displayItem = calendarDisplayItems.find((item) => item.id === info.event.id)
+
+                  if (displayItem) {
+                    handleSelectDisplayItem(displayItem)
+                    return
+                  }
+
                   const event = filteredEvents.find((item) => item.id === info.event.id)
 
                   if (event) {
@@ -639,6 +726,11 @@ export function CalendarPage({
               subjects={resolvedSubjects}
             />
           </aside>
+        ) : selectedDisplayItem ? (
+          <CalendarDisplayDetail
+            item={selectedDisplayItem}
+            onClose={() => setSelectedDisplayItemId(null)}
+          />
         ) : selectedEvent ? (
           <EventDetail
             accentColor={selectedEventColor}

@@ -7,6 +7,15 @@ export type EventKind = 'academic' | 'personal'
 export type EventStatus = 'pending' | 'completed'
 export type NoteTargetType = 'subject' | 'personal_group'
 export type DeviceTokenScope = 'read:snapshot' | 'write:events'
+export type HabitTrackingType = 'boolean' | 'count' | 'duration'
+export type HabitEvaluationMode = 'scheduled_occurrence' | 'period_quota'
+export type HabitMissPolicy = 'mark_missed' | 'keep_pending'
+export type HabitLifecycleStatus = 'active' | 'paused' | 'archived'
+export type HabitNotePolicy = 'none' | 'general' | 'daily' | 'both'
+export type HabitLogStatus = 'completed' | 'partial' | 'skipped'
+export type HabitLogSource = 'manual' | 'koreader'
+export type HabitQuotaPeriod = 'day' | 'week' | 'month'
+export type RecurringTaskOccurrenceStatus = 'completed' | 'rescheduled'
 
 export type Database = {
   public: {
@@ -304,6 +313,327 @@ export type Database = {
           window_started_at?: string
           attempt_count?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      habits: {
+        Row: {
+          id: string
+          owner_id: string
+          name: string
+          description: string | null
+          color: string | null
+          subject_id: string | null
+          personal_group_id: string | null
+          tracking_type: HabitTrackingType
+          unit: string | null
+          goal_value: number
+          evaluation_mode: HabitEvaluationMode
+          quota_period: HabitQuotaPeriod | null
+          miss_policy: HabitMissPolicy
+          schedule: Json
+          start_date: string
+          end_date: string | null
+          lifecycle_status: HabitLifecycleStatus
+          stats_enabled: boolean
+          note_policy: HabitNotePolicy
+          calendar_enabled: boolean
+          calendar_schedule: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          name: string
+          description?: string | null
+          color?: string | null
+          subject_id?: string | null
+          personal_group_id?: string | null
+          tracking_type: HabitTrackingType
+          unit?: string | null
+          goal_value: number
+          evaluation_mode: HabitEvaluationMode
+          quota_period?: HabitQuotaPeriod | null
+          miss_policy: HabitMissPolicy
+          schedule: Json
+          start_date: string
+          end_date?: string | null
+          lifecycle_status?: HabitLifecycleStatus
+          stats_enabled?: boolean
+          note_policy?: HabitNotePolicy
+          calendar_enabled?: boolean
+          calendar_schedule?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          name?: string
+          description?: string | null
+          color?: string | null
+          subject_id?: string | null
+          personal_group_id?: string | null
+          tracking_type?: HabitTrackingType
+          unit?: string | null
+          goal_value?: number
+          evaluation_mode?: HabitEvaluationMode
+          quota_period?: HabitQuotaPeriod | null
+          miss_policy?: HabitMissPolicy
+          schedule?: Json
+          start_date?: string
+          end_date?: string | null
+          lifecycle_status?: HabitLifecycleStatus
+          stats_enabled?: boolean
+          note_policy?: HabitNotePolicy
+          calendar_enabled?: boolean
+          calendar_schedule?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      habit_schedule_versions: {
+        Row: {
+          id: string
+          owner_id: string
+          habit_id: string
+          schedule: Json
+          evaluation_mode: HabitEvaluationMode
+          goal_value: number
+          quota_period: HabitQuotaPeriod | null
+          miss_policy: HabitMissPolicy
+          effective_from: string
+          effective_to: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          habit_id: string
+          schedule: Json
+          evaluation_mode: HabitEvaluationMode
+          goal_value: number
+          quota_period?: HabitQuotaPeriod | null
+          miss_policy: HabitMissPolicy
+          effective_from: string
+          effective_to?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          habit_id?: string
+          schedule?: Json
+          evaluation_mode?: HabitEvaluationMode
+          goal_value?: number
+          quota_period?: HabitQuotaPeriod | null
+          miss_policy?: HabitMissPolicy
+          effective_from?: string
+          effective_to?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      habit_logs: {
+        Row: {
+          id: string
+          owner_id: string
+          habit_id: string
+          local_date: string
+          value: number
+          status: HabitLogStatus
+          source: HabitLogSource
+          external_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          habit_id: string
+          local_date: string
+          value: number
+          status: HabitLogStatus
+          source?: HabitLogSource
+          external_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          habit_id?: string
+          local_date?: string
+          value?: number
+          status?: HabitLogStatus
+          source?: HabitLogSource
+          external_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      habit_notes: {
+        Row: {
+          id: string
+          owner_id: string
+          habit_id: string
+          entry_date: string | null
+          title: string
+          content_markdown: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          habit_id: string
+          entry_date?: string | null
+          title: string
+          content_markdown: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          habit_id?: string
+          entry_date?: string | null
+          title?: string
+          content_markdown?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      recurring_tasks: {
+        Row: {
+          id: string
+          owner_id: string
+          title: string
+          description: string | null
+          color: string | null
+          subject_id: string | null
+          personal_group_id: string | null
+          schedule: Json
+          start_date: string
+          end_date: string | null
+          next_due_date: string
+          due_time: string | null
+          duration_minutes: number | null
+          status: HabitLifecycleStatus
+          calendar_enabled: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          title: string
+          description?: string | null
+          color?: string | null
+          subject_id?: string | null
+          personal_group_id?: string | null
+          schedule: Json
+          start_date: string
+          end_date?: string | null
+          next_due_date: string
+          due_time?: string | null
+          duration_minutes?: number | null
+          status?: HabitLifecycleStatus
+          calendar_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          title?: string
+          description?: string | null
+          color?: string | null
+          subject_id?: string | null
+          personal_group_id?: string | null
+          schedule?: Json
+          start_date?: string
+          end_date?: string | null
+          next_due_date?: string
+          due_time?: string | null
+          duration_minutes?: number | null
+          status?: HabitLifecycleStatus
+          calendar_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      recurring_task_schedule_versions: {
+        Row: {
+          id: string
+          owner_id: string
+          recurring_task_id: string
+          schedule: Json
+          effective_from: string
+          effective_to: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          recurring_task_id: string
+          schedule: Json
+          effective_from: string
+          effective_to?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          recurring_task_id?: string
+          schedule?: Json
+          effective_from?: string
+          effective_to?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      recurring_task_occurrences: {
+        Row: {
+          id: string
+          owner_id: string
+          recurring_task_id: string
+          due_date: string
+          status: RecurringTaskOccurrenceStatus
+          completed_at: string | null
+          rescheduled_to: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          recurring_task_id: string
+          due_date: string
+          status: RecurringTaskOccurrenceStatus
+          completed_at?: string | null
+          rescheduled_to?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          recurring_task_id?: string
+          due_date?: string
+          status?: RecurringTaskOccurrenceStatus
+          completed_at?: string | null
+          rescheduled_to?: string | null
+          created_at?: string
         }
         Relationships: []
       }

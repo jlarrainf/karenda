@@ -43,6 +43,32 @@ function CalendarIcon({ className }: { className?: string }) {
   )
 }
 
+function HabitIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M12 20.5C12 14.5 10.5 10 6 7.5C5.5 12 7.5 16.5 12 20.5ZM12 20.5C12 14.5 13.5 10 18 7.5C18.5 12 16.5 16.5 12 20.5Z"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M12 20.5V5.5M12 9C10.5 6 8.5 4.5 6 3.5M12 9C13.5 6 15.5 4.5 18 3.5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  )
+}
+
 function BookIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -270,6 +296,10 @@ function PrimaryNavigation({
         <CalendarIcon className="size-5 shrink-0" />
         <span>Calendario</span>
       </NavLink>
+      <NavLink className={className} onClick={onNavigate} to="/habits">
+        <HabitIcon className="size-5 shrink-0" />
+        <span>Hábitos</span>
+      </NavLink>
       <NavLink className={className} onClick={onNavigate} to="/notes">
         <NoteIcon className="size-5 shrink-0" />
         <span>Notas</span>
@@ -325,6 +355,13 @@ function WorkspaceNavigation({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function getPageMeta(pathname: string) {
+  if (pathname.startsWith('/habits')) {
+    return {
+      title: 'Hábitos',
+      description: 'Registra tus avances y conserva tu historial',
+    }
+  }
+
   if (pathname.startsWith('/notes')) {
     return {
       title: 'Notas Markdown',
