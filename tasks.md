@@ -187,6 +187,15 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
 
 ## Fase 15: Verificación Y Evolución
 
+- [x] **Tarea 94: Crear hábitos asistidos con IA** (20-30 min). Añadir el
+  contrato server-side, borradores revisables y guardado mediante el servicio
+  de hábitos, manteniendo la validación del formulario existente.
+- [x] **Tarea 95: Endurecer rate limits de IA** (20-30 min). Compartir el
+  mapeo de `429` entre calendario y hábitos, limitar solicitudes sin reintentos
+  automáticos y verificar los mensajes públicos.
+- [x] **Tarea 96: Probar IA de hábitos y límites** (20-30 min). Cubrir contrato,
+  validación, estados, guardado parcial y respuestas `429` en servicio y UI.
+
 - [ ] **Tarea 89: Probar flujos críticos en navegador** (20-30 min).
   Verificar creación, registro, historial, estadísticas, notas, tareas y
   proyección de calendario.

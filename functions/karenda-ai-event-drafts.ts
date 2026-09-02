@@ -119,11 +119,9 @@ function jsonResponse(
 }
 
 function errorResponse(request: Request, error: RequestError): Response {
-  return jsonResponse(
-    request,
-    { error_code: error.errorCode, message: error.message },
-    error.status,
-  )
+  const result = jsonResponse(request, { error_code: error.errorCode, message: error.message }, error.status)
+  if (error.status === 429) result.headers.set('Retry-After', String(Math.ceil(RATE_WINDOW_MS / 1000)))
+  return result
 }
 
 async function getAuthenticatedUser(request: Request): Promise<{

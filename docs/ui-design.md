@@ -577,6 +577,24 @@ jerarquía completa en un espacio pequeño.
 - El análisis y sus fuentes están en
   `docs/koreader-static-calendar-study.md`.
 
+### Creación Asistida De Hábitos
+
+- La acción `Agregar con IA` vivirá junto a `Nuevo hábito` en la cabecera de
+  Hábitos y abrirá un panel con la misma jerarquía que `AiEventPromptPanel`:
+  explicación breve, textarea de máximo 4000 caracteres, cancelar y preparar
+  borradores.
+- La revisión reutilizará `HabitForm` para conservar sus cinco pasos, resumen
+  de regla, relaciones y validación. La lista de borradores mostrará nombre,
+  tipo, meta, frecuencia y fecha de inicio, con acciones `Editar` y `Quitar`.
+- Los estados serán inicial, carga no descartable, respuesta vacía, revisión,
+  guardado, éxito parcial, error de sesión, error de catálogo, error de modelo
+  y límite temporal. El estado de límite usará el mismo aviso español que
+  Calendario y no ofrecerá reintento automático.
+- La confirmación será explícita y el panel conservará los borradores que no
+  se hayan podido guardar. En móvil los botones se apilarán; en escritorio la
+  acción primaria permanecerá al final del flujo y los mensajes usarán
+  `aria-live`.
+
 ## Estados Y Calidad
 
 Cada superficie interactiva debe definir default, hover, focus, active,

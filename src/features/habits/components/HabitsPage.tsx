@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../../../components/ui/Button.tsx'
+import { AiHabitPromptPanel } from './AiHabitPromptPanel.tsx'
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog.tsx'
 import { EmptyState } from '../../../components/ui/EmptyState.tsx'
 import { SelectField, TextField } from '../../../components/ui/FormField.tsx'
@@ -17,6 +18,7 @@ import type {
   HabitStatistics,
   RecurringTask,
 } from '../../../types/domain.ts'
+import type { AiHabitDraft } from '../../../types/aiHabits.ts'
 import type {
   HabitInput as HabitFormInput,
   HabitLogInput,
@@ -859,6 +861,7 @@ export function HabitsPage() {
   const personalGroups = useCatalogStore((state) => state.personalGroups)
   const loadCatalog = useCatalogStore((state) => state.load)
   const [formOpen, setFormOpen] = useState(false)
+  const [aiPanelOpen, setAiPanelOpen] = useState(false)
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
   const [futureHabit, setFutureHabit] = useState<Habit | null>(null)
   const [notesHabit, setNotesHabit] = useState<Habit | null>(null)
@@ -978,6 +981,12 @@ export function HabitsPage() {
         </div>
         <div className="flex flex-wrap gap-3">
           <Button
+            onClick={() => setAiPanelOpen(true)}
+            variant="secondary"
+          >
+            Agregar con IA
+          </Button>
+          <Button
             onClick={() => {
               setEditingHabit(null)
               setFutureHabit(null)
@@ -988,6 +997,25 @@ export function HabitsPage() {
           </Button>
         </div>
       </header>
+
+      {aiPanelOpen ? (
+        <AiHabitPromptPanel
+          onCancel={() => setAiPanelOpen(false)}
+          onSave={async (drafts: AiHabitDraft[]) => {
+            const failedIndexes: number[] = []
+            let created = 0
+            for (const [index, draft] of drafts.entries()) {
+              const saved = await createHabit(draft.input)
+              if (saved) created += 1
+              else failedIndexes.push(index)
+            }
+            if (failedIndexes.length === 0) setAiPanelOpen(false)
+            return { created, failedIndexes }
+          }}
+          personalGroups={personalGroups}
+          subjects={subjects}
+        />
+      ) : null}
 
       <nav
         aria-label="Vistas de hábitos"

@@ -5,6 +5,7 @@ export type AppErrorCode =
   | 'not_found'
   | 'conflict'
   | 'network'
+  | 'rate_limited'
   | 'unknown'
 
 export const SESSION_EXPIRED_EVENT = 'karenda:session-expired'
@@ -112,6 +113,14 @@ export function toAppError(
 
   if (statusCode === 404 || errorCode.includes('not_found')) {
     return new AppError('not_found', 'No se encontró el recurso solicitado.', error)
+  }
+
+  if (statusCode === 429 || errorCode.includes('rate_limited') || errorCode.includes('too_many_requests')) {
+    return new AppError(
+      'rate_limited',
+      'Se alcanzó el límite temporal de IA. Espera unos minutos e inténtalo nuevamente.',
+      error,
+    )
   }
 
   if (

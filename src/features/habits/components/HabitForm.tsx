@@ -18,6 +18,8 @@ import { describeSchedule, formatHabitGoal } from '../utils/habitRecurrence.ts'
 
 interface HabitFormProps {
   habit?: Habit | null
+  initialInput?: HabitInput
+  heading?: string
   isLoading: boolean
   personalGroups: Pick<PersonalGroup, 'id' | 'name'>[]
   subjects: Pick<Subject, 'id' | 'name'>[]
@@ -130,6 +132,8 @@ function getPreset(draft: HabitInput): FrequencyPreset {
 
 export function HabitForm({
   habit,
+  initialInput,
+  heading,
   isLoading,
   personalGroups,
   subjects,
@@ -138,10 +142,10 @@ export function HabitForm({
   onSubmitFuture,
   mode = 'habit',
 }: HabitFormProps) {
-  const [draft, setDraft] = useState<HabitInput>(() => defaultDraft(habit))
+  const [draft, setDraft] = useState<HabitInput>(() => initialInput ?? defaultDraft(habit))
   const [step, setStep] = useState<FormStep>(1)
   const [frequencyPreset, setFrequencyPreset] = useState<FrequencyPreset>(() =>
-    getPreset(defaultDraft(habit)),
+    getPreset(initialInput ?? defaultDraft(habit)),
   )
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [effectiveFrom, setEffectiveFrom] = useState(
@@ -280,11 +284,11 @@ export function HabitForm({
             className="mt-2 text-xl font-bold tracking-tight text-ink"
             id="habit-form-title"
           >
-            {mode === 'future'
+            {heading ?? (mode === 'future'
               ? 'Nueva regla futura'
               : habit
                 ? 'Editar hábito'
-                : 'Nuevo hábito'}
+                : 'Nuevo hábito')}
           </h2>
         </div>
         <Button onClick={onCancel} variant="ghost">

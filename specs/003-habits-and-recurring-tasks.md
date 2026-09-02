@@ -1,6 +1,6 @@
 # Seguimiento De Hábitos Y Tareas Recurrentes Web
 
-Estado: implementación local completada y las migraciones `20260902120000` y
+Estado: implementación local completada, incluida la creación asistida con IA, y las migraciones `20260902120000` y
 `20260902130000` promovidas al proyecto principal `karenda`; la prueba RLS entre
 cuentas quedó verificada. El E2E autenticado sigue pendiente por falta de
 credenciales de prueba.
@@ -396,7 +396,54 @@ La fase actual solo prepara el contrato:
 - **CA-H-15:** La implementación no añade notificaciones, base local de
   producción ni cambios incompatibles al snapshot v1 de KOReader.
 
-## 9. Referencias De Investigación
+## 9. Creación Asistida De Hábitos Con IA
+
+La sección Hábitos ofrecerá una acción opcional equivalente a la creación
+asistida de eventos. La IA solo prepara borradores: nunca guarda hábitos ni
+puede crear asignaturas o grupos. La persona revisa cada borrador en el
+formulario normal y confirma el guardado explícitamente.
+
+### Contrato De Borrador
+
+La función `karenda-ai-habit-drafts` recibe `prompt`, `time_zone` y
+`reference_date`, carga server-side el catálogo autenticado y devuelve como
+máximo 10 borradores con los campos del contrato `HabitInput`. Las relaciones
+solo pueden apuntar a registros del catálogo de la cuenta. Las fechas son
+locales y la regla de repetición siempre se devuelve como objeto explícito.
+
+### Requisitos
+
+- **RF-H-29:** La función rechazará solicitudes sin sesión válida y no llamará
+  al proveedor de IA en ese caso.
+- **RF-H-30:** El prompt aceptará entre 1 y 4000 caracteres; la salida estará
+  limitada a 10 hábitos, campos acotados y tokens de respuesta controlados.
+- **RF-H-31:** Una respuesta HTTP fallida, agotada o inválida probará los
+  modelos de respaldo secuencialmente, sin exponer detalles del proveedor.
+- **RF-H-32:** La función aplicará un límite de 5 solicitudes por usuario cada
+  10 minutos antes de llamar al proveedor. El cliente traducirá cualquier
+  respuesta `429` de hábitos o calendario al mensaje español estable de límite
+  temporal y no reintentará automáticamente.
+- **RF-H-33:** La UI mostrará borradores para revisar, editar o quitar y
+  bloqueará el guardado si algún borrador no cumple `habitInputSchema`.
+- **RF-H-34:** La confirmación persistirá cada borrador mediante
+  `habitService.create`; un resultado parcial conservará los borradores que
+  fallaron y nunca mostrará éxito total falso.
+- **RF-H-35:** La clave del proveedor, el prompt y la respuesta no se
+  persistirán ni aparecerán en el navegador, mensajes o logs.
+
+### Criterios De Aceptación
+
+- **CA-H-16:** Un prompt como “leer 20 páginas de lunes a viernes” produce un
+  borrador revisable con tipo, meta, unidad y regla comprensibles.
+- **CA-H-17:** El borrador puede editarse en el formulario normal y guardarse
+  solo tras confirmación explícita.
+- **CA-H-18:** Al alcanzar el límite, calendario y hábitos muestran el mismo
+  aviso en español, permanecen sin reintentos automáticos y permiten volver a
+  intentarlo después del periodo indicado.
+- **CA-H-19:** Los fallos parciales conservan para revisión los hábitos no
+  guardados y comunican cuántos sí se crearon.
+
+## 10. Referencias De Investigación
 
 - [Habitify: registro de hábitos en web y escritorio](https://intercom.help/habitify-app/en/articles/11203298-track-progress-of-habits-on-website-desktop-app)
 - [Habitify: progreso y estadísticas en web](https://intercom.help/habitify-app/en/articles/14717723-progress-screen-the-good-habits-report-on-website-desktop)

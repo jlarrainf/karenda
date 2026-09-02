@@ -11,6 +11,13 @@ describe('application errors', () => {
     expect(toAppError(new Error('network failure')).code).toBe('network')
   })
 
+  it('maps provider rate limits to one stable Spanish message', () => {
+    expect(toAppError({ status: 429, error: 'RATE_LIMITED' })).toMatchObject({
+      code: 'rate_limited',
+      message: 'Se alcanzó el límite temporal de IA. Espera unos minutos e inténtalo nuevamente.',
+    })
+  })
+
   it('explains association conflicts in Spanish', () => {
     const error = toAppError(
       new Error('update or delete violates foreign key constraint'),
