@@ -1,0 +1,216 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-canvas: 245 246 242;
+  --color-surface: 255 255 255;
+  --color-surface-subtle: 237 241 237;
+  --color-surface-strong: 226 233 228;
+  --color-ink: 27 37 34;
+  --color-ink-muted: 94 107 101;
+  --color-ink-subtle: 122 135 128;
+  --color-border: 215 224 218;
+  --color-border-strong: 183 199 189;
+  --color-brand: 47 98 90;
+  --color-brand-strong: 35 75 69;
+  --color-brand-soft: 224 238 234;
+  --color-focus: 22 118 106;
+  --color-danger: 166 63 63;
+  --color-danger-soft: 248 232 230;
+  --color-success: 40 112 78;
+  --color-success-soft: 229 241 232;
+  --color-warning: 138 90 32;
+  --color-warning-soft: 250 240 220;
+  color: rgb(var(--color-ink));
+  background: rgb(var(--color-canvas));
+  font-family: 'Avenir Next', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: rgb(var(--color-canvas));
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  background: rgb(var(--color-canvas));
+  color: rgb(var(--color-ink));
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+::selection {
+  background: rgb(var(--color-brand) / 0.2);
+  color: rgb(var(--color-ink));
+}
+
+:focus-visible {
+  outline: 3px solid rgb(var(--color-focus));
+  outline-offset: 3px;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgb(var(--color-ink-subtle));
+  opacity: 1;
+}
+
+@layer components {
+  .calendar-panel .fc {
+    --fc-border-color: rgb(var(--color-border));
+    --fc-button-bg-color: rgb(var(--color-surface));
+    --fc-button-border-color: rgb(var(--color-border-strong));
+    --fc-button-text-color: rgb(var(--color-ink));
+    --fc-button-hover-bg-color: rgb(var(--color-brand-soft));
+    --fc-button-hover-border-color: rgb(var(--color-brand));
+    --fc-button-active-bg-color: rgb(var(--color-brand));
+    --fc-button-active-border-color: rgb(var(--color-brand));
+    --fc-event-bg-color: rgb(var(--color-brand));
+    --fc-event-border-color: rgb(var(--color-brand));
+    --fc-event-text-color: rgb(var(--color-surface));
+    --fc-page-bg-color: rgb(var(--color-surface));
+    --fc-neutral-bg-color: rgb(var(--color-surface-subtle));
+    --fc-today-bg-color: rgb(var(--color-brand-soft) / 0.55);
+    font-family: inherit;
+  }
+
+  .calendar-panel .fc .fc-toolbar {
+    gap: 0.75rem;
+  }
+
+  .calendar-panel .fc .fc-toolbar-title {
+    color: rgb(var(--color-ink));
+    font-size: 1.125rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .calendar-panel .fc .fc-button {
+    color: rgb(var(--color-ink));
+    min-height: 2.75rem;
+    border-radius: 0.5rem;
+    box-shadow: none;
+    font-weight: 600;
+    transition:
+      background-color 200ms,
+      border-color 200ms,
+      color 200ms;
+  }
+
+  .calendar-panel .fc .fc-button:disabled {
+    color: rgb(var(--color-ink-muted));
+  }
+
+  .calendar-panel .fc .fc-button-primary:not(:disabled).fc-button-active,
+  .calendar-panel .fc .fc-button-primary:not(:disabled):active {
+    color: rgb(var(--color-surface));
+  }
+
+  .calendar-panel .fc .fc-daygrid-day-number,
+  .calendar-panel .fc .fc-col-header-cell-cushion,
+  .calendar-panel .fc .fc-list-day-text,
+  .calendar-panel .fc .fc-list-day-side-text {
+    color: rgb(var(--color-ink-muted));
+  }
+
+  .calendar-panel .fc .fc-day-today .fc-daygrid-day-number {
+    color: rgb(var(--color-brand-strong));
+    font-weight: 700;
+  }
+
+  .calendar-panel .fc .calendar-event-completed {
+    opacity: 0.72;
+  }
+
+  .calendar-panel .fc .calendar-event-completed .fc-event-title {
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+
+  .calendar-panel .fc .fc-event {
+    cursor: pointer;
+  }
+}
+
+@media (max-width: 767px) {
+  .calendar-panel .fc .fc-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .calendar-panel .fc .fc-toolbar-chunk {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .calendar-panel .fc .fc-toolbar > .fc-toolbar-chunk:nth-child(2) {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .calendar-panel .fc .fc-toolbar-title {
+    font-size: 1rem;
+  }
+
+  .calendar-panel .fc .fc-button {
+    padding-inline: 0.625rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .calendar-panel .fc .fc-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .calendar-panel .fc .fc-toolbar > .fc-toolbar-chunk:first-child {
+    justify-self: start;
+  }
+
+  .calendar-panel .fc .fc-toolbar > .fc-toolbar-chunk:nth-child(2) {
+    justify-self: center;
+  }
+
+  .calendar-panel .fc .fc-toolbar > .fc-toolbar-chunk:last-child {
+    justify-self: end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

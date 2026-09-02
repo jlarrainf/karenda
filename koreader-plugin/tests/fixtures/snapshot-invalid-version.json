@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "snapshot_id": "snapshot-fixture-2",
+  "generated_at": "2026-08-30T23:00:00.000Z",
+  "timezone": "America/Santiago",
+  "window": {
+    "from": "2026-08-23",
+    "to": "2027-02-26"
+  },
+  "subjects": [],
+  "personal_groups": [],
+  "events": [],
+  "notes": []
+}

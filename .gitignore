@@ -1,0 +1,47 @@
+
+# InsForge & AI agent skills
+.insforge
+.agent
+.agents
+.augment
+.claude
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf
+
+# Frontend build artifacts and local environment files
+node_modules
+dist
+playwright-report
+test-results
+coverage
+blob-report
+.vite
+.cache
+*.local
+.env
+.env.*
+!.env.example
+.envrc
+.npmrc
+!.npmrc.example
+*.pem
+*.p12
+*.pfx
+*.key
+
+# Local deployment and editor state
+.vercel
+.vscode
+.idea
+*.swp
+*.swo
+
+# Operating system files
+.DS_Store
+Thumbs.db
