@@ -28,8 +28,10 @@ integración posterior.
 ## Regla Para Agentes
 
 Antes de iniciar cualquier tarea, el agente debe leer este archivo,
-`docs/constitution.md` y `docs/git-workflow.md`. Después debe identificar la
-spec, los criterios de aceptación, las tareas y la verificación relacionados.
+`docs/constitution.md` y `docs/git-workflow.md`. Si hay otra sesión o agente
+trabajando en el mismo proyecto, también debe leer
+`docs/agent-collaboration.md`. Después debe identificar la spec, los criterios
+de aceptación, las tareas y la verificación relacionados.
 Toda decisión y cambio debe respetar estos documentos.
 
 ## Flujo Spec-Anchored
@@ -56,6 +58,12 @@ GitHub. En cada tarea el agente debe:
   `checkout --` ni `push --force` para ocultar o reemplazar trabajo.
 - Mantener `main` estable: el trabajo normal ocurre en ramas de tarea y llega a
   `main` mediante un Pull Request con verificaciones exitosas.
+- En una carpeta compartida, solo un agente puede escribir, cambiar de rama,
+  preparar commits o mutar el contexto de InsForge; para dos agentes escritores
+  se deben usar worktrees separados.
+- Cada cambio de backend debe registrar la relación entre la rama Git y la
+  rama InsForge. No crear ramas InsForge por sesión ni superar su cuota;
+  reutilizar una rama coincidente o cerrar una rama ya auditada con respaldo.
 - Antes de cada commit o push revisar el diff real, buscar secretos, ejecutar
   las verificaciones pertinentes y confirmar el upstream. Después de publicar,
   comprobar que el remoto contiene el commit esperado.

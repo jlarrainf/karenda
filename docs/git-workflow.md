@@ -3,6 +3,8 @@
 Este documento define cómo se conserva la trazabilidad del proyecto cuando
 varias implementaciones se desarrollan en ramas distintas. Complementa a
 `AGENTS.md` y no reemplaza `docs/constitution.md`, las specs ni los tests.
+Para dos sesiones concurrentes, `docs/agent-collaboration.md` contiene el
+protocolo operativo de lock, worktrees y coordinación.
 
 ## 1. Fuentes De Verdad
 
@@ -70,7 +72,8 @@ el nombre de la rama.
 ## 4. Inicio De Una Tarea
 
 1. Leer `AGENTS.md`, `docs/constitution.md`, este documento y la documentación
-   de la spec relevante.
+   de la spec relevante. Si existe concurrencia, leer también
+   `docs/agent-collaboration.md`.
 2. Inspeccionar el estado local y remoto.
 3. Reutilizar una rama coincidente, o crear una rama desde la referencia
    actualizada de `origin/main` cuando el árbol esté limpio.
