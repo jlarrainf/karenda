@@ -75,8 +75,11 @@ visibles, con widgets de KOReader.
 `screensaver_preview_smoke.lua` pinta la vista previa, verifica que no active el
 estado real del salvapantallas ni su limpieza y comprueba que se pueda cerrar.
 `screensaver_integration_smoke.lua` prueba el wrapper idempotente, el modo nativo
-`Leave screen as-is`, la restauración de los campos temporales y el lock de
-gesto. Se ejecutan desde la raíz de KOReader:
+`Leave screen as-is`, la restauración de los campos temporales, el lock de gesto
+y la limpieza anti-ghosting de la rama de libro mediante una pantalla e-ink
+simulada (`clear` + `refreshFull` de pantalla completa). El runtime SDL omite
+el refresco físico, por lo que la validación final de ghosting debe hacerse en un
+Kindle real. Se ejecutan desde la raíz de KOReader:
 
 ```sh
 ./luajit <karenda>/koreader-plugin/tests/screensaver_config_spec.lua \

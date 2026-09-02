@@ -163,6 +163,10 @@ pruebas autenticadas de backend.
   recalcular el layout sin tarjetas o espacios vacíos.
 - [x] **KR-T33c: Añadir vista previa segura.** Mostrar la composición actual con
   ayuda visible y cierre por toque/tecla sin alterar el estado del screensaver.
+- [x] **KR-T33d: Limpiar el frame anterior al bloquear un libro.** Seguir la
+  secuencia nativa de KOReader en e-ink físico (`clear` + `refreshFull` de toda
+  la pantalla) antes de mostrar la composición de portada y estadísticas, sin
+  tocar la ruta `Leave screen as-is` de calendario/notas.
 
 ## Fase 6: Verificación
 

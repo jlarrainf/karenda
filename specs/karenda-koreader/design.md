@@ -233,6 +233,13 @@ Orden de decisión dentro de `Screensaver.show`:
 El libro se representa mediante widgets nativos de KOReader: `ImageWidget` para
 la portada escalada a pantalla completa, `FrameContainer` para la tarjeta de
 identificación y las tarjetas tipo post-it, y `ProgressWidget` para el avance.
+Antes de mostrar el widget de libro, `screensaver_integration` sigue la
+secuencia nativa de KOReader para imágenes en e-ink: limpia el framebuffer y
+ejecuta `Screen:refreshFull` sobre toda la pantalla. Así se elimina el frame de
+la página subyacente antes de pintar la portada y se reduce el ghosting al
+bloquear el dispositivo. Esta operación se omite únicamente en el emulador
+SDL, cuyo framebuffer virtual no implementa el refresco de hardware; no afecta
+la ruta `Leave screen as-is` de calendario y notas.
 La composición no reutiliza código del parche externo. La integración comparte
 el ciclo de vida de `ScreenSaverWidget` y `ScreenSaverLockWidget`, por lo que
 conserva toque, tecla, retraso, gesto, rotación y limpieza nativos. Si el widget

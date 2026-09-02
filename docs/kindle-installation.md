@@ -50,7 +50,9 @@ sus puntos públicos de apertura.
 - Si se bloquea el Kindle dentro de Calendario o Notas, la pantalla se conserva
   tal como estaba mediante la opción nativa `Leave screen as-is`; al bloquearse
   dentro de un libro se muestra la portada a pantalla completa con tarjetas tipo
-  post-it de progreso y estadísticas mediante la integración de Karenda.
+  post-it de progreso y estadísticas mediante la integración de Karenda. En este
+  último caso, antes de pintarla se limpia el framebuffer y se ejecuta un
+  refresco completo de e-ink para evitar ghosting de la página anterior.
 - Después de dejar la vista abierta hasta medianoche, `Hoy` cambia al día real;
   una navegación manual conserva su cursor.
 

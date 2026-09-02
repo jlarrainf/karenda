@@ -306,8 +306,12 @@ deberá delegar al método anterior.
 Al salir de Karenda, cerrar la nota, cerrar el calendario o cambiar a otra
 superficie, el contexto deberá limpiarse. La composición integrada de libro
 deberá conservar portada, progreso, estadísticas, cierre, rotación y gesto de
-KOReader. El método anterior se conservará cuando la función esté desactivada,
-para FileManager y para cualquier contexto que no corresponda a Karenda.
+KOReader. En una pantalla e-ink física, antes de mostrar esa composición se
+limpiará el framebuffer y se ejecutará un refresco completo síncrono de toda la
+pantalla para eliminar el frame de la página anterior; el emulador SDL omitirá
+esa operación específica de hardware. El método anterior se conservará cuando
+la función esté desactivada, para FileManager y para cualquier contexto que no
+corresponda a Karenda.
 
 La configuración visual se guardará en claves propias de `G_reader_settings`.
 La vista previa podrá consultar portada y estadísticas locales, pero no deberá

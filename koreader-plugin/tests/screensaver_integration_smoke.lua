@@ -16,6 +16,27 @@ stub("logger", {
 local Device = {
     screen_saver_mode = false,
     orig_rotation_mode = nil,
+    screen = {
+        getWidth = function()
+            return 600
+        end,
+        getHeight = function()
+            return 800
+        end,
+        clear = function(self)
+            self.clear_count = (self.clear_count or 0) + 1
+        end,
+        refreshFull = function(self, x, y, width, height)
+            self.refresh_count = (self.refresh_count or 0) + 1
+            self.last_refresh = { x = x, y = y, w = width, h = height }
+        end,
+    },
+    hasEinkScreen = function()
+        return true
+    end,
+    isEmulator = function()
+        return false
+    end,
     isTouchDevice = function()
         return true
     end,
@@ -141,12 +162,14 @@ assert(instance.overlay_message == "evento")
 
 G_reader_settings.karenda_screensaver_enabled = true
 instance.expect_as_is = true
+local refreshesBeforeAsIs = Device.screen.refresh_count or 0
 delegated = Screensaver.show(instance)
 assert(delegated == "delegated")
 assert(originalCalls == 3)
 assert(instance.screensaver_type == "kobo_style")
 assert(instance.show_message == true)
 assert(instance.overlay_message == "evento")
+assert((Device.screen.refresh_count or 0) == refreshesBeforeAsIs)
 
 Runtime.clearContext()
 instance.ui.document = { file = "book.epub" }
@@ -155,6 +178,10 @@ local beforeBook = originalCalls
 Screensaver.show(instance)
 assert(originalCalls == beforeBook)
 assert(Device.screen_saver_mode)
+assert(Device.screen.clear_count == 1)
+assert(Device.screen.refresh_count == 1)
+assert(Device.screen.last_refresh.w == 600)
+assert(Device.screen.last_refresh.h == 800)
 assert(#shown == 2)
 assert(shown[1].widget.kind == "screen_saver")
 assert(shown[2].widget.kind == "screen_saver_lock")

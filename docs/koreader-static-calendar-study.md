@@ -173,7 +173,8 @@ quedan fuera de esta vertical y requieren su propia spec:
   calendario y notas aunque solo se reconstruya inmediatamente una superficie.
 - KOReader de escritorio: apertura, rotación, scroll, cierre y ausencia de
   desbordes en español.
-- Kindle real: contraste, ghosting, tamaño táctil, latencia y lectura a distancia.
+- Kindle real: contraste, ghosting, limpieza full del framebuffer al entrar en
+  la pantalla de bloqueo del libro, tamaño táctil, latencia y lectura a distancia.
 
 ## Fuentes
 

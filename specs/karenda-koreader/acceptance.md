@@ -236,6 +236,18 @@ Verificación: `screensaver_preview_smoke` con cierre por toque y KOReader real.
 Estado: implementado localmente; pendiente de validación de tecla y toque en
 dispositivo.
 
+### KR-CA-021d: Limpieza anti-ghosting
+
+**Dado** un dispositivo e-ink y un libro abierto, **cuando** se muestre la
+pantalla integrada de lectura, **entonces** se limpiará el framebuffer y se
+ejecutará un refresco completo de toda la pantalla antes de pintar la portada y
+las estadísticas. El modo `Leave screen as-is` de calendario y notas no hará
+ese reemplazo visual.
+
+Verificación: `screensaver_integration_smoke` con una pantalla e-ink simulada y
+Kindle real, comprobando que el frame de la página anterior no quede visible.
+Estado: implementado localmente; pendiente de validación en dispositivo.
+
 ### KR-CA-022: Wrapper idempotente
 
 **Dado** que KOReader crea instancias para FileManager y ReaderUI, **cuando**

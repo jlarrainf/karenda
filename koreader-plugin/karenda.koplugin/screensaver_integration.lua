@@ -15,6 +15,29 @@ local ScreensaverIntegration = {
     },
 }
 
+local function refreshEinkBeforeBookScreensaver()
+    if type(Device.hasEinkScreen) ~= "function" or not Device:hasEinkScreen() then
+        return
+    end
+    if type(Device.isEmulator) == "function" and Device:isEmulator() then
+        return
+    end
+
+    local screen = Device.screen
+    if not screen
+        or type(screen.clear) ~= "function"
+        or type(screen.refreshFull) ~= "function"
+        or type(screen.getWidth) ~= "function"
+        or type(screen.getHeight) ~= "function"
+    then
+        return
+    end
+
+    -- Match KOReader's native image screensaver path to remove page ghosting.
+    screen:clear()
+    screen:refreshFull(0, 0, screen:getWidth(), screen:getHeight())
+end
+
 local function restoreInstanceFields(instance, fields)
     instance.screensaver_type = fields.screensaver_type
     instance.show_message = fields.show_message
@@ -57,6 +80,7 @@ local function showBook(instance, wrapper)
     end
 
     Device.screen_saver_mode = true
+    refreshEinkBeforeBookScreensaver()
     Device.orig_rotation_mode = nil
     UIManager:setIgnoreTouchInput(false)
 

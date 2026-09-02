@@ -38,6 +38,10 @@ persona haya elegido. El diseño usa únicamente blanco, negro y gris claro, con
 bordes finos, una jerarquía tipográfica clara y márgenes seguros para reducir
 ghosting y recortes en pantallas pequeñas. No habrá sombras ni transparencias
 que dependan de una pantalla a color.
+En una pantalla e-ink física, antes de mostrar esta composición se limpia el
+framebuffer y se hace un refresco completo de toda la pantalla, para que la
+página del libro no quede visible debajo de la portada. Esta limpieza no se
+aplica a calendario ni notas, que conservan el frame mediante `Leave screen as-is`.
 
 La configuración permitirá activar o desactivar cada dato de forma independiente:
 título, autor, capítulo, progreso del libro y del capítulo, página, páginas
