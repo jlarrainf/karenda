@@ -13,7 +13,7 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | --- | --- | --- | --- |
 | RF-01 | `authService`, `sessionStore`, `AuthPage` | `authService.test.ts`, `sessionStore.test.ts`; login E2E autenticado pendiente | Parcial |
 | RF-02 | `routes.tsx`, `ProtectedRoute`, `ProtectedLayout`, `AuthPage` | `public-routes.spec.ts`, `sessionStore.test.ts`, `errors.test.ts`; recorrido E2E autenticado pendiente | Parcial |
-| RF-03 | Servicios con `owner_id`, migración y RLS | Tests de servicios; políticas InsForge verificadas por CLI; dos cuentas pendientes | Parcial |
+| RF-03 | Servicios con `owner_id`, migración y RLS | Tests de servicios; políticas InsForge verificadas por CLI; prueba runtime de hábitos con dos cuentas aprobada | Parcial |
 | RF-04 | `SubjectForm`, `subjectService`, validación | `SubjectForm.test.tsx`, `validation.test.ts`, `domainServices.test.ts` | Automatizado |
 | RF-05 | `SubjectForm`, `catalogStore`, `subjectService` | `SubjectForm.test.tsx`, `catalogStore.test.ts`, `domainServices.test.ts` | Automatizado |
 | RF-06 | Errores de asociación, triggers y eliminación protegida | `errors.test.ts`, `catalogStore.test.ts`, migración revisada | Automatizado + estático |
@@ -115,9 +115,10 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 ## Seguimiento De Hábitos Y Tareas Recurrentes
 
 La funcionalidad está definida en specs/003-habits-and-recurring-tasks.md.
-La implementación local está en la rama de tarea y la migración ya fue
-aplicada en el backend aislado `karenda-koreader-backend`; RLS entre cuentas,
-E2E autenticado y promoción al proyecto principal siguen pendientes.
+La implementación local está en `main` y las migraciones de hábitos ya fueron
+promovidas al proyecto principal `karenda`; la prueba RLS entre cuentas quedó
+verificada en las siete tablas. El E2E autenticado sigue pendiente por falta de
+credenciales de prueba.
 
 ### Requisitos Funcionales
 
@@ -129,8 +130,8 @@ E2E autenticado y promoción al proyecto principal siguen pendientes.
 | RF-H-12 a RF-H-15 | Ciclo de vida, reglas versionadas y estadísticas | Tests puros y revisión de código | Automatizado + estático |
 | RF-H-16 a RF-H-17 | HabitNotesPanel, HabitNotesLibrary, habitService y Markdown seguro | Test contextual de carga, render seguro y eliminación; E2E pendiente | Parcial |
 | RF-H-18 a RF-H-20 | CalendarDisplayItem y proyección FullCalendar/Agenda | Tests de rango, visibilidad y solo lectura | Automatizado + parcial |
-| RF-H-21 a RF-H-24 | RecurringTaskForm, recurring_task_schedule_versions, habitService y recurringTaskStore | Tests de servicio, store y formulario; E2E/RLS pendientes | Automatizado + parcial |
-| RF-H-25 a RF-H-28 | Filtros, feedback, RLS y ausencia de permisos de notificación | Tests locales, migración revisada; RLS/E2E pendientes | Parcial |
+| RF-H-21 a RF-H-24 | RecurringTaskForm, recurring_task_schedule_versions, habitService y recurringTaskStore | Tests de servicio, store y formulario; RLS runtime aprobada; E2E pendiente | Automatizado + parcial |
+| RF-H-25 a RF-H-28 | Filtros, feedback, RLS y ausencia de permisos de notificación | Tests locales, migración revisada y RLS runtime; E2E pendiente | Parcial |
 
 ### Requisitos No Funcionales
 
@@ -148,7 +149,7 @@ E2E autenticado y promoción al proyecto principal siguen pendientes.
 | CA-H-04 a CA-H-08 | Evaluador puro, historial, pausas y versiones de regla | Tests de recurrencia/evaluación y revisión de flujo | Automatizado + parcial |
 | CA-H-09 a CA-H-11 | Estadísticas, notas y proyección de calendario | Tests de motor/proyección; UI autenticada pendiente | Automatizado + parcial |
 | CA-H-12 a CA-H-13 | Flujos de tareas, filtros, errores y responsive | Tests locales, lint y build; E2E pendiente | Parcial |
-| CA-H-14 a CA-H-15 | Integración RLS, revisión de snapshot v1 y alcance web-only | SQL revisado y snapshot sin cambios; RLS remoto pendiente | Parcial |
+| CA-H-14 a CA-H-15 | Integración RLS, revisión de snapshot v1 y alcance web-only | SQL revisado, snapshot sin cambios y RLS runtime en siete tablas; E2E pendiente | Parcial |
 
 ### Brechas Y Riesgos A Vigilar
 
@@ -162,12 +163,10 @@ E2E autenticado y promoción al proyecto principal siguen pendientes.
   históricas antes de construir gráficas.
 - No planificar todavía una escritura desde KOReader hasta fijar un contrato
   posterior de scope, vinculación e idempotencia.
-- InsForge no permitió crear una rama adicional para esta migración por la
-  cuota de ramas del proyecto; por seguridad no se aplicó directamente sobre
-  producción. La migración queda preparada en
-  migrations/20260902120000_create-habits-domain.sql.
-- La rama aislada `karenda-koreader-backend` fue respaldada y reutilizada para
-  aplicar la migración; el proyecto principal no fue modificado.
+- La migración se validó en una rama aislada limpia y se promovió al proyecto
+  principal mediante dry-run sin conflictos y merge transaccional; el segundo
+  paso `20260902130000` activa RLS en la tabla de versiones de tareas que quedó
+  fuera del primer paso.
 
 - La ingesta futura de KOReader quedó especificada en
   specs/004-koreader-habit-log-ingestion.md; no se implementó ni se modificó el
@@ -175,7 +174,8 @@ E2E autenticado y promoción al proyecto principal siguen pendientes.
 
 ## Gaps De Cierre
 
-- Ejecutar pruebas RLS con dos cuentas autorizadas.
+- Mantener la prueba RLS runtime como smoke de regresión cuando cambie el
+  esquema de hábitos.
 - Completar el flujo E2E autenticado con creación, búsqueda, filtros y notas.
 - Evidencia actual de navegador: el login público pasa en escritorio y móvil;
   los escenarios autenticados se omiten sin credenciales de prueba y el

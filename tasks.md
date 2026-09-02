@@ -193,8 +193,10 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
 - [ ] **Tarea 90: Revisar responsive y accesibilidad** (20-30 min). Validar
   lista diaria, formularios progresivos, cuadrícula histórica, teclado, foco y
   etiquetas.
-- [ ] **Tarea 91: Probar aislamiento entre cuentas** (20-30 min). Ejecutar
-  pruebas de integración para hábitos, logs, notas y tareas mediante RLS.
+- [x] **Tarea 91: Probar aislamiento entre cuentas** (20-30 min). Ejecutar
+  pruebas de integración para hábitos, logs, notas y tareas mediante RLS;
+  verificado en siete tablas con dos cuentas, acceso anónimo bloqueado,
+  escrituras cruzadas bloqueadas y limpieza de datos temporales.
 - [x] **Tarea 92: Ejecutar trazabilidad y calidad** (20-30 min). Actualizar
   spec, UI, matriz, tests, typecheck, lint y build en el mismo cambio.
 - [x] **Tarea 93: Documentar ingesta futura de KOReader** (20-30 min).

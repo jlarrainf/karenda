@@ -1,8 +1,9 @@
 # Seguimiento De Hábitos Y Tareas Recurrentes Web
 
-Estado: implementación local completada y migración aplicada en el backend
-aislado `karenda-koreader-backend`; las pruebas RLS entre cuentas, el E2E
-autenticado y la promoción al proyecto principal siguen pendientes.
+Estado: implementación local completada y las migraciones `20260902120000` y
+`20260902130000` promovidas al proyecto principal `karenda`; la prueba RLS entre
+cuentas quedó verificada. El E2E autenticado sigue pendiente por falta de
+credenciales de prueba.
 
 Esta especificación extiende el MVP web definido en
 `specs/001-web-mvp.md`. Solo aplica a Karenda Web. El plugin de KOReader no
