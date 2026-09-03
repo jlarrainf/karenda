@@ -38,6 +38,15 @@ la web publicada: conserva InsForge como backend compartido.
 Requisitos locales: Android Studio con su SDK instalado y un JDK compatible con
 la versión de Gradle del proyecto (JDK 21 recomendado).
 
+Antes de crear la APK, configura las variables públicas de InsForge en
+`.env.local`. La clave anónima se obtiene desde InsForge y no debe compartirse
+ni confirmarse en Git:
+
+```text
+VITE_INSFORGE_URL=https://5zz5dxgt.us-east.insforge.app
+VITE_INSFORGE_ANON_KEY=tu-clave-anonima
+```
+
 ```text
 npm run android:build
 npm run android:open
