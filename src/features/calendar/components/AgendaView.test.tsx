@@ -96,6 +96,7 @@ describe('AgendaView', () => {
         onClearFilters={vi.fn()}
         onSelect={onSelect}
         personalGroups={[]}
+        startDate="2026-08-30"
         subjects={[
           { abbreviation: 'ALG', color: '#2F625A', id: subjectId, name: 'Álgebra' },
         ]}

@@ -199,17 +199,17 @@ function shiftDateKey(value: string, days: number): string {
   return formatDateKey(date)
 }
 
-function getDateTimeParts(
-  value: Date,
-  timezone: string,
-): {
+interface SnapshotDateTimeParts {
   year: number
   month: number
   day: number
   hour: number
   minute: number
   second: number
-} {
+}
+
+// InsForge deploys this handler as a single file, so timezone projection stays inline.
+function getDateTimeParts(value: Date, timezone: string): SnapshotDateTimeParts {
   const parts = new Intl.DateTimeFormat('en-CA', {
     day: '2-digit',
     hour: '2-digit',
@@ -230,6 +230,45 @@ function getDateTimeParts(
     minute: Number(values.minute),
     second: Number(values.second),
   }
+}
+
+function getOffsetMinutes(value: Date, parts: SnapshotDateTimeParts): number {
+  const localAsUtc = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second,
+  )
+
+  return Math.round((localAsUtc - value.getTime()) / 60000)
+}
+
+function formatOffset(offsetMinutes: number): string {
+  const sign = offsetMinutes < 0 ? '-' : '+'
+  const absolute = Math.abs(offsetMinutes)
+  const hours = Math.floor(absolute / 60)
+  const minutes = absolute % 60
+
+  return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+}
+
+function formatInstantInTimeZone(value: unknown, timezone: string): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  const parts = getDateTimeParts(date, timezone)
+  const milliseconds = String(date.getUTCMilliseconds()).padStart(3, '0')
+  const offset = formatOffset(getOffsetMinutes(date, parts))
+
+  return `${String(parts.year).padStart(4, '0')}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}T${String(parts.hour).padStart(2, '0')}:${String(parts.minute).padStart(2, '0')}:${String(parts.second).padStart(2, '0')}.${milliseconds}${offset}`
 }
 
 function getTodayKey(timezone: string): string {
@@ -445,7 +484,10 @@ function mapPersonalGroup(row: Record<string, unknown>): Record<string, unknown>
   }
 }
 
-function mapEvent(row: Record<string, unknown>): Record<string, unknown> {
+function mapEvent(
+  row: Record<string, unknown>,
+  timezone: string,
+): Record<string, unknown> {
   const allDay = row.is_all_day === true
   const startAt = typeof row.start_at === 'string' ? row.start_at : ''
   const endAt = typeof row.end_at === 'string' ? row.end_at : null
@@ -456,8 +498,14 @@ function mapEvent(row: Record<string, unknown>): Record<string, unknown> {
     title: row.title,
     subject_id: row.subject_id ?? null,
     personal_group_id: row.personal_group_id ?? null,
-    start_at: allDay ? startAt.slice(0, 10) : normalizeInstant(startAt),
-    end_at: allDay ? (endAt ? endAt.slice(0, 10) : null) : normalizeInstant(endAt),
+    start_at: allDay
+      ? startAt.slice(0, 10)
+      : formatInstantInTimeZone(startAt, timezone),
+    end_at: allDay
+      ? endAt
+        ? endAt.slice(0, 10)
+        : null
+      : formatInstantInTimeZone(endAt, timezone),
     all_day: allDay,
     status: row.status,
     location: row.location ?? null,
@@ -493,7 +541,7 @@ function buildStableSnapshot(
 ): Record<string, unknown> {
   const mappedSubjects = subjects.map(mapSubject)
   const mappedPersonalGroups = personalGroups.map(mapPersonalGroup)
-  const mappedEvents = events.map(mapEvent)
+  const mappedEvents = events.map((event) => mapEvent(event, window.timezone))
   const mappedNotes = notes.map(mapNote)
   const referencedSubjectIds = new Set<string>()
   const referencedPersonalGroupIds = new Set<string>()

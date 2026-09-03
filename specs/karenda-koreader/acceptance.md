@@ -386,10 +386,10 @@ verificación en Kindle real pendiente.
 derivarse de la misma zona; un límite final exacto a medianoche no ocupará el día
 siguiente.
 
-Verificación: fixture con cambio de fecha, offsets equivalentes y transición de
-horario de verano para `America/Santiago`. Estado: pendiente; el mapper conserva
-los instantes, pero la capa temporal Lua todavía usa sus componentes literales y
-la zona del dispositivo.
+Verificación: helper de proyección con cambio de fecha, offsets equivalentes y
+transición de horario de verano para `America/Santiago`, además del smoke de
+calendario. Estado: proyección local implementada; verificación en Kindle real
+pendiente.
 
 ### KR-CA-035: Cuenta regresiva de entrega
 
@@ -475,7 +475,9 @@ variables matemáticas diferenciadas, exponentes/subíndices tipográficos y
 símbolos como `Σ`, `⊆`, `∪`, `∩`, `∖` y `≡`, sin delimitadores `$` ni comandos
 LaTeX comunes sin convertir. Una expresión como `\rho: p_0
 \xrightarrow{a_1} p_1` mostrará `a₁` sobre la flecha, y `\Sigma = \{0, 1\}`
-mostrará las llaves literales.
+mostrará las llaves literales. `\vdash_A` mostrará `⊢` con `A` como subíndice.
+Una fórmula de bloque con varias flechas conservará todos sus elementos en una
+línea cuando quepa, sin separar cada flecha o etiqueta en un bloque independiente.
 
 Verificación: test de `MarkdownRenderer`, smoke enriquecido de `markdown.lua` y
 `calendar_view_smoke.lua`; KOReader real para contraste/ghosting. Estado:

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Habit, HabitLog, HabitScheduleVersion } from '../types/domain.ts'
 import {
   createHabit,
@@ -110,6 +110,10 @@ const mockedUpdateHabitNote = vi.mocked(updateHabitNote)
 const mockedDeleteHabitNote = vi.mocked(deleteHabitNote)
 
 describe('habitStore', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     useHabitStore.getState().reset()
@@ -119,6 +123,9 @@ describe('habitStore', () => {
   })
 
   it('loads a bounded log range and derives occurrences and statistics', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 8, 1, 12, 0, 0))
+
     await useHabitStore.getState().loadRange({
       endDate: '2026-09-02',
       startDate: '2026-09-01',

@@ -29,6 +29,8 @@ assert(arrows:find("ρ: p₀ ⟶[a₁] p₁ ⟶[a₂] p₂ … ⟶[aₙ] pₙ", 
 assert(Markdown.toPlainText([[ $\harpoonup$ ]]):find("⇀", 1, true))
 local brace_text = Markdown.toPlainText([[ $\Sigma = \{0, 1\}$ ]])
 assert(brace_text:find("Σ = {0, 1}", 1, true))
+local turnstile_text = Markdown.toPlainText([[$\vdash_A$]])
+assert(turnstile_text:find("⊢_A", 1, true))
 
 local rich = Markdown.toHtml([[### Clase 00 - Repaso de fundamentos
 
@@ -69,8 +71,9 @@ assert(arrow_html:find("⟶", 1, true))
 assert(arrow_html:find("<i>a</i><sub>1</sub>", 1, true))
 assert(arrow_html:find("<i>a</i><sub>2</sub>", 1, true))
 assert(arrow_html:find("<i>a</i><sub><i>n</i></sub>", 1, true))
-assert(arrow_html:find("font-size: 0.65em", 1, true))
-assert(arrow_html:find("font-size: 0.65em", 1, true) < arrow_html:find("⟶", 1, true))
+assert(arrow_html:find("<sup style=\"font-size: 0.65em; line-height: 1;\"><i>a</i><sub>1</sub></sup>⟶", 1, true))
+assert(arrow_html:find("white-space: nowrap", 1, true))
+assert(not arrow_html:find("display: block", 1, true))
 assert(not arrow_html:find("xrightarrow", 1, true))
 assert(harpoon_html:find("⇀", 1, true))
 assert(not harpoon_html:find("harpoonup", 1, true))
@@ -78,6 +81,10 @@ assert(not harpoon_html:find("harpoonup", 1, true))
 local brace_html = Markdown.toHtml([[$\Sigma = \{0, 1\}$]])
 assert(brace_html:find("Σ = {0, 1}", 1, true))
 assert(not brace_html:find("\\{", 1, true))
+
+local turnstile_html = Markdown.toHtml([[$\vdash_A$]])
+assert(turnstile_html:find("⊢<sub><i>A</i></sub>", 1, true))
+assert(not turnstile_html:find("vdash", 1, true))
 
 local unsafe_fence = Markdown.toHtml([[```" onload="alert(1)
 texto sin atributos

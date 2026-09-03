@@ -430,7 +430,7 @@ y conservará la atribución exigida por las licencias aplicables.
 | API de snapshot | No existe; contrato especificado | Implementar y desplegar la función Edge mediante InsForge |
 | Token | No existe flujo de dispositivo; contrato especificado | Implementar hash, scopes, revocación y regeneración desde la web |
 | Eliminaciones | Borrado físico | Mantener snapshots completos; paginación/tombstones quedan fuera del MVP |
-| Zona horaria | `America/Santiago` predeterminada y configurable | Implementar y probar `timezone` de la proyección |
+| Zona horaria | `America/Santiago` predeterminada y configurable; la proyección devuelve el offset civil del snapshot | Validar el horario presentado en KOReader/Kindle real |
 | Registro SimpleUI | API confirmada, caché sensible al momento | Registrar temprano y probar invalidación pública |
 | Salvapantallas | Interruptor y personalización en `Wallpaper`, preview cerrable, wrapper integrado, `Leave screen as-is` y portada con tarjetas de estadísticas especificados e implementados | Probar coexistencia sin modificar el parche |
 | Markdown en e-ink | Subconjunto seguro con `TextViewer` HTML nativo implementado | Validar contraste y ghosting en KOReader/Kindle real |

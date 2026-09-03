@@ -496,11 +496,17 @@ jerarquía completa en un espacio pequeño.
   y del día siguiente escribirán `HOY` y `MAÑANA`; los eventos académicos
   pendientes añadirán una indicación textual de preparación o estudio. Cada
   evento abrirá un detalle desplazable sin acciones de escritura.
+- Los horarios de eventos se presentarán usando el offset civil de la zona del
+  snapshot, no la zona configurada por el sistema del lector; así una hora creada
+  como 17:30 conservará 17:30 en el Kindle.
 - Las notas se agruparán por asignatura o grupo personal. La lista mostrará
   título y actualización; el detalle mostrará Markdown seguro con títulos y
   subtítulos escalonados, negrita, cursiva y fórmulas renderizadas. Las variables
   matemáticas se distinguirán de los operadores y los exponentes/subíndices no
-  se mostrarán como caret o guion bajo crudos. La navegación de filtros usará una jerarquía de ancho completo:
+  se mostrarán como caret o guion bajo crudos; símbolos lógicos como `⊢` conservarán
+  sus subíndices. Las etiquetas de flecha se elevarán sin convertir sus elementos
+  contiguos en bloques, para que una fórmula de bloque permanezca en una línea
+  cuando quepa en la pantalla. La navegación de filtros usará una jerarquía de ancho completo:
   `Todos los ramos` será la acción académica principal, las asignaturas se
   distribuirán en filas legibles y los grupos personales conservarán una sección
   independiente.

@@ -14,13 +14,14 @@ La matriz cubre:
 - transporte LuaSocket cuando KOReader no activa Turbo I/O;
 - registro público de Quick Actions para calendario y notas;
 - cuenta regresiva por fecha final, eventos multidiarios, vencidos y completados;
+- presentación de instantes con el offset civil solicitado y cambio de horario;
 - orden Agenda/Mes/Semana/Día e iconografía local de Quick Actions;
 - Quick Actions de Calendario/Notas y actualización explícita desde la cabecera,
   con caché ante error;
 - conversión segura de Markdown a HTML nativo de `TextViewer`, sin ejecutar HTML
   de entrada ni enlaces;
 - encabezados, negrita, cursiva, tablas GFM, fórmulas Markdown inline y de bloque,
-  exponentes, subíndices, flechas parametrizadas y símbolos matemáticos
+  exponentes, subíndices, símbolos lógicos con subíndice, flechas parametrizadas y símbolos matemáticos
   normalizados para tinta electrónica;
 - Quick Actions declaradas como overlays in-place asíncronos;
 - cierre diferido al tocar otra acción de la navbar, sin repintado intermedio, e

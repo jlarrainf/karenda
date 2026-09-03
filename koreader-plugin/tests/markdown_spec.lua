@@ -57,10 +57,11 @@ describe("markdown", function()
     end)
 
     it("normaliza flechas parametrizadas y llaves literales", function()
-        local text = Markdown.toPlainText([[ $\rho: p_0 \xrightarrow{a_1} p_1$ y $\harpoonup$ y $\Sigma = \{0, 1\}$ ]])
+        local text = Markdown.toPlainText([[ $\rho: p_0 \xrightarrow{a_1} p_1$ y $\harpoonup$ y $\Sigma = \{0, 1\}$ y $\vdash_A$ ]])
 
         assert.is_true(text:find("ρ: p₀ ⟶[a₁] p₁", 1, true) ~= nil)
         assert.is_true(text:find("⇀", 1, true) ~= nil)
         assert.is_true(text:find("Σ = {0, 1}", 1, true) ~= nil)
+        assert.is_true(text:find("⊢_A", 1, true) ~= nil)
     end)
 end)

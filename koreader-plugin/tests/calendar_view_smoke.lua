@@ -94,7 +94,9 @@ $$
 \rho: p_0 \xrightarrow{a_1} p_1 \xrightarrow{a_2} p_2 \dots \xrightarrow{a_n} p_n
 $$
 
-$\Sigma = \{0, 1\}$]],
+$\Sigma = \{0, 1\}$
+
+$\vdash_A$]],
             updatedAt = "2026-08-31T12:00:00-04:00",
         },
         {
@@ -323,7 +325,9 @@ assert(note_viewer.text:find("⟶", 1, true))
 assert(note_viewer.text:find("<i>a</i><sub>1</sub>", 1, true))
 assert(note_viewer.text:find("<i>a</i><sub>2</sub>", 1, true))
 assert(note_viewer.text:find("<i>a</i><sub><i>n</i></sub>", 1, true))
+assert(note_viewer.text:find("<sup style=\"font-size: 0.65em; line-height: 1;\"><i>a</i><sub>1</sub></sup>⟶", 1, true))
 assert(note_viewer.text:find("Σ = {0, 1}", 1, true))
+assert(note_viewer.text:find("⊢<sub><i>A</i></sub>", 1, true))
 note_viewer:onClose()
 UIManager:forceRePaint()
 notesScreen.refreshButton.callback()

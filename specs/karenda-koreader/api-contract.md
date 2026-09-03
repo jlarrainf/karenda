@@ -250,8 +250,8 @@ consumidor no dependerá de que el backend mantenga los nombres de tablas.
   "title": "Control 3",
   "subject_id": "uuid",
   "personal_group_id": null,
-  "start_at": "2026-09-04T13:00:00Z",
-  "end_at": "2026-09-04T15:00:00Z",
+  "start_at": "2026-09-04T09:00:00-04:00",
+  "end_at": "2026-09-04T11:00:00-04:00",
   "all_day": false,
   "status": "pending",
   "location": "Sala 204",
@@ -266,7 +266,10 @@ Reglas:
 - `status` es `pending` o `completed`.
 - `subject_id` es obligatorio para `academic` y nulo para `personal`.
 - `personal_group_id` puede ser nulo en eventos personales.
-- `start_at` y `end_at` de eventos con hora son RFC 3339 inequívocos.
+- `start_at` y `end_at` de eventos con hora son RFC 3339 inequívocos. La
+  proyección los expresará con el offset vigente en `timezone`, sin cambiar el
+  instante representado, para que el cliente pueda mostrar la hora civil sin
+  depender de la configuración horaria del dispositivo.
 - Cuando `all_day` es `true`, `start_at` y `end_at` son fechas locales
   `YYYY-MM-DD`; `end_at` es inclusivo.
 - `location` y `description` pueden ser `null`.

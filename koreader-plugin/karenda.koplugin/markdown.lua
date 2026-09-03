@@ -158,6 +158,7 @@ local math_replacements = {
     { "\\Psi", "Ψ" },
     { "\\Omega", "Ω" },
     { "\\in", "∈" },
+    { "\\vdash", "⊢" },
 }
 
 local superscripts = {
@@ -508,13 +509,12 @@ local function renderMathText(value, arrows)
                     output[#output + 1] = escapeHtml(arrow.symbol)
                 else
                     local label = renderMathText(normalizeMath(arrow.label), arrows)
-                    output[#output + 1] = '<span style="display: inline-block; text-align: center; vertical-align: middle;">'
-                    output[#output + 1] = '<span style="display: block; font-size: 0.65em; line-height: 1;">'
+                    output[#output + 1] = '<span style="white-space: nowrap; vertical-align: middle;">'
+                    output[#output + 1] = '<sup style="font-size: 0.65em; line-height: 1;">'
                     output[#output + 1] = label
-                    output[#output + 1] = "</span>"
-                    output[#output + 1] = '<span style="display: block; line-height: 1;">'
+                    output[#output + 1] = "</sup>"
                     output[#output + 1] = escapeHtml(arrow.symbol)
-                    output[#output + 1] = "</span></span>"
+                    output[#output + 1] = "</span>"
                 end
                 index = end_index + 1
             else

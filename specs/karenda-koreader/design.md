@@ -84,7 +84,10 @@ Note
 
 Los valores de `startAt` y `endAt` mantendrán la distinción de contrato:
 RFC 3339 para instantes con hora y `YYYY-MM-DD` para eventos de todo el día.
-El mapper no convertirá una fecha de todo el día a un instante UTC.
+La proyección del snapshot devolverá los instantes con el offset vigente en
+`snapshot.timezone`, sin alterar el instante; así la presentación offline no
+dependerá de la zona del dispositivo. El mapper no convertirá una fecha de todo
+el día a un instante UTC.
 
 ## 3. Interfaz Del Cliente
 

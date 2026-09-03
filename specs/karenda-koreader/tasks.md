@@ -73,9 +73,10 @@ pruebas autenticadas de backend.
 - [x] **KR-T24a: Implementar sincronización al reanudar.** Ejecutar la misma
   sincronización solo cuando el intervalo configurado haya vencido, sin
   bloquear la vista ni usar `Screensaver.show`.
-- [ ] **KR-T24b: Presentar instantes en la zona del snapshot.** Convertir RFC
-  3339 a fecha y hora civil IANA antes de ordenar, agrupar, contar y calcular
-  `Hoy`, con tests de offset, cambio de fecha y horario de verano.
+- [x] **KR-T24b: Presentar instantes en la zona del snapshot.** Proyectar RFC
+  3339 con el offset civil IANA del snapshot antes de ordenar, agrupar, contar y
+  presentar en el cliente offline, con tests de offset, cambio de fecha y horario
+  de verano.
 
 ## Fase 4: UI Y SimpleUI
 

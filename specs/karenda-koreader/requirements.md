@@ -128,7 +128,8 @@ no deberá truncar silenciosamente la solicitud.
 
 Los instantes con hora deberán viajar como ISO 8601/RFC 3339 con offset o `Z`.
 La zona solicitada formará parte del snapshot y solo definirá la presentación
-de instantes.
+de instantes. La proyección deberá expresar cada instante con el offset civil de
+esa zona para que el cliente offline no dependa de la zona del dispositivo.
 
 Los eventos de todo el día deberán usar `start_at` y, cuando corresponda,
 `end_at` como fechas locales `YYYY-MM-DD`, sin convertirlas a UTC. El rango de
@@ -476,11 +477,16 @@ fórmulas a una notación tipográfica legible para tinta electrónica. La salid
 deberá conservar encabezados, negrita, cursiva, listas, citas y código del
 subconjunto soportado, y representará variables matemáticas en cursiva mediante
 etiquetas generadas, exponentes/subíndices con `sup`/`sub` y comandos comunes
-como `\\Sigma`, `\\harpoonup`, `\\subseteq`, `\\cup`, `\\cap`, `\\setminus` y
-`\\equiv` mediante sus símbolos Unicode. Las flechas parametrizadas como
+como `\\Sigma`, `\\harpoonup`, `\\vdash`, `\\subseteq`, `\\cup`, `\\cap`,
+`\\setminus` y `\\equiv` mediante sus símbolos Unicode. Los símbolos lógicos
+con subíndice, como `\\vdash_A`, deberán conservar el símbolo `⊢` y representar
+`A` como subíndice. Las flechas parametrizadas como
 `\\xrightarrow{a_1}` deberán mostrar la etiqueta sobre la flecha, y las llaves
 escapadas como `\\{0, 1\\}` deberán mostrarse como llaves literales. No mostrará
 delimitadores `$` ni comandos LaTeX crudos cuando exista una conversión segura.
+Una fórmula de bloque con varias flechas deberá conservar su flujo horizontal
+cuando quepa en el ancho disponible; la etiqueta elevada no introducirá saltos
+de línea entre la flecha y los elementos contiguos.
 
 ### KR-REQ-032: Notas con lectura como vista principal
 
