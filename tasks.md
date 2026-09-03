@@ -211,3 +211,40 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
 - [x] **Tarea 93: Documentar ingesta futura de KOReader** (20-30 min).
   Redactar una spec posterior para el scope write:habit_logs, vinculación,
   agregación local e idempotencia; no modificar el plugin en esta fase.
+
+## Fase 16: Aplicación Android Con Capacitor
+
+Estas tareas siguen `specs/005-android-app.md` y deben actualizar también
+`docs/ui-design.md`, `plan.md` y `docs/traceability.md` cuando cambie un
+contrato o una superficie visible.
+
+- [x] **Tarea 97: Definir el contrato Android** (20-30 min). Crear la spec de
+  alcance, estados offline, navegación Atrás, almacenamiento de sesión y
+  límites de permisos.
+- [x] **Tarea 98: Documentar la dirección UI Android** (20-30 min). Añadir
+  barras del sistema, áreas seguras, teclado, enlaces externos y estados de red
+  antes de cambiar componentes.
+- [x] **Tarea 99: Crear la base Capacitor** (20-30 min). Instalar Capacitor,
+  definir `capacitor.config.ts`, mantener `webDir` apuntando al build local y
+  generar `android/`.
+- [ ] **Tarea 100: Añadir adaptadores de plataforma** (20-30 min). Separar
+  conectividad, ciclo de vida, enlaces y portapapeles sin duplicar servicios de
+  InsForge.
+- [ ] **Tarea 101: Implementar estado offline** (20-30 min). Mostrar el estado
+  de conexión en español y bloquear confirmaciones engañosas sin crear caché de
+  dominio.
+- [ ] **Tarea 102: Preparar sesión segura** (20-30 min). Sustituir la
+  persistencia web temporal del refresh token por un puente de almacenamiento
+  seguro antes del APK de producción.
+- [ ] **Tarea 103: Configurar identidad y build** (20-30 min). Fijar
+  `applicationId`, iconos, splash, versión, logs de producción y firma fuera
+  del repositorio.
+- [ ] **Tarea 104: Verificar Android** (20-30 min). Probar arranque, login,
+  rutas, botón Atrás, teclado, rotación, suspensión, red y enlaces en emulador
+  y dispositivo real.
+- [ ] **Tarea 105: Auditar y empaquetar APK personal** (20-30 min). Ejecutar
+  calidad, revisar secretos y generar un APK release instalable sin publicar en
+  Google Play.
+- [ ] **Tarea 106: Diseñar la transición a caché de lectura** (20-30 min).
+  Documentar una fase posterior con cifrado, `synced_at`, caducidad y limpieza
+  por cuenta, sin activarla todavía.

@@ -194,3 +194,19 @@ credenciales de prueba.
 - Resolver la revisión de credenciales documentadas antes de considerar el MVP
   listo para publicar; la clave de usuario expuesta previamente ya fue retirada
   de `agents.md` y `tasks.md`, pero debe rotarse desde InsForge.
+
+## Aplicación Android
+
+| Requisito | Implementación | Verificación | Estado |
+| --- | --- | --- | --- |
+| RF-A-01 | Capacitor y assets del build local | `npm run android:build` y APK debug generado | Automatizado |
+| RF-A-02 a RF-A-03 | Cliente InsForge compartido y rutas protegidas existentes | Typecheck, tests web; smoke autenticado Android pendiente | Parcial |
+| RF-A-04 | Estado de conectividad y feedback de mutaciones | Test de componente; dispositivo sin red pendiente | Parcial |
+| RF-A-05 a RF-A-06 | Adaptador de botón Atrás y apertura externa | Smoke de navegación Android | Planificado |
+| RF-A-07 | Configuración pública y secretos fuera del código | Revisión estática del bundle; auditoría final pendiente | Parcial |
+| RF-A-08 | Persistencia web temporal documentada; puente seguro pendiente | Revisión de sesión en dispositivo | Planificado |
+| RNF-A-01 a RNF-A-03 | `capacitor.config.ts`, `webDir` local y `android/` | Lint, typecheck, build y `cap doctor` | Automatizado |
+| RNF-A-04 a RNF-A-06 | HTTPS, `applicationId` provisional y firma fuera del repositorio | Auditoría nativa y release firmado pendiente | Parcial |
+| CA-A-01 | Shell Android con assets locales | APK debug generado; instalación pendiente | Parcial |
+| CA-A-02 a CA-A-04 | InsForge y estado offline | Tests web; emulador/teléfono y RLS pendiente | Parcial |
+| CA-A-05 a CA-A-07 | Navegación, configuración y APK release | Smoke físico, análisis de secretos e instalación | Planificado |
