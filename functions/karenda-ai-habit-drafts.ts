@@ -11,7 +11,7 @@ const MODEL_TIMEOUT_MS = 15_000
 const RATE_LIMIT = 5
 const RATE_WINDOW_MS = 10 * 60 * 1000
 const rateLimitBuckets = new Map<string, { count: number; windowStartedAt: number }>()
-const ALLOWED_ORIGINS = new Set(['https://5zz5dxgt.insforge.site', 'http://localhost:5173', 'http://127.0.0.1:5173'])
+const ALLOWED_ORIGINS = new Set(['https://5zz5dxgt.insforge.site', 'https://karenda.insforge.site', 'http://localhost:5173', 'http://127.0.0.1:5173'])
 
 class RequestError extends Error { constructor(readonly status: number, readonly errorCode: string, message: string) { super(message) } }
 function bearer(request: Request): string | null { return request.headers.get('Authorization')?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() ?? null }

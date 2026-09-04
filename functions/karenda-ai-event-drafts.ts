@@ -17,6 +17,7 @@ const RATE_WINDOW_MS = 10 * 60 * 1000
 
 const ALLOWED_ORIGINS = new Set([
   'https://5zz5dxgt.insforge.site',
+  'https://karenda.insforge.site',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
 ])
