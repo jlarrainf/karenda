@@ -251,3 +251,6 @@ contrato o una superficie visible.
 - [x] **Tarea 107: Ajustar el encabezado móvil y la barra de estado** (20-30 min).
   Ocultar el encabezado al desplazarse hacia abajo, mostrarlo al desplazarse
   hacia arriba y mantener una cubierta sólida para el área de la barra de estado.
+- [x] **Tarea 108: Refinar el cajón móvil** (20-30 min). Respetar el área segura
+  superior y evitar repetir en el cajón las rutas principales ya visibles en el
+  encabezado.

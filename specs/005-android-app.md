@@ -54,6 +54,10 @@ proyecto InsForge configurado para Karenda.
   continuamente el gesto al desplazar hacia abajo o hacia arriba, ocultándose o
   reapareciendo sin saltos. El área de la barra de estado deberá mantener un
   fondo sólido para ocultar el contenido que se desplace por detrás de ella.
+- **RF-A-10:** En pantallas móviles, el cajón de navegación deberá comenzar
+  debajo del área segura de la barra de estado, mantener un fondo sólido en esa
+  franja y mostrar únicamente las rutas secundarias que no están en el
+  encabezado compacto.
 
 ## 4. Requisitos No Funcionales
 
@@ -118,6 +122,8 @@ la lógica de dominio.
 - **CA-A-08:** En un teléfono Android, el encabezado compacto se oculta al
   desplazarse hacia abajo, reaparece al desplazarse hacia arriba y la barra de
   estado conserva un fondo sólido sin contenido visible detrás.
+- **CA-A-09:** Al abrir el menú móvil, el cajón no queda debajo de la barra de
+  estado y no repite `Calendario`, `Hábitos` ni `Notas`.
 
 ## 8. Verificación Requerida
 

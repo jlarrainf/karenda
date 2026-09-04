@@ -176,7 +176,10 @@ semántico de diálogo o un patrón equivalente:
   segura inferior del dispositivo.
 - Debajo del encabezado se mantiene una navegación compacta y visible con
   `Calendario`, `Hábitos` y `Notas`, para que las tres tareas centrales no dependan de abrir
-  el cajón. El cajón conserva el resto de las rutas organizadas por secciones.
+  el cajón. El cajón muestra únicamente el resto de las rutas organizadas por
+  secciones, sin repetir esas tres áreas principales.
+- El cajón comienza debajo del área segura superior y conserva un fondo sólido
+  en la franja de la barra de estado para que el contenido no se vea por detrás.
 - En móvil se priorizan navegación, fecha, búsqueda y acción primaria; los
   filtros secundarios pueden abrirse en un panel accesible.
 

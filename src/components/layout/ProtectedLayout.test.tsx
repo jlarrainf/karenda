@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -79,8 +79,23 @@ describe('ProtectedLayout', () => {
 
     const dialog = screen.getByRole('dialog', { name: 'Navegación' })
     const appContent = document.querySelector('div[aria-hidden="true"]')
+    const drawerContainer = dialog.parentElement
 
     expect(dialog).toBeVisible()
+    expect(drawerContainer).toHaveClass('top-[var(--safe-area-inset-top)]')
+    expect(dialog).toHaveClass(
+      'pb-[calc(1.25rem+var(--safe-area-inset-bottom))]',
+    )
+    expect(
+      within(dialog).queryByRole('link', { name: 'Calendario' }),
+    ).not.toBeInTheDocument()
+    expect(
+      within(dialog).queryByRole('link', { name: 'Hábitos' }),
+    ).not.toBeInTheDocument()
+    expect(
+      within(dialog).queryByRole('link', { name: 'Notas' }),
+    ).not.toBeInTheDocument()
+    expect(within(dialog).getByRole('link', { name: 'Asignaturas' })).toBeVisible()
     expect(appContent).toHaveProperty('inert', true)
     expect(document.body.style.overflow).toBe('hidden')
 
