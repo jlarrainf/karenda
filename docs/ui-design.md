@@ -38,6 +38,10 @@ reemplazará por una K tipográfica: el calendario ocupa casi todo el lienzo
 cuadrado y solo conserva un margen transparente mínimo. Android usa además una
 derivación transparente de zona segura (`karenda_app_icon_adaptive.png`) para
 su máscara adaptativa, sin cambiar el diseño del logo principal.
+La pantalla de configuración inicial también muestra este mismo recurso junto al
+nombre de la aplicación.
+La pantalla de arranque nativa de Android lo presenta centrado sobre el lienzo
+neutro de Karenda y no conserva el recurso de bienvenida de Capacitor.
 
 ### Superficie De Bloqueo En KOReader
 

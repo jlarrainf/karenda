@@ -9,9 +9,17 @@ function ConfigurationPage() {
         aria-labelledby="configuration-title"
         className="w-full max-w-xl rounded-panel border border-border bg-surface p-6 shadow-overlay sm:p-8"
       >
-        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-brand">
-          Karenda
-        </p>
+        <div className="flex items-center gap-3" translate="no">
+          <img
+            alt=""
+            aria-hidden="true"
+            className="size-10 shrink-0 object-contain"
+            src="/karenda-app-icon.png"
+          />
+          <p className="text-sm font-semibold uppercase tracking-[0.12em] text-brand">
+            Karenda
+          </p>
+        </div>
         <h1 className="mt-3 text-2xl font-bold tracking-tight" id="configuration-title">
           Falta configurar InsForge
         </h1>

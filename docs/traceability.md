@@ -209,6 +209,7 @@ credenciales de prueba.
 | RF-A-08 | Persistencia web temporal documentada; puente seguro pendiente | Revisión de sesión en dispositivo | Planificado |
 | RF-A-09 | Encabezado compacto con ocultación al desplazarse y cubierta sólida de barra de estado | Test de visibilidad del layout; smoke Android pendiente | Parcial |
 | RF-A-10 | `public/karenda-app-icon.png`, foreground adaptativo y recursos mipmap del launcher | Inspección de recursos, comprobación RGBA y builds Android debug/release | Automatizado |
+| RF-A-11 | Variantes `splash.png` con el ícono oficial sobre el lienzo neutro | Inspección visual de splash y builds Android debug/release | Automatizado |
 | RNF-A-01 a RNF-A-03 | `capacitor.config.ts`, `webDir` local y `android/` | Lint, typecheck, build y `cap doctor` | Automatizado |
 | RNF-A-04 a RNF-A-06 | HTTPS, `SystemBars` con variables CSS de insets, `applicationId` provisional y firma fuera del repositorio | Lint, build Android y auditoría de release pendiente | Parcial |
 | CA-A-01 | Shell Android con assets locales | APK debug generado; instalación pendiente | Parcial |
@@ -216,3 +217,4 @@ credenciales de prueba.
 | CA-A-05 a CA-A-07 | Áreas seguras mediante `SystemBars`, navegación y configuración nativa; APK release pendiente | Test de layout y build; smoke físico, análisis de secretos e instalación pendientes | Parcial |
 | CA-A-08 | Encabezado sensible al desplazamiento y fondo sólido de barra de estado | Tests de layout; smoke físico pendiente | Parcial |
 | CA-A-09 | Ícono oficial compartido entre web y launcher Android | Inspección de variantes y builds Android debug/release | Automatizado |
+| CA-A-10 | Splash nativo de Android con la marca oficial | Inspección de variantes y builds Android debug/release | Automatizado |

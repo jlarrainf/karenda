@@ -259,3 +259,7 @@ contrato o una superficie visible.
 - [x] **Tarea 108: Integrar identidad visual en web y Android** (20-30 min).
   Aplicar el ícono oficial de Karenda al favicon, los puntos de marca de la web
   y las variantes normal, redonda y adaptativa del launcher Android.
+- [x] **Tarea 109: Completar la identidad visual nativa** (15-20 min).
+  Aplicar el recurso oficial al splash de Android, retirar los recursos de
+  plantilla de Capacitor y mostrar la marca también en la pantalla de
+  configuración inicial de la web.

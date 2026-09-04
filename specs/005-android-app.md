@@ -57,6 +57,9 @@ proyecto InsForge configurado para Karenda.
 - **RF-A-10:** Cuando se instale la aplicación, el launcher de Android deberá
   mostrar el ícono oficial de Karenda, compartido con la web, sin conservar el
   ícono de plantilla de Capacitor.
+- **RF-A-11:** Durante el arranque nativo, Android deberá mostrar el recurso
+  visual oficial de Karenda centrado sobre el lienzo neutro de la aplicación y
+  no la pantalla de bienvenida de plantilla de Capacitor.
 
 ## 4. Requisitos No Funcionales
 
@@ -124,6 +127,8 @@ la lógica de dominio.
 - **CA-A-09:** El APK debug y el APK release configurado muestran el ícono
   oficial de Karenda en sus variantes normal, redonda y adaptativa, usando el
   mismo recurso visual que la web.
+- **CA-A-10:** Las variantes de splash configuradas para Android muestran el
+  ícono oficial de Karenda centrado y no muestran el recurso de Capacitor.
 
 ## 8. Verificación Requerida
 
@@ -131,6 +136,7 @@ la lógica de dominio.
 - Smoke en emulador y teléfono Android real con login, navegación, calendario,
   hábitos, notas, rotación, suspensión y recuperación.
 - Revisión visual del ícono normal, redondo y adaptativo en el launcher Android,
-  además de la presencia del favicon y la marca oficial en la web.
+  del splash en orientaciones compatibles, además de la presencia del favicon y
+  la marca oficial en la web.
 - Pruebas de conexión perdida, expiración de sesión y aislamiento RLS.
 - Revisión de configuración nativa, secretos, permisos y tamaño del paquete.
