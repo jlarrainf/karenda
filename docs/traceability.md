@@ -72,6 +72,8 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | RF-H-29 a RF-H-32 | `karenda-ai-habit-drafts`, `errors.ts`, `aiHabitService` | `aiHabitService.test.ts`, `errors.test.ts`, revisión de función | Automatizado + estático |
 | RF-H-33 a RF-H-35 | `AiHabitPromptPanel`, `HabitForm`, `habitService` | `aiHabitService.test.ts`, validación y búsqueda estática de secretos | Automatizado + estático |
 | CA-H-16 a CA-H-19 | Panel de borradores y manejo compartido de `429` | Tests unitarios; E2E autenticado pendiente | Automatizado + parcial |
+| RF-H-36 a RF-H-40 | Switch rápido/guiado, contrato de preguntas y normalización cuantitativa | `aiHabitService.test.ts`, typecheck y revisión de función | Automatizado + estático |
+| CA-H-20 a CA-H-22 | “Estudiar 1 hora”, preguntas guiadas y cambio de modo | `aiHabitService.test.ts`; E2E autenticado pendiente | Automatizado + parcial |
 
 ## Requisitos No Funcionales
 

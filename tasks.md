@@ -195,6 +195,11 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
   automáticos y verificar los mensajes públicos.
 - [x] **Tarea 96: Probar IA de hábitos y límites** (20-30 min). Cubrir contrato,
   validación, estados, guardado parcial y respuestas `429` en servicio y UI.
+- [x] **Tarea 97: Añadir modos rápido y guiado para hábitos** (20-30 min).
+  Definir preguntas serializables, respuestas y flujo de revisión reutilizable
+  en web y Android.
+- [x] **Tarea 98: Normalizar hábitos cuantitativos** (20-30 min). Corregir
+  combinaciones contradictorias de tipo, unidad y meta antes de validar.
 
 - [ ] **Tarea 89: Probar flujos críticos en navegador** (20-30 min).
   Verificar creación, registro, historial, estadísticas, notas, tareas y
