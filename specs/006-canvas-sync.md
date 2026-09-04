@@ -158,6 +158,19 @@ personales de Canvas quedan fuera del alcance.
   eventos, asignaturas y vínculos históricos.
 - **RF-C-21 [EARS: estado]:** El detalle de un evento vinculado deberá mostrar
   su categoría, la procedencia Canvas y un enlace externo seguro al origen.
+- **RF-C-22 [EARS: evento]:** Cuando la persona edite una asignatura vinculada,
+  deberá ver los cursos activos de Canvas asociados y podrá desvincular cada
+  curso con confirmación; la desvinculación deberá conservar eventos, vínculos
+  de elementos y datos históricos, y permitir volver a vincular el curso.
+- **RF-C-23 [EARS: estado]:** Cuando exista una conexión Canvas utilizable, el
+  encabezado del calendario deberá mostrar una acción `Sincronizar Canvas` que
+  inicie la misma ejecución manual de la página Canvas y refresque los eventos
+  visibles al terminar.
+- **RF-C-24 [EARS: condición no deseada]:** Si Canvas rechaza o no entrega una
+  colección secundaria de un curso, la ejecución deberá continuar con los
+  recursos disponibles, registrar un aviso sanitizado y finalizar como
+  `partial`; los fallos de autenticación, credenciales, base de datos o cursos
+  deberán seguir siendo recuperables y explícitos.
 
 ## 6. Contratos HTTP
 
@@ -241,5 +254,12 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
   IA tienen estados españoles, recuperables y sin éxito falso.
 - **CA-C-10:** La ruta Canvas funciona en web y en el frontend empaquetado de
   Android, con teclado, foco visible, objetivos táctiles y layout responsive.
-- **CA-C-11:** Migración, RLS, funciones, tests, lint, typecheck, build y E2E
+- **CA-C-11:** La edición de una asignatura identifica sus cursos Canvas
+  vinculados, permite desvincularlos con confirmación y conserva sus eventos.
+- **CA-C-12:** El calendario ofrece `Sincronizar Canvas` solo cuando la
+  conexión está disponible y muestra el resultado sin perder los eventos
+  visibles.
+- **CA-C-13:** Un recurso secundario bloqueado por Canvas deja una ejecución
+  parcial con aviso y no impide procesar cursos o colecciones restantes.
+- **CA-C-14:** Migración, RLS, funciones, tests, lint, typecheck, build y E2E
   quedan verificados y trazados antes del despliegue piloto.

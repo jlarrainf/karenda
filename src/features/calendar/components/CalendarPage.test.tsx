@@ -10,6 +10,13 @@ import { useRecurringTaskStore } from '../../../stores/recurringTaskStore.ts'
 import { requestAiEventPlan } from '../../../services/aiEventService.ts'
 import { CalendarPage } from './CalendarPage.tsx'
 
+const canvasServiceMock = vi.hoisted(() => ({
+  getCanvasConnection: vi.fn(),
+  synchronizeCanvas: vi.fn(),
+}))
+
+vi.mock('../../../services/canvasService.ts', () => canvasServiceMock)
+
 type FullCalendarMockProps = {
   datesSet?: (info: DatesSetArg) => void
 }
@@ -75,6 +82,38 @@ describe('CalendarPage', () => {
     useRecurringTaskStore.getState().reset()
     fullCalendarMock.props = null
     vi.resetAllMocks()
+    canvasServiceMock.getCanvasConnection.mockResolvedValue(null)
+    canvasServiceMock.synchronizeCanvas.mockResolvedValue({
+      counts: {},
+      runId: 'run-1',
+      status: 'completed',
+    })
+  })
+
+  it('shows and executes the Canvas sync action when the connection is active', async () => {
+    const user = userEvent.setup()
+    const loadEvents = vi.fn().mockResolvedValue(undefined)
+
+    canvasServiceMock.getCanvasConnection.mockResolvedValue({
+      authMode: 'personal_access_token',
+      canvasBaseUrl: 'https://cursos.canvas.uc.cl',
+      id: 'connection-1',
+      lastErrorCode: null,
+      lastErrorMessage: null,
+      lastSyncAt: null,
+      nextSyncAt: null,
+      status: 'connected',
+      timeZone: 'America/Santiago',
+      tokenExpiresAt: '2099-09-01T00:00:00.000Z',
+    })
+    useCalendarStore.setState({ load: loadEvents })
+
+    render(<CalendarPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Sincronizar Canvas' }))
+
+    expect(canvasServiceMock.synchronizeCanvas).toHaveBeenCalledOnce()
+    expect(await screen.findByText('Canvas se sincronizó correctamente.')).toBeVisible()
   })
 
   it('loads a visible range once when FullCalendar reports it repeatedly', () => {

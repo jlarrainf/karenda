@@ -9,7 +9,8 @@ import type {
   CanvasSyncRun,
 } from '../types/canvas.ts'
 import { requireCurrentUserId } from './authService.ts'
-import { runInsForge } from './errors.ts'
+import { runInsForge, runInsForgeAction } from './errors.ts'
+import { entityIdSchema, parseInput } from './validation.ts'
 
 const CONNECTION_FUNCTION = 'karenda-canvas-connection'
 const SYNC_FUNCTION = 'karenda-canvas-sync'
@@ -119,6 +120,7 @@ export async function listCanvasCourseLinks(): Promise<CanvasCourseLink[]> {
         .from('canvas_course_links')
         .select('id, canvas_course_id, subject_id, canvas_name, canvas_code, canvas_term_name')
         .eq('owner_id', ownerId)
+        .eq('active', true)
         .order('canvas_name', { ascending: true })
         .limit(500),
     'No se pudieron cargar las asignaturas vinculadas.',
@@ -131,6 +133,18 @@ export async function listCanvasCourseLinks(): Promise<CanvasCourseLink[]> {
     canvasCode: asNullableString(row.canvas_code),
     canvasTermName: asNullableString(row.canvas_term_name),
   }))
+}
+
+export async function unlinkCanvasCourse(courseLinkId: string): Promise<void> {
+  const parsedCourseLinkId = parseInput(entityIdSchema, courseLinkId)
+
+  await runInsForgeAction(
+    () =>
+      insforge.database.rpc('unlink_canvas_course_link', {
+        p_course_link_id: parsedCourseLinkId,
+      }),
+    'No se pudo desvincular el curso de Canvas.',
+  )
 }
 
 export async function listCanvasReviews(): Promise<CanvasReviewItem[]> {

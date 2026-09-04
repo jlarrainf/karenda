@@ -44,6 +44,8 @@ import {
 import { getCalendarDisplayItems } from '../utils/calendarDisplayProjection.ts'
 import { CalendarDisplayDetail } from './CalendarDisplayDetail.tsx'
 import { getLocalDateKey, shiftDateKey } from '../../../lib/dates/dateUtils.ts'
+import { getCanvasConnection, synchronizeCanvas } from '../../../services/canvasService.ts'
+import type { CanvasConnection } from '../../../types/canvas.ts'
 
 interface CalendarPageProps {
   events?: CalendarEvent[]
@@ -150,6 +152,9 @@ export function CalendarPage({
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [isAiPromptOpen, setIsAiPromptOpen] = useState(false)
   const [areFiltersOpen, setAreFiltersOpen] = useState(false)
+  const [canvasConnection, setCanvasConnection] = useState<CanvasConnection | null>(null)
+  const [isCanvasSyncing, setIsCanvasSyncing] = useState(false)
+  const [canvasSyncFeedback, setCanvasSyncFeedback] = useState<{ kind: 'error' | 'success'; message: string } | null>(null)
   const calendarRef = useRef<FullCalendar | null>(null)
   const lastRequestedCalendarRangeKey = useRef<string | null>(null)
   const storeEvents = useCalendarStore((state) => state.events)
@@ -288,6 +293,21 @@ export function CalendarPage({
   }, [events, loadCatalog])
 
   useEffect(() => {
+    if (events !== undefined) return
+    let isActive = true
+    void getCanvasConnection()
+      .then((connection) => {
+        if (isActive) setCanvasConnection(connection)
+      })
+      .catch(() => {
+        if (isActive) setCanvasConnection(null)
+      })
+    return () => {
+      isActive = false
+    }
+  }, [events])
+
+  useEffect(() => {
     if (
       events === undefined &&
       !calendarIsLoaded &&
@@ -326,6 +346,28 @@ export function CalendarPage({
   const handleDateFilterChange = (field: 'endDate' | 'startDate', value: string) => {
     const nextFilters: Partial<CalendarFilters> = { [field]: value }
     setFilters(nextFilters)
+  }
+
+  const handleCanvasSync = async () => {
+    setIsCanvasSyncing(true)
+    setCanvasSyncFeedback(null)
+    try {
+      const result = await synchronizeCanvas()
+      setCanvasSyncFeedback({
+        kind: 'success',
+        message: result.status === 'partial'
+          ? 'Canvas se sincronizó con avisos. Revisa la bandeja de revisión.'
+          : 'Canvas se sincronizó correctamente.',
+      })
+      await refreshEvents()
+    } catch (syncError) {
+      setCanvasSyncFeedback({
+        kind: 'error',
+        message: syncError instanceof Error ? syncError.message : 'No se pudo sincronizar Canvas.',
+      })
+    } finally {
+      setIsCanvasSyncing(false)
+    }
   }
 
   const openCreateForm = (kind: EventKind) => {
@@ -663,12 +705,34 @@ export function CalendarPage({
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
+          {canvasConnection?.status === 'connected' || canvasConnection?.status === 'error' ? (
+            <Button
+              isLoading={isCanvasSyncing}
+              loadingLabel="Sincronizando…"
+              onClick={() => void handleCanvasSync()}
+              variant="secondary"
+            >
+              Sincronizar Canvas
+            </Button>
+          ) : null}
           <Button onClick={() => openCreateForm('academic')}>Nuevo evento</Button>
           <Button onClick={openAiPrompt} variant="secondary">
             Agregar con IA
           </Button>
         </div>
       </header>
+
+      {canvasSyncFeedback ? (
+        <p
+          aria-live="polite"
+          className={canvasSyncFeedback.kind === 'error'
+            ? 'rounded-control border border-danger/30 bg-danger-soft px-4 py-3 text-sm leading-6 text-danger'
+            : 'rounded-control border border-success/30 bg-success-soft px-4 py-3 text-sm leading-6 text-success'}
+          role={canvasSyncFeedback.kind === 'error' ? 'alert' : undefined}
+        >
+          {canvasSyncFeedback.message}
+        </p>
+      ) : null}
 
       {calendarError || catalogError || projectionError ? (
         <div

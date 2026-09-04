@@ -239,4 +239,7 @@ credenciales de prueba.
 | RF-C-12 a RF-C-15 | Sanitización, esquema IA estricto, hashes, propuestas y avisos de retiro | Tests de HTML malicioso, salida IA inválida y deduplicación | Automatizado + estático |
 | RF-C-16 a RF-C-20 | Ejecuciones idempotentes, `429`, vencimiento, desconexión y programador horario | Índice exclusivo, funciones activas y schedule `0 * * * *` en producción | Desplegado |
 | RF-C-21 | Categoría editable, procedencia y enlace Canvas en `EventDetail` | `EventDetail.test.tsx`, typecheck y build | Automatizado |
+| RF-C-22 | Estado de cursos Canvas en asignaturas, desvinculación reversible y confirmación | `SubjectsPage.test.tsx`, `SubjectForm.test.tsx`, migración/RPC RLS | Desplegado + automatizado |
+| RF-C-23 | Acción de sincronización Canvas en el encabezado del calendario | `CalendarPage.test.tsx`, build y E2E público | Desplegado + automatizado |
+| RF-C-24 | Recursos secundarios bloqueados producen ejecución parcial | `karenda-canvas-sync`, despliegue de función y tests de regresión del frontend | Desplegado + función compilada; smoke real pendiente |
 | CA-C-01 a CA-C-11 | Flujo del piloto integrado mediante PR #2 y desplegado en InsForge | 163 tests, lint, typecheck, build, E2E público local/producción y políticas RLS; E2E autenticado y piloto real pendientes | Parcial |

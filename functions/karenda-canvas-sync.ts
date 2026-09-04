@@ -219,6 +219,10 @@ async function canvasObject(path: string, token: string): Promise<JsonObject> {
   return asObject(await result.json())
 }
 
+function isOptionalCanvasResourceError(error: unknown): boolean {
+  return error instanceof RequestError && error.code !== 'CANVAS_TOKEN_EXPIRED'
+}
+
 async function sha256(value: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
@@ -557,7 +561,7 @@ async function syncCourse(
     try {
       endpointResults[name] = await canvasList(path, token)
     } catch (error) {
-      if (error instanceof RequestError && error.status === 403) {
+      if (isOptionalCanvasResourceError(error)) {
         counts.warnings += 1
         endpointResults[name] = []
       } else throw error
@@ -612,8 +616,8 @@ async function markRemoved(admin: Admin, connection: JsonObject, runStartedAt: s
     .eq('connection_id', connection.id).not('event_id', 'is', null).lt('last_seen_at', runStartedAt).limit(500)
   for (const raw of (data ?? []) as JsonObject[]) {
     if (raw.canvas_item_type === 'announcement' || raw.canvas_item_type === 'wiki_page' || raw.canvas_item_type === 'calendar_event') continue
-    const { data: course } = await admin.database.from('canvas_course_links').select('canvas_course_id').eq('id', raw.course_link_id).maybeSingle()
-    if (!course) continue
+    const { data: course } = await admin.database.from('canvas_course_links').select('canvas_course_id, active').eq('id', raw.course_link_id).maybeSingle()
+    if (!course || asObject(course).active === false) continue
     const queued = await pendingReview(admin, {
       connection_id: connection.id, owner_id: connection.owner_id, course_link_id: raw.course_link_id,
       canvas_course_id: asObject(course).canvas_course_id, canvas_item_type: raw.canvas_item_type,
@@ -653,7 +657,7 @@ async function synchronize(connection: JsonObject, trigger: 'manual' | 'schedule
       const plannerEnd = new Date(Date.now() + 370 * 86_400_000).toISOString()
       counts.plannerItems = (await canvasList(`/api/v1/planner/items?start_date=${encodeURIComponent(todayStart().toISOString())}&end_date=${encodeURIComponent(plannerEnd)}&per_page=100`, token)).length
     } catch (error) {
-      if (error instanceof RequestError && error.status === 403) counts.warnings += 1
+      if (isOptionalCanvasResourceError(error)) counts.warnings += 1
       else throw error
     }
 
@@ -668,7 +672,7 @@ async function synchronize(connection: JsonObject, trigger: 'manual' | 'schedule
       if (!courseId || !courseName) continue
       const { data: linked } = await admin.database.from('canvas_course_links').select('*')
         .eq('connection_id', connection.id).eq('canvas_course_id', courseId).maybeSingle()
-      if (!linked) {
+      if (!linked || asObject(linked).active === false) {
         const code = asText(course.course_code, 40) ?? courseName.slice(0, 40)
         const queued = await pendingReview(admin, {
           connection_id: connection.id, owner_id: ownerId, canvas_course_id: courseId,

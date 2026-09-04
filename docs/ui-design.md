@@ -714,6 +714,14 @@ de datos.
   no se renderiza HTML remoto.
 - La alerta de vencimiento aparece dentro del estado de conexión siete días
   antes. `Requiere reconexión` usa texto y acción, no solo color rojo.
+- La lista de asignaturas marca con una etiqueta textual qué asignaturas tienen
+  cursos Canvas vinculados. En `Editar asignatura`, un bloque `Vínculos Canvas`
+  muestra cada curso y ofrece `Desvincular`; la acción exige confirmación y
+  explica que los eventos históricos se conservarán.
+- El encabezado del calendario conserva `Nuevo evento` y `Agregar con IA` como
+  acciones principales. Cuando Canvas está conectado añade `Sincronizar Canvas`
+  como acción secundaria, con un estado `Sincronizando…` y una región
+  `aria-live` para el resultado.
 - Carga, sincronización, lista vacía, ejecución parcial, token vencido,
   conflicto y error conservan la misma región para evitar saltos. Los mensajes
   usan `aria-live`; durante una mutación se deshabilitan acciones duplicadas.
