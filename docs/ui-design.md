@@ -688,6 +688,42 @@ de datos.
 
 ## Estados Y Calidad
 
+### Sincronización Con Canvas
+
+- Canvas vive en `/canvas` dentro de `Organización y conexiones`; no compite
+  con Calendario, Hábitos y Notas como destino principal.
+- El encabezado de la superficie muestra `Canvas`, una explicación breve y la
+  acción `Sincronizar ahora` solo cuando existe una conexión utilizable.
+- La conexión usa un panel único con token tipo contraseña, fecha de vencimiento
+  y ayuda visible que indica que el secreto no vuelve a mostrarse. El estado
+  conectado reemplaza el formulario por metadatos seguros y acciones explícitas
+  `Reemplazar token` y `Desconectar`.
+- La jerarquía posterior es: estado de conexión; asignaturas pendientes de
+  vinculación; bandeja de revisión. Los conteos usan texto, no solo color.
+- La vinculación de cursos presenta el curso Canvas y un selector de asignatura
+  propia; `Crear asignatura` revela nombre, sigla, abreviación y color editables
+  sin abandonar la revisión.
+- Cada actividad pendiente muestra primero fuente, asignatura, categoría
+  sugerida y fecha. Debajo compara el cambio propuesto con hasta cinco eventos
+  existentes y ofrece `Vincular con existente`, `Crear evento` e `Ignorar`.
+- Las diferencias por campo se presentan en dos columnas desde `md`; en móvil
+  se apilan con etiquetas `Karenda` y `Canvas`. Un conflicto usa
+  `warning-soft`, conserva el valor local y exige una acción explícita.
+- Los anuncios se identifican como propuestas, nunca como cambios ya aplicados.
+  Se muestra un extracto sanitizado, el campo afectado y un enlace al origen;
+  no se renderiza HTML remoto.
+- La alerta de vencimiento aparece dentro del estado de conexión siete días
+  antes. `Requiere reconexión` usa texto y acción, no solo color rojo.
+- Carga, sincronización, lista vacía, ejecución parcial, token vencido,
+  conflicto y error conservan la misma región para evitar saltos. Los mensajes
+  usan `aria-live`; durante una mutación se deshabilitan acciones duplicadas.
+- El token nunca se vuelve a dibujar tras enviarse. Los enlaces a Canvas abren
+  fuera de Karenda; en Android usan el comportamiento externo definido por la
+  spec de plataforma.
+- Los objetivos táctiles mantienen 44 px, el foco es visible y el orden de
+  teclado sigue conexión, cursos y revisiones. No se usan gradientes, tarjetas
+  decorativas ni animaciones ajenas al cambio de estado.
+
 Cada superficie interactiva debe definir default, hover, focus, active,
 disabled, loading, error y empty. La revisión aplica estas preguntas de
 Impeccable antes de cerrar una tarea:

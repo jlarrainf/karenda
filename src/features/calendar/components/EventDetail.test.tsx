@@ -1,12 +1,16 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CalendarEvent } from '../../../types/domain.ts'
 import { EventDetail } from './EventDetail.tsx'
+
+const mocks = vi.hoisted(() => ({ getCanvasEventSource: vi.fn() }))
+vi.mock('../../../services/canvasService.ts', () => mocks)
 
 const event: CalendarEvent = {
   createdAt: '2026-08-30T10:00:00.000Z',
   description: 'Repasar capítulos uno y dos.',
+  academicActivityType: 'test',
   endAt: '2026-09-10T12:00:00-03:00',
   id: '44444444-4444-4444-8444-444444444444',
   isAllDay: false,
@@ -32,6 +36,14 @@ const detailProps = {
 }
 
 describe('EventDetail', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.getCanvasEventSource.mockResolvedValue({
+      canvasItemType: 'assignment',
+      sourceUrl: 'https://cursos.canvas.uc.cl/courses/42/assignments/99',
+    })
+  })
+
   it('shows event metadata and exposes status and edit actions', async () => {
     const user = userEvent.setup()
 
@@ -41,6 +53,11 @@ describe('EventDetail', () => {
     expect(screen.getByText('Álgebra')).toBeVisible()
     expect(screen.getByText('Pendiente')).toBeVisible()
     expect(screen.getByText('Sala 12')).toBeVisible()
+    expect(screen.getByText('Control o prueba')).toBeVisible()
+    expect(await screen.findByRole('link', { name: 'Abrir elemento original' })).toHaveAttribute(
+      'href',
+      'https://cursos.canvas.uc.cl/courses/42/assignments/99',
+    )
 
     await user.click(screen.getByRole('button', { name: 'Marcar como completado' }))
     expect(detailProps.onToggleStatus).toHaveBeenCalledWith(event)

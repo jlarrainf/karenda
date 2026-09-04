@@ -103,6 +103,15 @@ export const personalGroupPatchSchema = personalGroupInputSchema
 
 const eventKindSchema = z.enum(['academic', 'personal'])
 export const eventStatusSchema = z.enum(['pending', 'completed'])
+export const academicActivityTypeSchema = z.enum([
+  'assignment',
+  'graded_discussion',
+  'quiz',
+  'oral_assessment',
+  'test',
+  'exam',
+  'other',
+])
 export const noteTargetTypeSchema = z.enum(['subject', 'personal_group'])
 
 export const aiReviewFlagSchema = z.enum([
@@ -149,6 +158,7 @@ const eventInputBaseSchema = z.object({
     .max(5000, 'La descripción es demasiado larga.')
     .nullable()
     .optional(),
+  academicActivityType: academicActivityTypeSchema.nullable().optional(),
 })
 
 export const eventInputSchema = eventInputBaseSchema.superRefine((value, context) => {
@@ -176,6 +186,14 @@ export const eventInputSchema = eventInputBaseSchema.superRefine((value, context
       code: 'custom',
       path: ['subjectId'],
       message: 'Los eventos personales no pueden tener una asignatura.',
+    })
+  }
+
+  if (value.kind === 'personal' && value.academicActivityType) {
+    context.addIssue({
+      code: 'custom',
+      path: ['academicActivityType'],
+      message: 'Los eventos personales no usan una categoría académica.',
     })
   }
 

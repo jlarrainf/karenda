@@ -5,6 +5,14 @@ export type Json =
 
 export type EventKind = 'academic' | 'personal'
 export type EventStatus = 'pending' | 'completed'
+export type AcademicActivityType =
+  | 'assignment'
+  | 'graded_discussion'
+  | 'quiz'
+  | 'oral_assessment'
+  | 'test'
+  | 'exam'
+  | 'other'
 export type NoteTargetType = 'subject' | 'personal_group'
 export type DeviceTokenScope = 'read:snapshot' | 'write:events'
 export type HabitTrackingType = 'boolean' | 'count' | 'duration'
@@ -110,6 +118,7 @@ export type Database = {
           status: EventStatus
           location: string | null
           description: string | null
+          academic_activity_type?: AcademicActivityType | null
           created_at: string
           updated_at: string
         }
@@ -126,6 +135,7 @@ export type Database = {
           status?: EventStatus
           location?: string | null
           description?: string | null
+          academic_activity_type?: AcademicActivityType | null
           created_at?: string
           updated_at?: string
         }
@@ -142,6 +152,7 @@ export type Database = {
           status?: EventStatus
           location?: string | null
           description?: string | null
+          academic_activity_type?: AcademicActivityType | null
           created_at?: string
           updated_at?: string
         }

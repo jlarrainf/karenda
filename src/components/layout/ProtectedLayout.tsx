@@ -238,6 +238,24 @@ function DeviceIcon({ className }: { className?: string }) {
   )
 }
 
+function CanvasIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="7.5" r="1.5" fill="currentColor" />
+      <circle cx="16.5" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="12" cy="16.5" r="1.5" fill="currentColor" />
+      <circle cx="7.5" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  )
+}
+
 function BrandMark() {
   return (
     <img
@@ -327,6 +345,10 @@ function SecondaryNavigation({ onNavigate }: { onNavigate?: () => void }) {
         <DeviceIcon className="size-5 shrink-0" />
         <span>Dispositivos</span>
       </NavLink>
+      <NavLink className={navigationClassName} onClick={onNavigate} to="/canvas">
+        <CanvasIcon className="size-5 shrink-0" />
+        <span>Canvas</span>
+      </NavLink>
     </nav>
   )
 }
@@ -387,6 +409,13 @@ function getPageMeta(pathname: string) {
     return {
       title: 'Dispositivos',
       description: 'Administra el acceso de tus dispositivos',
+    }
+  }
+
+  if (pathname.startsWith('/canvas')) {
+    return {
+      title: 'Canvas',
+      description: 'Revisa y sincroniza tu actividad académica',
     }
   }
 

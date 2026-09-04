@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { CalendarEvent, PersonalGroup, Subject } from '../../../types/domain.ts'
 import { Button } from '../../../components/ui/Button.tsx'
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog.tsx'
+import { getCanvasEventSource } from '../../../services/canvasService.ts'
+import type { CanvasEventSource } from '../../../types/canvas.ts'
 
 interface EventDetailProps {
   accentColor: string
@@ -22,6 +24,16 @@ const dateTimeFormatter = new Intl.DateTimeFormat('es-CL', {
   dateStyle: 'medium',
   timeStyle: 'short',
 })
+
+const activityLabels = {
+  assignment: 'Tarea',
+  graded_discussion: 'Discusión evaluada',
+  quiz: 'Quiz',
+  oral_assessment: 'Interrogación oral',
+  test: 'Control o prueba',
+  exam: 'Examen',
+  other: 'Otra actividad',
+} as const
 
 function formatLocalDate(value: string): string {
   const [year, month, day] = value.slice(0, 10).split('-').map(Number)
@@ -72,6 +84,10 @@ export function EventDetail({
 }: EventDetailProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [canvasSourceState, setCanvasSourceState] = useState<{
+    eventId: string
+    source: CanvasEventSource | null
+  } | null>(null)
   const isAcademic = event.kind === 'academic'
   const subjectName = subjects.find((subject) => subject.id === event.subjectId)?.name
   const groupName = personalGroups.find(
@@ -79,6 +95,23 @@ export function EventDetail({
   )?.name
   const statusLabel = event.status === 'completed' ? 'Completado' : 'Pendiente'
   const nextStatusLabel = event.status === 'completed' ? 'Pendiente' : 'Completado'
+  const canvasSource = canvasSourceState?.eventId === event.id
+    ? canvasSourceState.source
+    : null
+
+  useEffect(() => {
+    let active = true
+    void getCanvasEventSource(event.id)
+      .then((source) => {
+        if (active) setCanvasSourceState({ eventId: event.id, source })
+      })
+      .catch(() => {
+        if (active) setCanvasSourceState({ eventId: event.id, source: null })
+      })
+    return () => {
+      active = false
+    }
+  }, [event.id])
 
   const handleToggleStatus = async () => {
     if (!onToggleStatus) {
@@ -155,6 +188,14 @@ export function EventDetail({
                 : (groupName ?? 'Sin grupo personal')}
             </dd>
           </div>
+          {isAcademic && event.academicActivityType ? (
+            <div>
+              <dt className="font-semibold text-ink-muted">Tipo de actividad</dt>
+              <dd className="mt-1 text-ink">
+                {activityLabels[event.academicActivityType]}
+              </dd>
+            </div>
+          ) : null}
           <div>
             <dt className="font-semibold text-ink-muted">Cuándo</dt>
             <dd className="mt-1 text-ink">{formatSchedule(event)}</dd>
@@ -184,6 +225,27 @@ export function EventDetail({
               <dt className="font-semibold text-ink-muted">Descripción</dt>
               <dd className="mt-1 whitespace-pre-wrap break-words leading-6 text-ink">
                 {event.description}
+              </dd>
+            </div>
+          ) : null}
+          {canvasSource ? (
+            <div>
+              <dt className="font-semibold text-ink-muted">Procedencia</dt>
+              <dd className="mt-1 text-ink">
+                Canvas UC
+                {canvasSource.sourceUrl ? (
+                  <>
+                    {' · '}
+                    <a
+                      className="font-semibold text-brand underline-offset-4 hover:underline"
+                      href={canvasSource.sourceUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Abrir elemento original
+                    </a>
+                  </>
+                ) : null}
               </dd>
             </div>
           ) : null}

@@ -273,3 +273,32 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   el fallback estructurado del servicio server-side.
 - [x] **Tarea 111: Verificar eventos asistidos en Android** (20-30 min).
   Ejecutar tests, typecheck, lint, build web y sincronización/build Android.
+
+## Fase 18: Sincronización Canvas UC
+
+- [x] **Tarea 112: Fijar spec, UI y trazabilidad Canvas**. Documentar alcance,
+  contratos, estados, seguridad, pruebas y límites del piloto personal.
+- [x] **Tarea 113: Crear esquema Canvas y RLS**. Añadir categoría académica,
+  conexiones, credenciales privadas, vínculos, propuestas, ejecuciones,
+  restricciones, índices y aislamiento por propietario.
+- [x] **Tarea 114: Implementar cliente y normalización Canvas**. Cubrir
+  paginación segura, reintentos, clasificación, intervalos, HTML sanitizado,
+  candidatos y reconciliación de tres versiones.
+- [x] **Tarea 115: Implementar funciones de conexión y sincronización**.
+  Validar/cifrar credenciales, preparar cursos y actividades, registrar
+  ejecuciones e integrar propuestas IA sin autoridad de escritura.
+- [x] **Tarea 116: Implementar decisiones de revisión**. Vincular o crear
+  asignaturas y eventos de forma atómica, aplicar cambios confirmados e ignorar
+  propuestas sin duplicar identificadores externos.
+- [x] **Tarea 117: Implementar servicio, estado y ruta Canvas**. Añadir estado de
+  conexión, vencimiento, sincronización manual, mapeo de cursos y bandeja
+  responsive en español.
+- [x] **Tarea 118: Mostrar procedencia Canvas en eventos**. Exponer categoría,
+  fuente y enlace seguro sin cambiar la edición manual existente.
+- [x] **Tarea 119: Configurar programador seguro**. Invocar cada hora, resolver
+  las 06:00 de Santiago mediante `next_sync_at` y evitar ejecuciones paralelas.
+- [ ] **Tarea 120: Verificar y desplegar piloto Canvas**. Ejecutar pruebas de
+  dominio, funciones, RLS, UI, E2E, lint, typecheck, build, auditoría de
+  secretos y despliegue limitado a la cuenta autorizada. Completado en la rama
+  InsForge aislada; faltan la promoción revisada al proyecto padre y la prueba
+  real con un token nuevo ingresado directamente en la interfaz.

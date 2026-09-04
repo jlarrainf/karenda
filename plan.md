@@ -504,3 +504,28 @@ El trabajo se dividirá en: contrato Android y decisiones de UI; spike de
 Capacitor; shell y build nativo; adaptadores de sesión y plataforma; prueba
 funcional en emulador y dispositivo real; APK personal firmado; y auditoría de
 secretos, navegación, permisos, accesibilidad y trazabilidad.
+
+## 15. Sincronización Canvas UC
+
+La spec `specs/006-canvas-sync.md` añade un adaptador unidireccional alojado
+exclusivamente en funciones y PostgreSQL de InsForge. El frontend nunca llama a
+Canvas ni conserva su token; invoca funciones autenticadas para conectar,
+sincronizar y aplicar decisiones de revisión.
+
+El backend separará conexiones, credenciales cifradas, vínculos de cursos,
+vínculos de elementos, propuestas y ejecuciones. Las tablas visibles usan RLS
+por propietario; la tabla de credenciales no concede acceso a roles runtime.
+Una allowlist server-side restringe el piloto personal y deja el contrato listo
+para sustituir el token por OAuth sin cambiar el motor de sincronización.
+
+La ingesta carga cursos activos y contenido académico futuro, normaliza fechas,
+clasifica actividades y genera propuestas. Cursos y elementos nuevos siempre
+requieren revisión; las actualizaciones posteriores aplican una reconciliación
+de tres versiones y solo actualizan automáticamente campos locales intactos.
+Anuncios y páginas pasan por extracción IA estructurada y nunca escriben sin
+confirmación.
+
+El trabajo se divide en: spec y UI; migración y RLS; cliente Canvas y funciones;
+servicio y store; superficie `/canvas`; procedencia en detalle de evento;
+programador diario; tests de dominio, funciones, RLS, UI y E2E; despliegue
+limitado a la cuenta piloto.

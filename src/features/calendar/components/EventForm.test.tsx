@@ -87,6 +87,7 @@ describe('EventForm', () => {
 
     await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
     expect(onSubmit).toHaveBeenCalledWith({
+      academicActivityType: null,
       description: null,
       endAt: null,
       isAllDay: false,
