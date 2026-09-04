@@ -61,8 +61,8 @@ proyecto InsForge configurado para Karenda.
 - **RNF-A-03:** La configuración de Capacitor usará el directorio de build local
   y no `server.url` en compilaciones de producción.
 - **RNF-A-04:** La configuración nativa mantendrá HTTPS, navegación externa
-  restringida, logs de producción mínimos (sin logging de Capacitor) y sin mixed
-  content.
+  restringida, logs de producción mínimos (sin logging de Capacitor), insets de
+  `SystemBars` mediante CSS y sin mixed content.
 - **RNF-A-05:** La interfaz deberá conservar los tamaños táctiles, contraste,
   foco visible y semántica definidos en `docs/ui-design.md`.
 - **RNF-A-06:** El `applicationId` será estable desde el primer APK y la clave de

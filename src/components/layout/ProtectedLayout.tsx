@@ -545,7 +545,7 @@ export function ProtectedLayout() {
         className="min-w-0"
         ref={appContentRef}
       >
-        <header className="sticky top-0 z-30 border-b border-border bg-canvas px-4 sm:px-6 lg:px-8">
+        <header className="sticky top-[var(--safe-area-inset-top)] z-30 border-b border-border bg-canvas px-4 sm:px-6 lg:px-8">
           <div className="flex min-h-16 items-center justify-between">
             <div className="flex items-center gap-3">
               <button
@@ -588,7 +588,7 @@ export function ProtectedLayout() {
         </header>
 
         <main
-          className="min-h-[calc(100vh-7.5rem)] px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 lg:min-h-[calc(100vh-4rem)] lg:px-8 lg:py-8"
+          className="min-h-[calc(100vh-7.5rem)] px-4 pb-[calc(2rem+var(--safe-area-inset-bottom))] pt-6 sm:px-6 lg:min-h-[calc(100vh-4rem)] lg:px-8 lg:py-8"
           id="main-content"
         >
           <div className="mx-auto w-full max-w-[1440px]">

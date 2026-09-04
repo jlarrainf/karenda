@@ -196,8 +196,11 @@ de datos.
   barra inferior mientras las tres áreas principales ya sean accesibles desde
   el encabezado compacto.
 - La aplicación respetará las barras de estado y navegación mediante el área
-  segura inferior y superior. Ningún contenido esencial quedará debajo de un
-  recorte, teclado o barra del sistema.
+  segura inferior y superior. Se usará la variable corregida que inyecta
+  Capacitor (`--safe-area-inset-*`) con `env(safe-area-inset-*)` como respaldo,
+  porque algunas versiones de WebView reportan cero en el valor estándar.
+  Ningún contenido esencial quedará debajo de un recorte, teclado o barra del
+  sistema.
 - El botón Atrás cerrará primero un diálogo, panel de filtros o cajón abierto;
   después volverá a la ruta anterior. No se duplicarán controles nativos y web
   para la misma acción.

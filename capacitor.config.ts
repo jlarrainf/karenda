@@ -5,6 +5,14 @@ const config: CapacitorConfig = {
   appName: 'Karenda',
   backgroundColor: '#F5F6F2',
   loggingBehavior: 'none',
+  plugins: {
+    SystemBars: {
+      animation: 'NONE',
+      hidden: false,
+      insetsHandling: 'css',
+      style: 'LIGHT',
+    },
+  },
   server: {
     androidScheme: 'https',
   },
