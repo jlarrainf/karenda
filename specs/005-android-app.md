@@ -54,6 +54,9 @@ proyecto InsForge configurado para Karenda.
   continuamente el gesto al desplazar hacia abajo o hacia arriba, ocultándose o
   reapareciendo sin saltos. El área de la barra de estado deberá mantener un
   fondo sólido para ocultar el contenido que se desplace por detrás de ella.
+- **RF-A-10:** Cuando se instale la aplicación, el launcher de Android deberá
+  mostrar el ícono oficial de Karenda, compartido con la web, sin conservar el
+  ícono de plantilla de Capacitor.
 
 ## 4. Requisitos No Funcionales
 
@@ -118,11 +121,16 @@ la lógica de dominio.
 - **CA-A-08:** En un teléfono Android, el encabezado compacto se oculta al
   desplazarse hacia abajo, reaparece al desplazarse hacia arriba y la barra de
   estado conserva un fondo sólido sin contenido visible detrás.
+- **CA-A-09:** El APK debug y el APK release configurado muestran el ícono
+  oficial de Karenda en sus variantes normal, redonda y adaptativa, usando el
+  mismo recurso visual que la web.
 
 ## 8. Verificación Requerida
 
 - `npm run lint`, `npm run typecheck`, `npm test` y `npm run build`.
 - Smoke en emulador y teléfono Android real con login, navegación, calendario,
   hábitos, notas, rotación, suspensión y recuperación.
+- Revisión visual del ícono normal, redondo y adaptativo en el launcher Android,
+  además de la presencia del favicon y la marca oficial en la web.
 - Pruebas de conexión perdida, expiración de sesión y aislamiento RLS.
 - Revisión de configuración nativa, secretos, permisos y tamaño del paquete.

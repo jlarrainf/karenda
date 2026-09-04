@@ -256,3 +256,6 @@ contrato o una superficie visible.
 - [x] **Tarea 107: Ajustar el encabezado móvil y la barra de estado** (20-30 min).
   Ocultar el encabezado al desplazarse hacia abajo, mostrarlo al desplazarse
   hacia arriba y mantener una cubierta sólida para el área de la barra de estado.
+- [x] **Tarea 108: Integrar identidad visual en web y Android** (20-30 min).
+  Aplicar el ícono oficial de Karenda al favicon, los puntos de marca de la web
+  y las variantes normal, redonda y adaptativa del launcher Android.
