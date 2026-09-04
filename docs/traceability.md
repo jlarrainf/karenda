@@ -228,3 +228,15 @@ credenciales de prueba.
 | CA-A-08 | Encabezado sensible al desplazamiento y fondo sólido de barra de estado | Tests de layout; smoke físico pendiente | Parcial |
 | CA-A-09 | Cajón móvil respeta la barra de estado y evita repetir navegación principal | Test del layout; smoke físico pendiente | Parcial |
 | CA-A-10 | Preparación y confirmación de eventos asistidos desde Android | Tests de servicio/panel, build web y sincronización de Capacitor | Automatizado + parcial |
+
+## Sincronización Canvas UC
+
+| Requisito | Implementación | Verificación | Estado |
+| --- | --- | --- | --- |
+| RF-C-01 a RF-C-02 | `karenda-canvas-connection`, AES-GCM, secretos server-side y allowlist por UUID | Funciones activas en rama, llamadas anónimas `401`, auditoría estática sin credenciales | Implementado + remoto |
+| RF-C-03 a RF-C-08 | `karenda-canvas-sync`, tablas de vínculos, candidatos ±7 días y `CanvasPage` | `reconciliation.test.ts`, `CanvasPage.test.tsx`, migraciones aplicadas | Automatizado + remoto |
+| RF-C-09 a RF-C-11 | Comparación base/local/remoto, conflictos y completitud monotónica | Tests unitarios de reconciliación y estado; piloto real pendiente | Automatizado + parcial |
+| RF-C-12 a RF-C-15 | Sanitización, esquema IA estricto, hashes, propuestas y avisos de retiro | Tests de HTML malicioso, salida IA inválida y deduplicación | Automatizado + estático |
+| RF-C-16 a RF-C-20 | Ejecuciones idempotentes, `429`, vencimiento, desconexión y programador horario | Índice exclusivo, funciones activas, schedule horario y pruebas de acciones HTTP | Implementado + remoto |
+| RF-C-21 | Categoría editable, procedencia y enlace Canvas en `EventDetail` | `EventDetail.test.tsx`, typecheck y build | Automatizado |
+| CA-C-01 a CA-C-11 | Flujo del piloto en rama Git/InsForge aislada | 163 tests, lint, typecheck, build, E2E público y políticas RLS; E2E autenticado y piloto real pendientes | Parcial |

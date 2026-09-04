@@ -1,6 +1,7 @@
 import { useForm, useWatch, type FieldErrors } from 'react-hook-form'
 import type {
   CalendarEvent,
+  AcademicActivityType,
   EventKind,
   EventStatus,
   PersonalGroup,
@@ -29,6 +30,7 @@ interface EventFormProps {
 }
 
 interface EventFormValues {
+  academicActivityType: AcademicActivityType | ''
   description: string
   endDate: string
   endTime: string
@@ -45,6 +47,7 @@ interface EventFormValues {
 const eventFieldOrder: (keyof EventFormValues)[] = [
   'title',
   'subjectId',
+  'academicActivityType',
   'startDate',
   'startTime',
   'endDate',
@@ -90,6 +93,7 @@ function getDefaultValues(
 
   if (!source) {
     return {
+      academicActivityType: '',
       description: '',
       endDate: '',
       endTime: '',
@@ -109,6 +113,7 @@ function getDefaultValues(
   const end = getDateTimeParts(source.endAt ?? null, isAllDay)
 
   return {
+    academicActivityType: source.academicActivityType ?? '',
     description: source.description ?? '',
     endDate: end.date,
     endTime: end.time,
@@ -154,6 +159,7 @@ function getInputFieldForIssue(
     field === 'status' ||
     field === 'location' ||
     field === 'description'
+    || field === 'academicActivityType'
   ) {
     return field
   }
@@ -174,6 +180,7 @@ function getEventInput(values: EventFormValues, kind: EventKind): EventInput {
   const hasEndValue = Boolean(values.endDate || values.endTime)
 
   return {
+    academicActivityType: isAcademic ? values.academicActivityType || null : null,
     description: values.description || null,
     endAt: hasEndValue
       ? values.isAllDay
@@ -294,26 +301,43 @@ export function EventForm({
       />
 
       {isAcademic ? (
-        <SelectField
-          disabled={subjects.length === 0}
-          error={errors.subjectId?.message}
-          hint={
-            subjects.length === 0
-              ? 'Crea una asignatura antes de registrar un evento académico.'
-              : undefined
-          }
-          id="event-subject"
-          label="Asignatura"
-          required
-          {...registerField('subjectId')}
-        >
-          <option value="">Selecciona una asignatura</option>
-          {subjects.map((subject) => (
-            <option key={subject.id} value={subject.id}>
-              {subject.name} ({subject.abbreviation})
-            </option>
-          ))}
-        </SelectField>
+        <>
+          <SelectField
+            disabled={subjects.length === 0}
+            error={errors.subjectId?.message}
+            hint={
+              subjects.length === 0
+                ? 'Crea una asignatura antes de registrar un evento académico.'
+                : undefined
+            }
+            id="event-subject"
+            label="Asignatura"
+            required
+            {...registerField('subjectId')}
+          >
+            <option value="">Selecciona una asignatura</option>
+            {subjects.map((subject) => (
+              <option key={subject.id} value={subject.id}>
+                {subject.name} ({subject.abbreviation})
+              </option>
+            ))}
+          </SelectField>
+          <SelectField
+            hint="Opcional para eventos creados manualmente. Canvas te pedirá confirmarla al importar."
+            id="event-academic-activity-type"
+            label="Tipo de actividad académica"
+            {...registerField('academicActivityType')}
+          >
+            <option value="">Sin categoría</option>
+            <option value="assignment">Tarea</option>
+            <option value="graded_discussion">Discusión evaluada</option>
+            <option value="quiz">Quiz</option>
+            <option value="oral_assessment">Interrogación oral</option>
+            <option value="test">Control o prueba</option>
+            <option value="exam">Examen</option>
+            <option value="other">Otra actividad</option>
+          </SelectField>
+        </>
       ) : (
         <SelectField
           error={errors.personalGroupId?.message}

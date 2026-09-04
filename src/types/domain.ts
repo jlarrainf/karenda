@@ -4,6 +4,14 @@ export type LocalDate = string
 
 export type EventKind = 'academic' | 'personal'
 export type EventStatus = 'pending' | 'completed'
+export type AcademicActivityType =
+  | 'assignment'
+  | 'graded_discussion'
+  | 'quiz'
+  | 'oral_assessment'
+  | 'test'
+  | 'exam'
+  | 'other'
 export type NoteTargetType = 'subject' | 'personal_group'
 
 export interface NoteTarget {
@@ -50,6 +58,7 @@ export interface CalendarEvent {
   status: EventStatus
   location: string | null
   description: string | null
+  academicActivityType?: AcademicActivityType | null
   createdAt: IsoDateTime
   updatedAt: IsoDateTime
 }

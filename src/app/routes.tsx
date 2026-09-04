@@ -9,6 +9,7 @@ import { NotesPage } from '../features/notes/components/NotesPage.tsx'
 import { PersonalGroupsPage } from '../features/personal-groups/components/PersonalGroupsPage.tsx'
 import { SubjectsPage } from '../features/subjects/components/SubjectsPage.tsx'
 import { DeviceTokensPage } from '../features/devices/components/DeviceTokensPage.tsx'
+import { CanvasPage } from '../features/canvas/components/CanvasPage.tsx'
 import { ProtectedRoute } from './ProtectedRoute.tsx'
 
 export const appRouter = createBrowserRouter([
@@ -31,6 +32,7 @@ export const appRouter = createBrowserRouter([
               { path: 'personal-groups', element: <PersonalGroupsPage /> },
               { path: 'notes', element: <NotesPage /> },
               { path: 'devices', element: <DeviceTokensPage /> },
+              { path: 'canvas', element: <CanvasPage /> },
             ],
           },
         ],
