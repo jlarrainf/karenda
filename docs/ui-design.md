@@ -34,8 +34,10 @@ eventos académicos, compromisos personales, hábitos y notas.
 El mismo recurso se usará en el launcher de Android, el favicon y los puntos de
 entrada visibles de la web. En la web se acompañará con el wordmark `Karenda`;
 en el cajón de apps se mostrará solo el ícono. No se deformará, recortará ni se
-reemplazará por una K tipográfica. El recurso mantiene fondo transparente y se
-renderiza con `object-fit: contain` para preservar su silueta en cada tamaño.
+reemplazará por una K tipográfica. El recurso usa un lienzo cuadrado opaco con
+márgenes de seguridad alrededor del calendario, para conservar la lectura bajo
+máscaras circulares o redondeadas; en la web se renderiza con
+`object-fit: contain`.
 
 ### Superficie De Bloqueo En KOReader
 
