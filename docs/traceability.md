@@ -233,10 +233,10 @@ credenciales de prueba.
 
 | Requisito | Implementación | Verificación | Estado |
 | --- | --- | --- | --- |
-| RF-C-01 a RF-C-02 | `karenda-canvas-connection`, AES-GCM, secretos server-side y allowlist por UUID | Funciones activas en rama, llamadas anónimas `401`, auditoría estática sin credenciales | Implementado + remoto |
-| RF-C-03 a RF-C-08 | `karenda-canvas-sync`, tablas de vínculos, candidatos ±7 días y `CanvasPage` | `reconciliation.test.ts`, `CanvasPage.test.tsx`, migraciones aplicadas | Automatizado + remoto |
+| RF-C-01 a RF-C-02 | `karenda-canvas-connection`, AES-GCM, secretos server-side y allowlist por UUID | Funciones activas en producción, llamadas anónimas `401`, cero credenciales iniciales y tabla privada | Desplegado |
+| RF-C-03 a RF-C-08 | `karenda-canvas-sync`, tablas de vínculos, candidatos ±7 días y `CanvasPage` | `reconciliation.test.ts`, `CanvasPage.test.tsx`, migraciones aplicadas en producción | Desplegado + automatizado |
 | RF-C-09 a RF-C-11 | Comparación base/local/remoto, conflictos y completitud monotónica | Tests unitarios de reconciliación y estado; piloto real pendiente | Automatizado + parcial |
 | RF-C-12 a RF-C-15 | Sanitización, esquema IA estricto, hashes, propuestas y avisos de retiro | Tests de HTML malicioso, salida IA inválida y deduplicación | Automatizado + estático |
-| RF-C-16 a RF-C-20 | Ejecuciones idempotentes, `429`, vencimiento, desconexión y programador horario | Índice exclusivo, funciones activas, schedule horario y pruebas de acciones HTTP | Implementado + remoto |
+| RF-C-16 a RF-C-20 | Ejecuciones idempotentes, `429`, vencimiento, desconexión y programador horario | Índice exclusivo, funciones activas y schedule `0 * * * *` en producción | Desplegado |
 | RF-C-21 | Categoría editable, procedencia y enlace Canvas en `EventDetail` | `EventDetail.test.tsx`, typecheck y build | Automatizado |
-| CA-C-01 a CA-C-11 | Flujo del piloto en rama Git/InsForge aislada | 163 tests, lint, typecheck, build, E2E público y políticas RLS; E2E autenticado y piloto real pendientes | Parcial |
+| CA-C-01 a CA-C-11 | Flujo del piloto integrado mediante PR #2 y desplegado en InsForge | 163 tests, lint, typecheck, build, E2E público local/producción y políticas RLS; E2E autenticado y piloto real pendientes | Parcial |
