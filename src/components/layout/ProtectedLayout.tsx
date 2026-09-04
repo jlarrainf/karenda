@@ -240,12 +240,12 @@ function DeviceIcon({ className }: { className?: string }) {
 
 function BrandMark() {
   return (
-    <span
+    <img
+      alt=""
       aria-hidden="true"
-      className="grid size-9 shrink-0 place-items-center rounded-control bg-brand text-sm font-bold text-surface"
-    >
-      K
-    </span>
+      className="size-9 shrink-0 object-contain"
+      src="/karenda-app-icon.png"
+    />
   )
 }
 

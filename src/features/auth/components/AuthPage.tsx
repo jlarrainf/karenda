@@ -201,12 +201,12 @@ export function AuthPage({ mode }: AuthPageProps) {
         <section className="hidden flex-col justify-between bg-brand px-10 py-10 text-surface lg:flex xl:px-16">
           <div>
             <div className="flex items-center gap-3" translate="no">
-              <span
+              <img
+                alt=""
                 aria-hidden="true"
-                className="grid size-10 place-items-center rounded-control bg-surface text-sm font-bold text-brand"
-              >
-                K
-              </span>
+                className="size-10 shrink-0 object-contain"
+                src="/karenda-app-icon.png"
+              />
               <span className="text-xl font-bold tracking-tight">Karenda</span>
             </div>
             <div className="mt-24 max-w-md">
@@ -228,12 +228,12 @@ export function AuthPage({ mode }: AuthPageProps) {
         <section className="flex min-w-0 flex-col px-4 py-6 sm:px-8 sm:py-10 lg:px-16 lg:py-12">
           <div className="flex items-center justify-between gap-4 lg:justify-end">
             <div className="flex items-center gap-3 lg:hidden" translate="no">
-              <span
+              <img
+                alt=""
                 aria-hidden="true"
-                className="grid size-9 place-items-center rounded-control bg-brand text-sm font-bold text-surface"
-              >
-                K
-              </span>
+                className="size-9 shrink-0 object-contain"
+                src="/karenda-app-icon.png"
+              />
               <span className="font-bold tracking-tight text-ink">Karenda</span>
             </div>
             <p className="text-right text-sm text-ink-muted">

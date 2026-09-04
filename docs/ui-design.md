@@ -23,6 +23,20 @@ tarea y sus estados antes de elegir la forma, construir con un vocabulario
 reutilizable, y revisar cada superficie con `critique`, `audit` y `polish` antes
 de considerarla terminada.
 
+### Identidad De Marca
+
+La marca oficial usa el recurso `public/karenda-app-icon.png`: un calendario
+redondeado en verde petróleo con una forma blanca integrada que recuerda una K
+y una página en movimiento. La silueta conserva la lectura inmediata de
+calendario, mientras la K y la página representan la organización conjunta de
+eventos académicos, compromisos personales, hábitos y notas.
+
+El mismo recurso se usará en el launcher de Android, el favicon y los puntos de
+entrada visibles de la web. En la web se acompañará con el wordmark `Karenda`;
+en el cajón de apps se mostrará solo el ícono. No se deformará, recortará ni se
+reemplazará por una K tipográfica. El recurso mantiene fondo transparente y se
+renderiza con `object-fit: contain` para preservar su silueta en cada tamaño.
+
 ### Superficie De Bloqueo En KOReader
 
 La pantalla de bloqueo del plugin no añade una composición visual paralela para

@@ -36,6 +36,8 @@ describe('AuthPage', () => {
     const user = userEvent.setup()
     renderAuthPage('login')
 
+    expect(document.querySelectorAll('img[src="/karenda-app-icon.png"]')).toHaveLength(2)
+
     await user.click(screen.getByRole('button', { name: 'Iniciar sesión' }))
 
     expect(await screen.findByText('Ingresa tu correo electrónico.')).toBeVisible()

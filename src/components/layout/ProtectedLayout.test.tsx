@@ -62,5 +62,6 @@ describe('ProtectedLayout', () => {
     expect(screen.getAllByRole('link', { name: 'Hábitos' })).toHaveLength(2)
     expect(screen.getAllByRole('link', { name: 'Notas' })).toHaveLength(2)
     expect(screen.getByText('Organización y conexiones')).toBeVisible()
+    expect(document.querySelectorAll('img[src="/karenda-app-icon.png"]')).toHaveLength(2)
   })
 })
