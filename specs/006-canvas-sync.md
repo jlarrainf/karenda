@@ -216,6 +216,8 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
 - La rama InsForge contiene las migraciones, funciones, secretos versionados y
   programador de prueba. La promoción al proyecto padre debe ocurrir únicamente
   junto con la integración revisada de la rama Git.
+- Promoción ejecutada el 4 de septiembre de 2026 después de integrar el PR #2
+  con CI exitoso; el proyecto padre cuenta con respaldo previo a la migración.
 
 ## 9. Criterios De Aceptación
 

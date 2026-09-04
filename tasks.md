@@ -299,6 +299,7 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   las 06:00 de Santiago mediante `next_sync_at` y evitar ejecuciones paralelas.
 - [ ] **Tarea 120: Verificar y desplegar piloto Canvas**. Ejecutar pruebas de
   dominio, funciones, RLS, UI, E2E, lint, typecheck, build, auditoría de
-  secretos y despliegue limitado a la cuenta autorizada. Completado en la rama
-  InsForge aislada; faltan la promoción revisada al proyecto padre y la prueba
-  real con un token nuevo ingresado directamente en la interfaz.
+  secretos y despliegue limitado a la cuenta autorizada. El esquema, las
+  funciones, el programador y la web ya están en producción; faltan el E2E
+  autenticado y la prueba real con un token nuevo ingresado directamente en la
+  interfaz.
