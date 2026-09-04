@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -19,6 +19,33 @@ describe('ProtectedLayout', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     document.body.style.overflow = ''
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      value: 0,
+    })
+  })
+
+  it('hides the header while scrolling down and shows it while scrolling up', () => {
+    render(
+      <MemoryRouter>
+        <ProtectedLayout />
+      </MemoryRouter>,
+    )
+
+    const header = screen.getByRole('banner')
+
+    expect(header).toHaveClass('translate-y-0')
+
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 120 })
+    fireEvent.scroll(window)
+
+    expect(header).toHaveClass('-translate-y-full', 'pointer-events-none')
+
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 80 })
+    fireEvent.scroll(window)
+
+    expect(header).toHaveClass('translate-y-0')
+    expect(header).not.toHaveClass('pointer-events-none')
   })
 
   it('traps mobile drawer focus and makes the page content inert', async () => {

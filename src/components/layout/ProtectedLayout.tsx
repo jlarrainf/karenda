@@ -432,9 +432,11 @@ export function ProtectedLayout() {
   const isLoading = useSessionStore((state) => state.isLoading)
   const signOut = useSessionStore((state) => state.signOut)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLElement>(null)
   const appContentRef = useRef<HTMLDivElement>(null)
+  const lastScrollYRef = useRef(0)
   const email = user?.email ?? 'Cuenta personal'
   const userInitial = email.charAt(0).toUpperCase()
   const pageMeta = getPageMeta(location.pathname)
@@ -443,6 +445,30 @@ export function ProtectedLayout() {
     setIsDrawerOpen(false)
     window.requestAnimationFrame(() => menuButtonRef.current?.focus())
   }
+
+  useEffect(() => {
+    const scrollThreshold = 8
+
+    const handleScroll = () => {
+      const currentScrollY = Math.max(window.scrollY, 0)
+      const scrollDelta = currentScrollY - lastScrollYRef.current
+
+      if (isDrawerOpen || currentScrollY <= 16 || scrollDelta <= -scrollThreshold) {
+        setIsHeaderVisible(true)
+      } else if (scrollDelta >= scrollThreshold) {
+        setIsHeaderVisible(false)
+      }
+
+      lastScrollYRef.current = currentScrollY
+    }
+
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [isDrawerOpen])
 
   useEffect(() => {
     const appContent = appContentRef.current
@@ -545,7 +571,12 @@ export function ProtectedLayout() {
         className="min-w-0"
         ref={appContentRef}
       >
-        <header className="sticky top-[var(--safe-area-inset-top)] z-30 border-b border-border bg-canvas px-4 sm:px-6 lg:px-8">
+        <header
+          className={[
+            'sticky top-[var(--safe-area-inset-top)] z-30 border-b border-border bg-canvas px-4 sm:px-6 lg:px-8 transition-transform duration-state will-change-transform motion-reduce:transition-none',
+            isHeaderVisible ? 'translate-y-0' : '-translate-y-full pointer-events-none',
+          ].join(' ')}
+        >
           <div className="flex min-h-16 items-center justify-between">
             <div className="flex items-center gap-3">
               <button

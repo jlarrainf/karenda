@@ -248,3 +248,6 @@ contrato o una superficie visible.
 - [ ] **Tarea 106: Diseñar la transición a caché de lectura** (20-30 min).
   Documentar una fase posterior con cifrado, `synced_at`, caducidad y limpieza
   por cuenta, sin activarla todavía.
+- [x] **Tarea 107: Ajustar el encabezado móvil y la barra de estado** (20-30 min).
+  Ocultar el encabezado al desplazarse hacia abajo, mostrarlo al desplazarse
+  hacia arriba y mantener una cubierta sólida para el área de la barra de estado.

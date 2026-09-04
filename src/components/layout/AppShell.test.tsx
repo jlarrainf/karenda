@@ -14,5 +14,10 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Saltar al contenido principal' }).parentElement).toHaveClass(
       'pt-[var(--safe-area-inset-top)]',
     )
+
+    expect(document.querySelector('[aria-hidden="true"].fixed')).toHaveClass(
+      'h-[var(--safe-area-inset-top)]',
+      'bg-canvas',
+    )
   })
 })

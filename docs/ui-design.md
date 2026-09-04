@@ -201,6 +201,10 @@ de datos.
   porque algunas versiones de WebView reportan cero en el valor estándar.
   Ningún contenido esencial quedará debajo de un recorte, teclado o barra del
   sistema.
+- En el desplazamiento vertical, el encabezado compacto se ocultará al avanzar
+  hacia abajo y reaparecerá al retroceder hacia arriba. La zona de la barra de
+  estado conservará siempre un fondo sólido del lienzo para que el contenido no
+  se vea detrás de la hora ni de los iconos del sistema.
 - El botón Atrás cerrará primero un diálogo, panel de filtros o cajón abierto;
   después volverá a la ruta anterior. No se duplicarán controles nativos y web
   para la misma acción.

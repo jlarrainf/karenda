@@ -50,6 +50,10 @@ proyecto InsForge configurado para Karenda.
 - **RF-A-08:** La persistencia de sesión que se habilite para producción deberá
   usar almacenamiento seguro del sistema; el almacenamiento web se considera
   únicamente una compatibilidad temporal del spike.
+- **RF-A-09:** En las rutas autenticadas, el encabezado compacto deberá ocultarse
+  al desplazar hacia abajo y reaparecer al desplazar hacia arriba. El área de la
+  barra de estado deberá mantener un fondo sólido para ocultar el contenido que
+  se desplace por detrás de ella.
 
 ## 4. Requisitos No Funcionales
 
@@ -111,6 +115,9 @@ la lógica de dominio.
   tokens de prueba ni secretos de funciones.
 - **CA-A-07:** El APK release se puede instalar personalmente y conserva un
   `applicationId` y una firma reproducibles para futuras actualizaciones.
+- **CA-A-08:** En un teléfono Android, el encabezado compacto se oculta al
+  desplazarse hacia abajo, reaparece al desplazarse hacia arriba y la barra de
+  estado conserva un fondo sólido sin contenido visible detrás.
 
 ## 8. Verificación Requerida
 
