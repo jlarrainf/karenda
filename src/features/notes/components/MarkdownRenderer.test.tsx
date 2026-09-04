@@ -20,6 +20,14 @@ describe('MarkdownRenderer', () => {
       'href',
       'https://example.com',
     )
+    expect(screen.getByRole('link', { name: 'Enlace seguro' })).toHaveAttribute(
+      'target',
+      '_blank',
+    )
+    expect(screen.getByRole('link', { name: 'Enlace seguro' })).toHaveAttribute(
+      'rel',
+      'noreferrer',
+    )
     const links = container.querySelectorAll('a')
     expect(links).toHaveLength(2)
     expect(links[1]).not.toHaveAttribute('href', 'javascript:alert(1)')

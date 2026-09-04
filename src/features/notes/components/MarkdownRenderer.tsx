@@ -21,6 +21,13 @@ export function MarkdownRenderer({ className, content }: MarkdownRendererProps) 
         .join(' ')}
     >
       <ReactMarkdown
+        components={{
+          a: ({ node, ...props }) => {
+            void node
+
+            return <a {...props} rel="noreferrer" target="_blank" />
+          },
+        }}
         rehypePlugins={[rehypeSanitize, rehypeKatex]}
         remarkPlugins={[remarkGfm, remarkMath]}
       >

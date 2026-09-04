@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Karenda</string>
+    <string name="title_activity_main">Karenda</string>
+    <string name="package_name">app.karenda.android</string>
+    <string name="custom_url_scheme">app.karenda.android</string>
+</resources>

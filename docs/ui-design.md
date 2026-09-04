@@ -199,6 +199,43 @@ datos crecerá con asignaturas, grupos, eventos, hábitos y notas. La navegació
 superior solo expone las tres superficies principales y el cajón mantiene la
 jerarquía completa en un espacio pequeño.
 
+### Android Empaquetado Con Capacitor
+
+La primera aplicación Android reutilizará la interfaz React compilada dentro de
+un runtime de Capacitor. El APK no abrirá la web publicada como una página
+remota: cargará los assets incluidos en el paquete y usará InsForge como fuente
+de datos.
+
+- El layout móvil existente se mantiene como base; no se añadirá una segunda
+  barra inferior mientras las tres áreas principales ya sean accesibles desde
+  el encabezado compacto.
+- La aplicación respetará las barras de estado y navegación mediante el área
+  segura inferior y superior. Se usará la variable corregida que inyecta
+  Capacitor (`--safe-area-inset-*`) con `env(safe-area-inset-*)` como respaldo,
+  porque algunas versiones de WebView reportan cero en el valor estándar.
+  Ningún contenido esencial quedará debajo de un recorte, teclado o barra del
+  sistema.
+- En el desplazamiento vertical, el encabezado compacto seguirá el gesto con una
+  transición continua: se desplazará progresivamente al avanzar hacia abajo y
+  volverá progresivamente al retroceder hacia arriba, sin saltos entre estados.
+  La zona de la barra de estado conservará siempre un fondo sólido del lienzo
+  para que el contenido no se vea detrás de la hora ni de los iconos del sistema.
+  Con `prefers-reduced-motion` se desactivará la transición animada.
+- El botón Atrás cerrará primero un diálogo, panel de filtros o cajón abierto;
+  después volverá a la ruta anterior. No se duplicarán controles nativos y web
+  para la misma acción.
+- Mientras no exista conexión se mostrará un aviso persistente y discreto en
+  español. La versión inicial no presentará datos como actualizados ni
+  permitirá confirmar una escritura que no haya sido aceptada por InsForge.
+- Los enlaces que salgan de Karenda se abrirán en el navegador del sistema. El
+  WebView no permitirá navegación arbitraria a otros sitios.
+- La sesión podrá restaurarse en el dispositivo solo mediante almacenamiento
+  seguro; `localStorage`, `sessionStorage` y Preferences no cifradas no serán
+  la solución definitiva para refresh tokens.
+- Las notificaciones, widgets y accesos rápidos son superficies futuras. Cada
+  una requerirá una decisión documentada y una prueba de permisos antes de
+  incorporarse.
+
 ### Jerarquía De Acceso
 
 - `Calendario` es la entrada principal para revisar fechas, crear eventos y
