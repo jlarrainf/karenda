@@ -50,10 +50,10 @@ proyecto InsForge configurado para Karenda.
 - **RF-A-08:** La persistencia de sesión que se habilite para producción deberá
   usar almacenamiento seguro del sistema; el almacenamiento web se considera
   únicamente una compatibilidad temporal del spike.
-- **RF-A-09:** En las rutas autenticadas, el encabezado compacto deberá ocultarse
-  al desplazar hacia abajo y reaparecer al desplazar hacia arriba. El área de la
-  barra de estado deberá mantener un fondo sólido para ocultar el contenido que
-  se desplace por detrás de ella.
+- **RF-A-09:** En las rutas autenticadas, el encabezado compacto deberá seguir
+  continuamente el gesto al desplazar hacia abajo o hacia arriba, ocultándose o
+  reapareciendo sin saltos. El área de la barra de estado deberá mantener un
+  fondo sólido para ocultar el contenido que se desplace por detrás de ella.
 
 ## 4. Requisitos No Funcionales
 

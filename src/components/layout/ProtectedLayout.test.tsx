@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProtectedLayout } from './ProtectedLayout.tsx'
 
 const mocks = vi.hoisted(() => ({
@@ -16,6 +16,10 @@ vi.mock('../../stores/sessionStore.ts', () => ({
 }))
 
 describe('ProtectedLayout', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     document.body.style.overflow = ''
@@ -25,7 +29,9 @@ describe('ProtectedLayout', () => {
     })
   })
 
-  it('hides the header while scrolling down and shows it while scrolling up', () => {
+  it('follows scroll direction continuously and settles the header smoothly', () => {
+    vi.useFakeTimers()
+
     render(
       <MemoryRouter>
         <ProtectedLayout />
@@ -33,19 +39,30 @@ describe('ProtectedLayout', () => {
     )
 
     const header = screen.getByRole('banner')
+    Object.defineProperty(header, 'offsetHeight', {
+      configurable: true,
+      value: 100,
+    })
 
-    expect(header).toHaveClass('translate-y-0')
+    expect(header).not.toHaveStyle({ transform: 'translate3d(0, -100px, 0)' })
 
-    Object.defineProperty(window, 'scrollY', { configurable: true, value: 120 })
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 30 })
+    fireEvent.scroll(window)
+    expect(header).toHaveStyle({ transform: 'translate3d(0, -30px, 0)' })
+
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 60 })
+    fireEvent.scroll(window)
+    expect(header).toHaveStyle({ transform: 'translate3d(0, -60px, 0)' })
+
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 20 })
     fireEvent.scroll(window)
 
-    expect(header).toHaveClass('-translate-y-full', 'pointer-events-none')
+    expect(header).toHaveStyle({ transform: 'translate3d(0, -20px, 0)' })
 
-    Object.defineProperty(window, 'scrollY', { configurable: true, value: 80 })
-    fireEvent.scroll(window)
+    vi.advanceTimersByTime(140)
 
-    expect(header).toHaveClass('translate-y-0')
-    expect(header).not.toHaveClass('pointer-events-none')
+    expect(header).toHaveStyle({ transform: 'translate3d(0, 0px, 0)' })
+    expect(header.style.transition).toContain('220ms')
   })
 
   it('traps mobile drawer focus and makes the page content inert', async () => {

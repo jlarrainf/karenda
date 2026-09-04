@@ -432,11 +432,13 @@ export function ProtectedLayout() {
   const isLoading = useSessionStore((state) => state.isLoading)
   const signOut = useSessionStore((state) => state.signOut)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLElement>(null)
   const appContentRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
   const lastScrollYRef = useRef(0)
+  const headerOffsetRef = useRef(0)
+  const settleTimeoutRef = useRef<number | null>(null)
   const email = user?.email ?? 'Cuenta personal'
   const userInitial = email.charAt(0).toUpperCase()
   const pageMeta = getPageMeta(location.pathname)
@@ -447,26 +449,85 @@ export function ProtectedLayout() {
   }
 
   useEffect(() => {
-    const scrollThreshold = 8
+    const settleDelay = 140
+    const settleDuration = 220
+    const headerElement = headerRef.current
+
+    const clearSettleTimeout = () => {
+      if (settleTimeoutRef.current !== null) {
+        window.clearTimeout(settleTimeoutRef.current)
+        settleTimeoutRef.current = null
+      }
+    }
+
+    const prefersReducedMotion = () =>
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+
+    const getHeaderHeight = () => headerElement?.offsetHeight ?? 0
+
+    const applyHeaderOffset = (offset: number, animate: boolean) => {
+      const headerHeight = getHeaderHeight()
+
+      if (!headerElement || headerHeight <= 0) {
+        return
+      }
+
+      const boundedOffset = Math.min(0, Math.max(-headerHeight, offset))
+      const shouldAnimate = animate && !prefersReducedMotion()
+
+      headerOffsetRef.current = boundedOffset
+      headerElement.style.transition = shouldAnimate
+        ? `transform ${settleDuration}ms cubic-bezier(0.22, 1, 0.36, 1)`
+        : 'none'
+
+      if (shouldAnimate) {
+        void headerElement.offsetHeight
+      }
+
+      headerElement.style.transform = `translate3d(0, ${boundedOffset}px, 0)`
+    }
+
+    const settleHeader = () => {
+      const headerHeight = getHeaderHeight()
+
+      if (headerHeight <= 0) {
+        return
+      }
+
+      const targetOffset =
+        headerOffsetRef.current <= -headerHeight / 2 ? -headerHeight : 0
+
+      applyHeaderOffset(targetOffset, true)
+      settleTimeoutRef.current = null
+    }
 
     const handleScroll = () => {
       const currentScrollY = Math.max(window.scrollY, 0)
       const scrollDelta = currentScrollY - lastScrollYRef.current
 
-      if (isDrawerOpen || currentScrollY <= 16 || scrollDelta <= -scrollThreshold) {
-        setIsHeaderVisible(true)
-      } else if (scrollDelta >= scrollThreshold) {
-        setIsHeaderVisible(false)
+      clearSettleTimeout()
+
+      if (isDrawerOpen || currentScrollY <= 16) {
+        applyHeaderOffset(0, false)
+      } else if (scrollDelta !== 0) {
+        applyHeaderOffset(headerOffsetRef.current - scrollDelta, false)
       }
 
       lastScrollYRef.current = currentScrollY
+      settleTimeoutRef.current = window.setTimeout(settleHeader, settleDelay)
     }
 
     handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
 
     return () => {
+      clearSettleTimeout()
       window.removeEventListener('scroll', handleScroll)
+
+      if (headerElement) {
+        headerElement.style.removeProperty('transform')
+        headerElement.style.removeProperty('transition')
+      }
     }
   }, [isDrawerOpen])
 
@@ -572,10 +633,8 @@ export function ProtectedLayout() {
         ref={appContentRef}
       >
         <header
-          className={[
-            'sticky top-[var(--safe-area-inset-top)] z-30 border-b border-border bg-canvas px-4 sm:px-6 lg:px-8 transition-transform duration-state will-change-transform motion-reduce:transition-none',
-            isHeaderVisible ? 'translate-y-0' : '-translate-y-full pointer-events-none',
-          ].join(' ')}
+          className="sticky top-[var(--safe-area-inset-top)] z-30 border-b border-border bg-canvas px-4 sm:px-6 lg:px-8 will-change-transform motion-reduce:transition-none"
+          ref={headerRef}
         >
           <div className="flex min-h-16 items-center justify-between">
             <div className="flex items-center gap-3">
