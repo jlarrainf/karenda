@@ -111,4 +111,20 @@ describe('CanvasPage', () => {
       )
     })
   })
+
+  it('keeps manual synchronization available after a recoverable resource error', async () => {
+    const user = userEvent.setup()
+    mocks.getCanvasConnection.mockResolvedValue({
+      ...connection,
+      lastErrorCode: 'CANVAS_UNAVAILABLE',
+      lastErrorMessage: 'Canvas no permitió leer uno de los recursos solicitados.',
+      status: 'error',
+    })
+
+    render(<CanvasPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Sincronizar ahora' }))
+
+    expect(mocks.synchronizeCanvas).toHaveBeenCalledOnce()
+  })
 })

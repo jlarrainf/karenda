@@ -300,6 +300,7 @@ export function CanvasPage() {
   const activityReviews = reviews.filter((review) => review.reviewKind !== 'course_mapping')
   const expirySoon = connection?.status === 'connected' && Date.parse(connection.tokenExpiresAt) - referenceTime <= 7 * 86_400_000
   const connectionMeta = connection ? statusMeta(connection) : null
+  const canSync = connection?.status === 'connected' || connection?.status === 'error'
   const eventsById = useMemo(() => new Map(candidateEvents.map((event) => [event.id, event])), [candidateEvents])
 
   const handleConnect = async (event: React.FormEvent) => {
@@ -382,7 +383,7 @@ export function CanvasPage() {
       {error ? <p className="rounded-control border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger" role="alert">{error}</p> : null}
       {message ? <p aria-live="polite" className="rounded-control border border-success/30 bg-success-soft px-4 py-3 text-sm text-success">{message}</p> : null}
 
-      {!connection || connection.status !== 'connected' ? (
+      {!connection || connection.status === 'expired' || connection.status === 'disabled' ? (
         <section aria-labelledby="canvas-connect-title" className="rounded-panel border border-border bg-surface p-5 sm:p-6">
           <h2 className="text-xl font-bold text-ink" id="canvas-connect-title">{connection ? 'Volver a conectar Canvas' : 'Conectar Canvas UC'}</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">
@@ -412,7 +413,7 @@ export function CanvasPage() {
               </dl>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
-              {connection.status === 'connected' ? <Button isLoading={busyAction === 'sync'} loadingLabel="Sincronizando…" onClick={() => void handleSync()}>Sincronizar ahora</Button> : null}
+              {canSync ? <Button isLoading={busyAction === 'sync'} loadingLabel="Sincronizando…" onClick={() => void handleSync()}>Sincronizar ahora</Button> : null}
               <Button disabled={busyAction !== null} onClick={() => setDisconnectOpen(true)} variant="ghost">Desconectar</Button>
             </div>
           </div>

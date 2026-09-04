@@ -6,6 +6,8 @@ import { ConfirmDialog } from '../../../components/ui/ConfirmDialog.tsx'
 import { EmptyState } from '../../../components/ui/EmptyState.tsx'
 import { SubjectForm } from './SubjectForm.tsx'
 import { useCatalogStore } from '../../../stores/catalogStore.ts'
+import { listCanvasCourseLinks, unlinkCanvasCourse } from '../../../services/canvasService.ts'
+import type { CanvasCourseLink } from '../../../types/canvas.ts'
 
 function getSubjectCountLabel(count: number): string {
   return `${count} ${count === 1 ? 'asignatura' : 'asignaturas'}`
@@ -26,10 +28,29 @@ export function SubjectsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null)
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null)
+  const [canvasLinks, setCanvasLinks] = useState<CanvasCourseLink[]>([])
+  const [canvasCourseToUnlink, setCanvasCourseToUnlink] = useState<CanvasCourseLink | null>(null)
+  const [isCanvasUnlinking, setIsCanvasUnlinking] = useState(false)
+  const [canvasUnlinkError, setCanvasUnlinkError] = useState<string | null>(null)
+  const [canvasUnlinkMessage, setCanvasUnlinkMessage] = useState<string | null>(null)
 
   useEffect(() => {
     void load()
   }, [load])
+
+  useEffect(() => {
+    let isActive = true
+    void listCanvasCourseLinks()
+      .then((links) => {
+        if (isActive) setCanvasLinks(links)
+      })
+      .catch(() => {
+        if (isActive) setCanvasLinks([])
+      })
+    return () => {
+      isActive = false
+    }
+  }, [])
 
   const openCreateForm = () => {
     clearError()
@@ -69,6 +90,34 @@ export function SubjectsPage() {
     if (deleted) {
       setSubjectToDelete(null)
     }
+  }
+
+  const handleUnlinkCanvasCourse = async () => {
+    if (!canvasCourseToUnlink) return
+
+    setIsCanvasUnlinking(true)
+    setCanvasUnlinkError(null)
+    setCanvasUnlinkMessage(null)
+    try {
+      await unlinkCanvasCourse(canvasCourseToUnlink.id)
+      setCanvasLinks((links) => links.filter((link) => link.id !== canvasCourseToUnlink.id))
+      setCanvasUnlinkMessage(`Se desvinculó ${canvasCourseToUnlink.canvasName}. Los eventos históricos se conservaron.`)
+      setCanvasCourseToUnlink(null)
+    } catch (unlinkError) {
+      setCanvasUnlinkError(unlinkError instanceof Error ? unlinkError.message : 'No se pudo desvincular el curso de Canvas.')
+    } finally {
+      setIsCanvasUnlinking(false)
+    }
+  }
+
+  const subjectCanvasLinks = editingSubject
+    ? canvasLinks.filter((link) => link.subjectId === editingSubject.id)
+    : []
+  const canvasLinksBySubjectId = new Map<string, CanvasCourseLink[]>()
+  for (const link of canvasLinks) {
+    const links = canvasLinksBySubjectId.get(link.subjectId) ?? []
+    links.push(link)
+    canvasLinksBySubjectId.set(link.subjectId, links)
   }
 
   const renderSubjectContent = () => {
@@ -131,6 +180,11 @@ export function SubjectsPage() {
                 <p className="mt-1 break-words text-sm text-ink-muted">
                   {subject.code} · {subject.abbreviation} · Color {subject.color}
                 </p>
+                {canvasLinksBySubjectId.get(subject.id)?.length ? (
+                  <p className="mt-2 text-xs font-semibold text-brand">
+                    Canvas vinculado: {canvasLinksBySubjectId.get(subject.id)?.map((link) => link.canvasName).join(', ')}
+                  </p>
+                ) : null}
               </div>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
@@ -224,10 +278,15 @@ export function SubjectsPage() {
             aria-label="Formulario de asignatura"
           >
             <SubjectForm
+              canvasLinks={subjectCanvasLinks}
               isLoading={isSaving}
               key={editingSubject?.id ?? 'new'}
               onCancel={closeForm}
               onSubmit={handleSubmit}
+              onUnlinkCanvasCourse={(link) => {
+                setCanvasUnlinkError(null)
+                setCanvasCourseToUnlink(link)
+              }}
               subject={editingSubject}
             />
           </aside>
@@ -243,6 +302,27 @@ export function SubjectsPage() {
         onConfirm={handleDelete}
         open={subjectToDelete !== null}
         title={`¿Eliminar ${subjectToDelete?.name ?? 'esta asignatura'}?`}
+      />
+
+      {canvasUnlinkMessage ? (
+        <p aria-live="polite" className="rounded-control border border-success/30 bg-success-soft px-4 py-3 text-sm leading-6 text-success">
+          {canvasUnlinkMessage}
+        </p>
+      ) : null}
+
+      <ConfirmDialog
+        confirmLabel="Desvincular curso"
+        description="El curso dejará de sincronizarse con esta asignatura. Los eventos, vínculos de elementos y datos históricos de Karenda se conservarán."
+        error={canvasUnlinkError}
+        isLoading={isCanvasUnlinking}
+        loadingLabel="Desvinculando…"
+        onCancel={() => {
+          setCanvasCourseToUnlink(null)
+          setCanvasUnlinkError(null)
+        }}
+        onConfirm={handleUnlinkCanvasCourse}
+        open={canvasCourseToUnlink !== null}
+        title={`¿Desvincular ${canvasCourseToUnlink?.canvasName ?? 'este curso'}?`}
       />
     </section>
   )

@@ -303,3 +303,7 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   funciones, el programador y la web ya están en producción; faltan el E2E
   autenticado y la prueba real con un token nuevo ingresado directamente en la
   interfaz.
+- [x] **Tarea 121: Endurecer recursos Canvas y exponer vínculos**. Continuar
+  cuando Canvas bloquee una colección secundaria, conservar la ejecución como
+  parcial, mostrar cursos vinculados en asignaturas, permitir desvincularlos sin
+  borrar eventos y añadir sincronización rápida desde el calendario.

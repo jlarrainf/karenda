@@ -59,4 +59,42 @@ describe('SubjectForm', () => {
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
     expect(onCancel).toHaveBeenCalledOnce()
   })
+
+  it('shows Canvas links while editing and exposes unlink action', async () => {
+    const user = userEvent.setup()
+    const onUnlinkCanvasCourse = vi.fn()
+    const courseLink = {
+      canvasCode: 'MAT-101',
+      canvasCourseId: '105794',
+      canvasName: 'Diseño y Análisis de Algoritmos',
+      canvasTermName: '2026-2',
+      id: '66666666-6666-4666-8666-666666666666',
+      subjectId: '11111111-1111-4111-8111-111111111111',
+    }
+
+    render(
+      <SubjectForm
+        canvasLinks={[courseLink]}
+        isLoading={false}
+        onCancel={vi.fn()}
+        onSubmit={vi.fn().mockResolvedValue(undefined)}
+        onUnlinkCanvasCourse={onUnlinkCanvasCourse}
+        subject={{
+          abbreviation: 'ALG',
+          code: 'MAT-101',
+          color: '#2F625A',
+          createdAt: '2026-09-01T10:00:00.000Z',
+          id: courseLink.subjectId,
+          name: 'Algoritmos',
+          ownerId: '22222222-2222-4222-8222-222222222222',
+          updatedAt: '2026-09-01T10:00:00.000Z',
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Diseño y Análisis de Algoritmos')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Desvincular' }))
+
+    expect(onUnlinkCanvasCourse).toHaveBeenCalledWith(courseLink)
+  })
 })
