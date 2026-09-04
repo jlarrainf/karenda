@@ -171,6 +171,9 @@ personales de Canvas quedan fuera del alcance.
   recursos disponibles, registrar un aviso sanitizado y finalizar como
   `partial`; los fallos de autenticación, credenciales, base de datos o cursos
   deberán seguir siendo recuperables y explícitos.
+- **RF-C-25 [EARS: condición no deseada]:** Si Canvas entrega texto HTML con
+  unidades Unicode malformadas, Karenda deberá reemplazar las unidades aisladas
+  antes de persistirlas o enviarlas a la IA, sin abortar la sincronización.
 
 ## 6. Contratos HTTP
 
@@ -210,7 +213,8 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
   relación se vuelve a validar en servidor.
 - El contenido HTML remoto se sanitiza y se trata como datos no confiables. La
   IA no recibe herramientas ni autoridad de escritura y su salida se valida
-  antes de crear una propuesta.
+  antes de crear una propuesta. Las cadenas se normalizan a Unicode bien
+  formado antes de persistirlas en JSON.
 - La UI y sus mensajes son españoles; código, tipos, funciones y comentarios
   son ingleses.
 
@@ -263,3 +267,5 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
   parcial con aviso y no impide procesar cursos o colecciones restantes.
 - **CA-C-14:** Migración, RLS, funciones, tests, lint, typecheck, build y E2E
   quedan verificados y trazados antes del despliegue piloto.
+- **CA-C-15:** Un anuncio o página con un sustituto Unicode aislado no provoca
+  `503`, queda sanitizado y permite completar la ejecución o dejarla en `partial`.

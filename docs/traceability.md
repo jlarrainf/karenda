@@ -242,4 +242,5 @@ credenciales de prueba.
 | RF-C-22 | Estado de cursos Canvas en asignaturas, desvinculación reversible y confirmación | `SubjectsPage.test.tsx`, `SubjectForm.test.tsx`, migración/RPC RLS | Desplegado + automatizado |
 | RF-C-23 | Acción de sincronización Canvas en el encabezado del calendario | `CalendarPage.test.tsx`, build y E2E público | Desplegado + automatizado |
 | RF-C-24 | Recursos secundarios bloqueados producen ejecución parcial | `karenda-canvas-sync`, despliegue de función y tests de regresión del frontend | Desplegado + función compilada; smoke real pendiente |
-| CA-C-01 a CA-C-11 | Flujo del piloto integrado mediante PR #2 y desplegado en InsForge | 163 tests, lint, typecheck, build, E2E público local/producción y políticas RLS; E2E autenticado y piloto real pendientes | Parcial |
+| RF-C-25 | Texto HTML remoto se normaliza a Unicode bien formado antes de JSON/IA | `canvasText.test.ts`, función Canvas | Desplegado + automatizado; smoke real pendiente |
+| CA-C-01 a CA-C-15 | Flujo del piloto integrado mediante PR #2 y desplegado en InsForge | 169 tests, lint, typecheck, build, E2E público local/producción y políticas RLS; E2E autenticado y piloto real pendientes | Parcial |
