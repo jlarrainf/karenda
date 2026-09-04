@@ -411,6 +411,14 @@ máximo 10 borradores con los campos del contrato `HabitInput`. Las relaciones
 solo pueden apuntar a registros del catálogo de la cuenta. Las fechas son
 locales y la regla de repetición siempre se devuelve como objeto explícito.
 
+La misma función acepta `mode: "quick" | "guided"`. En modo `quick` devuelve
+directamente borradores. En modo `guided`, la primera respuesta devuelve
+preguntas estructuradas con `id`, `question`, `options`, `allows_other` y
+`optional`; la aplicación presenta una pregunta por vez y envía las respuestas
+como `{ question_id, option_id, other_text, no_preference }` para solicitar la
+planificación final. Las preguntas no se persisten, tienen un máximo de cinco,
+y nunca pueden solicitar secretos ni datos innecesarios.
+
 ### Requisitos
 
 - **RF-H-29:** La función rechazará solicitudes sin sesión válida y no llamará
@@ -430,6 +438,19 @@ locales y la regla de repetición siempre se devuelve como objeto explícito.
   fallaron y nunca mostrará éxito total falso.
 - **RF-H-35:** La clave del proveedor, el prompt y la respuesta no se
   persistirán ni aparecerán en el navegador, mensajes o logs.
+- **RF-H-36:** El switch de creación de Hábitos permitirá cambiar entre modo
+  rápido y modo guiado antes de enviar el prompt.
+- **RF-H-37:** El modo guiado mostrará preguntas estructuradas, una por vez,
+  con alternativas, `Otro` con texto libre y `No me importa`; no permitirá
+  enviar una respuesta sin seleccionar una alternativa o indicar una opción
+  válida.
+- **RF-H-38:** Las respuestas guiadas se enviarán en una segunda solicitud y
+  producirán borradores usando el mismo contrato y validación del modo rápido.
+- **RF-H-39:** Si el modelo devuelve `boolean` junto a unidad o meta
+  cuantitativa, el servidor normalizará la combinación a `duration` o `count`
+  cuando sea inequívoca; nunca se rechazará solo por esa contradicción.
+- **RF-H-40:** El contrato guiado será independiente de React y expondrá solo
+  datos serializables para que Android pueda reutilizarlo sin cambios.
 
 ### Criterios De Aceptación
 
@@ -442,6 +463,12 @@ locales y la regla de repetición siempre se devuelve como objeto explícito.
   intentarlo después del periodo indicado.
 - **CA-H-19:** Los fallos parciales conservan para revisión los hábitos no
   guardados y comunican cuántos sí se crearon.
+- **CA-H-20:** “Estudiar 1 hora al día” genera un hábito de duración diaria
+  revisable, sin error de unidad booleana.
+- **CA-H-21:** El modo guiado permite completar preguntas con una alternativa,
+  texto libre o “No me importa” y luego genera el borrador.
+- **CA-H-22:** Cambiar a modo rápido no muestra preguntas y cambiar a modo
+  guiado no genera hábitos hasta terminar la ronda de preguntas.
 
 ## 10. Referencias De Investigación
 
