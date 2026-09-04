@@ -114,6 +114,7 @@ export const aiReviewFlagSchema = z.enum([
   'guessed_date',
   'uncertain_duration',
   'invalid_status',
+  'new_subject',
   'new_personal_group',
 ])
 
@@ -254,6 +255,13 @@ const aiEventDraftSchema = z
       .string()
       .max(5000, 'La descripción es demasiado larga.')
       .nullable(),
+    new_subject_name: z
+      .string()
+      .trim()
+      .min(1, 'El nombre de la asignatura no puede estar vacío.')
+      .max(160, 'El nombre de la asignatura es demasiado largo.')
+      .nullable()
+      .default(null),
     new_personal_group_name: z
       .string()
       .trim()
@@ -324,6 +332,22 @@ const aiEventDraftSchema = z
       })
     }
 
+    if (value.kind === 'personal' && value.new_subject_name !== null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['new_subject_name'],
+        message: 'Los eventos personales no pueden proponer una asignatura.',
+      })
+    }
+
+    if (value.subject_id !== null && value.new_subject_name !== null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['new_subject_name'],
+        message: 'Un evento no puede usar una asignatura existente y proponer otra.',
+      })
+    }
+
     if (value.kind === 'academic' && value.new_personal_group_name !== null) {
       context.addIssue({
         code: 'custom',
@@ -348,6 +372,17 @@ const aiEventDraftSchema = z
         code: 'custom',
         path: ['new_personal_group_name'],
         message: 'La propuesta de grupo personal requiere un nombre.',
+      })
+    }
+
+    if (
+      value.review_flags.includes('new_subject') &&
+      value.new_subject_name === null
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['new_subject_name'],
+        message: 'La propuesta de asignatura requiere un nombre.',
       })
     }
   })

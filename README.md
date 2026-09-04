@@ -29,6 +29,33 @@ npm run build
 La configuración pública del cliente se toma de `.env.local`; las credenciales
 y claves privadas no deben entrar al repositorio.
 
+## Desarrollo Android
+
+La aplicación Android vive dentro de este mismo repositorio, en `android/`, y
+empaqueta el build local de Vite mediante Capacitor. No carga la interfaz desde
+la web publicada: conserva InsForge como backend compartido.
+
+Requisitos locales: Android Studio con su SDK instalado y un JDK compatible con
+la versión de Gradle del proyecto (JDK 21 recomendado).
+
+Antes de crear la APK, configura las variables públicas de InsForge en
+`.env.local`. La clave anónima se obtiene desde InsForge y no debe compartirse
+ni confirmarse en Git:
+
+```text
+VITE_INSFORGE_URL=https://5zz5dxgt.us-east.insforge.app
+VITE_INSFORGE_ANON_KEY=tu-clave-anonima
+```
+
+```text
+npm run android:build
+npm run android:open
+```
+
+`android:build` genera el frontend y sincroniza sus assets con el proyecto
+nativo. La firma de release debe configurarse fuera del repositorio; el APK de
+debug sirve únicamente para pruebas personales.
+
 ## Documentación Para Agentes Y Colaboradores
 
 - [`AGENTS.md`](AGENTS.md): instrucciones canónicas para agentes.

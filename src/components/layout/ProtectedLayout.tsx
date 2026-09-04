@@ -240,12 +240,12 @@ function DeviceIcon({ className }: { className?: string }) {
 
 function BrandMark() {
   return (
-    <span
+    <img
+      alt=""
       aria-hidden="true"
-      className="grid size-9 shrink-0 place-items-center rounded-control bg-brand text-sm font-bold text-surface"
-    >
-      K
-    </span>
+      className="size-9 shrink-0 object-contain"
+      src="/karenda-app-icon.png"
+    />
   )
 }
 
@@ -435,6 +435,10 @@ export function ProtectedLayout() {
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const drawerRef = useRef<HTMLElement>(null)
   const appContentRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
+  const lastScrollYRef = useRef(0)
+  const headerOffsetRef = useRef(0)
+  const settleTimeoutRef = useRef<number | null>(null)
   const email = user?.email ?? 'Cuenta personal'
   const userInitial = email.charAt(0).toUpperCase()
   const pageMeta = getPageMeta(location.pathname)
@@ -443,6 +447,89 @@ export function ProtectedLayout() {
     setIsDrawerOpen(false)
     window.requestAnimationFrame(() => menuButtonRef.current?.focus())
   }
+
+  useEffect(() => {
+    const settleDelay = 140
+    const settleDuration = 220
+    const headerElement = headerRef.current
+
+    const clearSettleTimeout = () => {
+      if (settleTimeoutRef.current !== null) {
+        window.clearTimeout(settleTimeoutRef.current)
+        settleTimeoutRef.current = null
+      }
+    }
+
+    const prefersReducedMotion = () =>
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+
+    const getHeaderHeight = () => headerElement?.offsetHeight ?? 0
+
+    const applyHeaderOffset = (offset: number, animate: boolean) => {
+      const headerHeight = getHeaderHeight()
+
+      if (!headerElement || headerHeight <= 0) {
+        return
+      }
+
+      const boundedOffset = Math.min(0, Math.max(-headerHeight, offset))
+      const shouldAnimate = animate && !prefersReducedMotion()
+
+      headerOffsetRef.current = boundedOffset
+      headerElement.style.transition = shouldAnimate
+        ? `transform ${settleDuration}ms cubic-bezier(0.22, 1, 0.36, 1)`
+        : 'none'
+
+      if (shouldAnimate) {
+        void headerElement.offsetHeight
+      }
+
+      headerElement.style.transform = `translate3d(0, ${boundedOffset}px, 0)`
+    }
+
+    const settleHeader = () => {
+      const headerHeight = getHeaderHeight()
+
+      if (headerHeight <= 0) {
+        return
+      }
+
+      const targetOffset =
+        headerOffsetRef.current <= -headerHeight / 2 ? -headerHeight : 0
+
+      applyHeaderOffset(targetOffset, true)
+      settleTimeoutRef.current = null
+    }
+
+    const handleScroll = () => {
+      const currentScrollY = Math.max(window.scrollY, 0)
+      const scrollDelta = currentScrollY - lastScrollYRef.current
+
+      clearSettleTimeout()
+
+      if (isDrawerOpen || currentScrollY <= 16) {
+        applyHeaderOffset(0, false)
+      } else if (scrollDelta !== 0) {
+        applyHeaderOffset(headerOffsetRef.current - scrollDelta, false)
+      }
+
+      lastScrollYRef.current = currentScrollY
+      settleTimeoutRef.current = window.setTimeout(settleHeader, settleDelay)
+    }
+
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      clearSettleTimeout()
+      window.removeEventListener('scroll', handleScroll)
+
+      if (headerElement) {
+        headerElement.style.removeProperty('transform')
+        headerElement.style.removeProperty('transition')
+      }
+    }
+  }, [isDrawerOpen])
 
   useEffect(() => {
     const appContent = appContentRef.current
@@ -545,7 +632,10 @@ export function ProtectedLayout() {
         className="min-w-0"
         ref={appContentRef}
       >
-        <header className="sticky top-0 z-30 border-b border-border bg-canvas px-4 sm:px-6 lg:px-8">
+        <header
+          className="sticky top-[var(--safe-area-inset-top)] z-30 border-b border-border bg-canvas px-4 sm:px-6 lg:px-8 will-change-transform motion-reduce:transition-none"
+          ref={headerRef}
+        >
           <div className="flex min-h-16 items-center justify-between">
             <div className="flex items-center gap-3">
               <button
@@ -588,7 +678,7 @@ export function ProtectedLayout() {
         </header>
 
         <main
-          className="min-h-[calc(100vh-7.5rem)] px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 lg:min-h-[calc(100vh-4rem)] lg:px-8 lg:py-8"
+          className="min-h-[calc(100vh-7.5rem)] px-4 pb-[calc(2rem+var(--safe-area-inset-bottom))] pt-6 sm:px-6 lg:min-h-[calc(100vh-4rem)] lg:px-8 lg:py-8"
           id="main-content"
         >
           <div className="mx-auto w-full max-w-[1440px]">

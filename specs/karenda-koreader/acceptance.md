@@ -472,12 +472,14 @@ y enlaces inseguros continuarán ausentes o neutralizados.
 **Dado** el mismo contenido en el plugin offline, **cuando** se abra el detalle,
 **entonces** se mostrará una representación legible como `O(|d| · |p|)`, con
 variables matemáticas diferenciadas, exponentes/subíndices tipográficos y
-símbolos como `Σ`, `⊆`, `∪`, `∩`, `∖` y `≡`, sin delimitadores `$` ni comandos
+símbolos como `Σ`, `⊆`, `∪`, `∩`, `∖`, `≡` y `‡`, sin delimitadores `$` ni comandos
 LaTeX comunes sin convertir. Una expresión como `\rho: p_0
 \xrightarrow{a_1} p_1` mostrará `a₁` sobre la flecha, y `\Sigma = \{0, 1\}`
 mostrará las llaves literales. `\vdash_A` mostrará `⊢` con `A` como subíndice.
 Una fórmula de bloque con varias flechas conservará todos sus elementos en una
 línea cuando quepa, sin separar cada flecha o etiqueta en un bloque independiente.
+Los marcadores de listas numeradas del detalle no quedarán recortados en su borde
+izquierdo por el padding interno explícito de `ol` y `ul`.
 
 Verificación: test de `MarkdownRenderer`, smoke enriquecido de `markdown.lua` y
 `calendar_view_smoke.lua`; KOReader real para contraste/ghosting. Estado:

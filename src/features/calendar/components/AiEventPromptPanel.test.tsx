@@ -3,10 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { EventInput } from '../../../services/validation.ts'
 import { AiEventPromptPanel } from './AiEventPromptPanel.tsx'
-import { requestAiEventDrafts } from '../../../services/aiEventService.ts'
+import { requestAiEventPlan } from '../../../services/aiEventService.ts'
 
 vi.mock('../../../services/aiEventService.ts', () => ({
-  requestAiEventDrafts: vi.fn(),
+  requestAiEventPlan: vi.fn(),
 }))
 
 const subjectId = '11111111-1111-4111-8111-111111111111'
@@ -65,16 +65,18 @@ describe('AiEventPromptPanel', () => {
   it('previews several drafts and only saves after explicit confirmation', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn().mockResolvedValue({ created: 2, failedIndexes: [] })
-    vi.mocked(requestAiEventDrafts).mockResolvedValue([
+    vi.mocked(requestAiEventPlan).mockResolvedValue([
       {
         draftId: 'ai-draft-1',
         input: academicInput,
+        newSubjectName: null,
         newPersonalGroupName: null,
         reviewFlags: [],
       },
       {
         draftId: 'ai-draft-2',
         input: personalInput,
+        newSubjectName: null,
         newPersonalGroupName: null,
         reviewFlags: [],
       },
@@ -99,12 +101,14 @@ describe('AiEventPromptPanel', () => {
       {
         draftId: 'ai-draft-1',
         input: academicInput,
+        newSubjectName: null,
         newPersonalGroupName: null,
         reviewFlags: [],
       },
       {
         draftId: 'ai-draft-2',
         input: personalInput,
+        newSubjectName: null,
         newPersonalGroupName: null,
         reviewFlags: [],
       },
@@ -116,10 +120,11 @@ describe('AiEventPromptPanel', () => {
 
   it('blocks saving until an incomplete academic draft is corrected', async () => {
     const user = userEvent.setup()
-    vi.mocked(requestAiEventDrafts).mockResolvedValue([
+    vi.mocked(requestAiEventPlan).mockResolvedValue([
       {
         draftId: 'ai-draft-1',
         input: { ...academicInput, subjectId: null },
+        newSubjectName: null,
         newPersonalGroupName: null,
         reviewFlags: ['missing_subject'],
       },
@@ -142,16 +147,18 @@ describe('AiEventPromptPanel', () => {
       failedIndexes: [1],
     })
 
-    vi.mocked(requestAiEventDrafts).mockResolvedValue([
+    vi.mocked(requestAiEventPlan).mockResolvedValue([
       {
         draftId: 'ai-draft-1',
         input: academicInput,
+        newSubjectName: null,
         newPersonalGroupName: null,
         reviewFlags: [],
       },
       {
         draftId: 'ai-draft-2',
         input: personalInput,
+        newSubjectName: null,
         newPersonalGroupName: null,
         reviewFlags: [],
       },
@@ -184,10 +191,11 @@ describe('AiEventPromptPanel', () => {
       title: 'Control médico',
     }
 
-    vi.mocked(requestAiEventDrafts).mockResolvedValue([
+    vi.mocked(requestAiEventPlan).mockResolvedValue([
       {
         draftId: 'ai-draft-1',
         input: proposedInput,
+        newSubjectName: null,
         newPersonalGroupName: 'Salud',
         reviewFlags: ['new_personal_group'],
       },
@@ -210,6 +218,7 @@ describe('AiEventPromptPanel', () => {
       {
         draftId: 'ai-draft-1',
         input: proposedInput,
+        newSubjectName: null,
         newPersonalGroupName: 'Salud',
         reviewFlags: ['new_personal_group'],
       },
@@ -217,5 +226,62 @@ describe('AiEventPromptPanel', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(
       'Se agregó 1 evento al calendario. También se creó 1 grupo personal.',
     )
+  })
+
+  it('uses guided questions to choose a proposed subject before reviewing drafts', async () => {
+    const user = userEvent.setup()
+    vi.mocked(requestAiEventPlan)
+      .mockResolvedValueOnce({
+        kind: 'questions',
+        questions: [
+          {
+            allowsOther: true,
+            id: 'academic_subject',
+            optional: false,
+            options: [
+              { id: `subject:${subjectId}`, label: 'Álgebra' },
+              { id: 'create_subject:calculo', label: 'Crear asignatura «Cálculo»' },
+            ],
+            question: '¿A qué asignatura pertenece el control?',
+          },
+        ],
+      })
+      .mockResolvedValueOnce([
+        {
+          draftId: 'ai-draft-1',
+          input: { ...academicInput, subjectId: null },
+          newSubjectName: 'Cálculo',
+          newPersonalGroupName: null,
+          reviewFlags: ['new_subject', 'missing_subject'],
+        },
+      ])
+
+    render(<AiEventPromptPanel {...defaultProps} />)
+
+    await user.click(screen.getByRole('switch', { name: /actual: Rápida/ }))
+    await user.type(screen.getByLabelText('Describe tus eventos'), 'Control de cálculo.')
+    await user.click(screen.getByRole('button', { name: 'Preparar borradores' }))
+
+    expect(await screen.findByText('¿A qué asignatura pertenece el control?')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Crear asignatura «Cálculo»' }))
+    await user.click(screen.getByRole('button', { name: 'Preparar eventos' }))
+
+    expect(await screen.findByText('Revisa tus borradores')).toBeVisible()
+    expect(requestAiEventPlan).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        answers: [
+          {
+            noPreference: false,
+            optionId: 'create_subject:calculo',
+            otherText: null,
+            questionId: 'academic_subject',
+          },
+        ],
+        mode: 'guided',
+      }),
+    )
+    expect(screen.getByText(/Nueva asignatura: Cálculo/)).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Confirmar y guardar' })).toBeEnabled()
   })
 })

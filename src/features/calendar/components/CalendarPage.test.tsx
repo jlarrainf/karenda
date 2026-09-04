@@ -2,12 +2,12 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DatesSetArg } from '@fullcalendar/core'
-import type { CalendarEvent, PersonalGroup } from '../../../types/domain.ts'
+import type { CalendarEvent, PersonalGroup, Subject } from '../../../types/domain.ts'
 import { useCalendarStore } from '../../../stores/calendarStore.ts'
 import { useCatalogStore } from '../../../stores/catalogStore.ts'
 import { useHabitStore } from '../../../stores/habitStore.ts'
 import { useRecurringTaskStore } from '../../../stores/recurringTaskStore.ts'
-import { requestAiEventDrafts } from '../../../services/aiEventService.ts'
+import { requestAiEventPlan } from '../../../services/aiEventService.ts'
 import { CalendarPage } from './CalendarPage.tsx'
 
 type FullCalendarMockProps = {
@@ -26,7 +26,7 @@ vi.mock('@fullcalendar/react', () => ({
 }))
 
 vi.mock('../../../services/aiEventService.ts', () => ({
-  requestAiEventDrafts: vi.fn(),
+  requestAiEventPlan: vi.fn(),
 }))
 
 const subjectId = '11111111-1111-4111-8111-111111111111'
@@ -156,13 +156,9 @@ describe('CalendarPage', () => {
     await user.click(screen.getByRole('button', { name: 'Agenda' }))
 
     expect(screen.getByRole('heading', { name: 'Agenda' })).toBeVisible()
-    expect(screen.getByRole('group', { name: 'Navegación de agenda' })).toBeVisible()
-    expect(
-      screen.getByRole('button', { name: 'Ir a la agenda anterior' }),
-    ).toBeVisible()
-    expect(
-      screen.getByRole('button', { name: 'Ir a la agenda siguiente' }),
-    ).toBeVisible()
+    expect(screen.queryByRole('group', { name: 'Navegación de agenda' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Ir a la agenda anterior' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Ir a la agenda siguiente' })).not.toBeInTheDocument()
     expect(screen.getByText('Control de Álgebra')).toBeVisible()
     expect(screen.queryByText('Cita médica')).not.toBeInTheDocument()
   })
@@ -217,7 +213,7 @@ describe('CalendarPage', () => {
 
     useCatalogStore.setState({ createPersonalGroup })
     useCalendarStore.setState({ createEvent })
-    vi.mocked(requestAiEventDrafts).mockResolvedValue([
+    vi.mocked(requestAiEventPlan).mockResolvedValue([
       {
         draftId: 'ai-draft-1',
         input: {
@@ -232,6 +228,7 @@ describe('CalendarPage', () => {
           subjectId: null,
           title: 'Cita médica',
         },
+        newSubjectName: null,
         newPersonalGroupName: 'Salud',
         reviewFlags: ['new_personal_group'],
       },
@@ -249,6 +246,7 @@ describe('CalendarPage', () => {
           subjectId: null,
           title: 'Control médico',
         },
+        newSubjectName: null,
         newPersonalGroupName: ' salud ',
         reviewFlags: ['new_personal_group'],
       },
@@ -275,6 +273,71 @@ describe('CalendarPage', () => {
     )
 
     useCatalogStore.setState({ createPersonalGroup: originalCreatePersonalGroup })
+    useCalendarStore.setState({ createEvent: originalCreateEvent })
+  })
+
+  it('creates one confirmed subject and associates a proposed academic event with it', async () => {
+    const user = userEvent.setup()
+    const newSubjectId = '55555555-5555-4555-8555-555555555555'
+    const createdSubject: Subject = {
+      abbreviation: 'CALCULO',
+      code: 'CALCULO',
+      color: '#2F625A',
+      createdAt: '2026-09-01T10:00:00.000Z',
+      id: newSubjectId,
+      name: 'Cálculo',
+      ownerId: '22222222-2222-4222-8222-222222222222',
+      updatedAt: '2026-09-01T10:00:00.000Z',
+    }
+    const createSubject = vi.fn().mockResolvedValue(createdSubject)
+    const createEvent = vi.fn().mockResolvedValue(events[0])
+    const originalCreateSubject = useCatalogStore.getState().createSubject
+    const originalCreateEvent = useCalendarStore.getState().createEvent
+
+    useCatalogStore.setState({ createSubject })
+    useCalendarStore.setState({ createEvent })
+    vi.mocked(requestAiEventPlan).mockResolvedValue([
+      {
+        draftId: 'ai-draft-1',
+        input: {
+          description: null,
+          endAt: null,
+          isAllDay: true,
+          kind: 'academic',
+          location: null,
+          personalGroupId: null,
+          startAt: '2099-09-04',
+          status: 'pending',
+          subjectId: null,
+          title: 'Control de Cálculo',
+        },
+        newSubjectName: 'Cálculo',
+        newPersonalGroupName: null,
+        reviewFlags: ['new_subject', 'missing_subject'],
+      },
+    ])
+
+    render(<CalendarPage events={[]} />)
+
+    await user.click(screen.getByRole('button', { name: 'Agregar con IA' }))
+    await user.type(screen.getByLabelText('Describe tus eventos'), 'Control de cálculo.')
+    await user.click(screen.getByRole('button', { name: 'Preparar borradores' }))
+    await screen.findByText('Revisa tus borradores')
+    await user.click(screen.getByRole('button', { name: 'Confirmar y guardar' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar eventos (1)' }))
+
+    expect(createSubject).toHaveBeenCalledOnce()
+    expect(createSubject).toHaveBeenCalledWith({
+      abbreviation: 'CALCULO',
+      code: 'CALCULO',
+      color: '#2F625A',
+      name: 'Cálculo',
+    })
+    expect(createEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ subjectId: newSubjectId }),
+    )
+
+    useCatalogStore.setState({ createSubject: originalCreateSubject })
     useCalendarStore.setState({ createEvent: originalCreateEvent })
   })
 })

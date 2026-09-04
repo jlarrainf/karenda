@@ -1,6 +1,11 @@
 import { z } from 'zod'
 import { insforge } from '../lib/insforge/client.ts'
-import type { AiHabitDraft, AiHabitReviewFlag } from '../types/aiHabits.ts'
+import type {
+  AiHabitAnswer,
+  AiHabitDraft,
+  AiHabitQuestionSet,
+  AiHabitReviewFlag,
+} from '../types/aiHabits.ts'
 import {
   habitInputSchema,
   type HabitInput,
@@ -51,7 +56,18 @@ const aiFunctionHabitSchema = z.object({
   review_flags: z.array(z.string()).default([]),
 })
 
-interface AiFunctionResponse { habits: z.infer<typeof aiFunctionHabitSchema>[] }
+const aiFunctionQuestionSchema = z.object({
+  id: z.string().min(1).max(80),
+  question: z.string().min(1).max(240),
+  options: z.array(z.object({ id: z.string().min(1).max(80), label: z.string().min(1).max(160) })).min(1).max(6),
+  allows_other: z.boolean(),
+  optional: z.boolean(),
+})
+
+interface AiFunctionResponse {
+  habits?: z.infer<typeof aiFunctionHabitSchema>[]
+  questions?: z.infer<typeof aiFunctionQuestionSchema>[]
+}
 
 function getBrowserTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
@@ -71,6 +87,14 @@ function mapHabit(value: z.infer<typeof aiFunctionHabitSchema>, index: number, s
   )
   if (value.subject_id && !subjectId) flags.push('unknown_subject')
   if (value.personal_group_id && !personalGroupId) flags.push('unknown_personal_group')
+  const isDurationUnit = value.unit?.toLocaleLowerCase().match(/hora|minuto|hour|minute/)
+  const trackingType = value.tracking_type === 'boolean' && value.unit
+    ? isDurationUnit ? 'duration' : 'count'
+    : value.tracking_type === 'boolean' && value.goal_value !== 1
+      ? 'count'
+      : value.tracking_type
+  const unit = trackingType === 'boolean' ? null : value.unit ?? (trackingType === 'count' ? 'veces' : 'minutos')
+  const goalValue = trackingType === 'boolean' ? 1 : value.goal_value > 0 ? value.goal_value : 1
   const input: HabitInput = {
     calendarEnabled: value.calendar_enabled,
     calendarSchedule: value.calendar_schedule,
@@ -78,7 +102,7 @@ function mapHabit(value: z.infer<typeof aiFunctionHabitSchema>, index: number, s
     description: value.description,
     endDate: value.end_date,
     evaluationMode: value.evaluation_mode,
-    goalValue: value.goal_value,
+    goalValue,
     lifecycleStatus: value.lifecycle_status,
     missPolicy: value.miss_policy,
     name: value.name,
@@ -89,8 +113,8 @@ function mapHabit(value: z.infer<typeof aiFunctionHabitSchema>, index: number, s
     startDate: value.start_date,
     statsEnabled: value.stats_enabled,
     subjectId,
-    trackingType: value.tracking_type,
-    unit: value.unit,
+    trackingType,
+    unit,
   }
   const parsed = habitInputSchema.safeParse(input)
   if (!parsed.success) throw new AppError('validation', parsed.error.issues[0]?.message ?? 'La IA devolvió un hábito no válido.')
@@ -99,14 +123,48 @@ function mapHabit(value: z.infer<typeof aiFunctionHabitSchema>, index: number, s
 
 export interface GenerateAiHabitDraftOptions { prompt: string; timeZone?: string; referenceDate?: string; subjectIds?: string[]; personalGroupIds?: string[] }
 
-export async function requestAiHabitDrafts(options: GenerateAiHabitDraftOptions): Promise<AiHabitDraft[]> {
+export interface GenerateAiHabitPlanOptions extends GenerateAiHabitDraftOptions {
+  mode: 'quick' | 'guided'
+  answers?: AiHabitAnswer[]
+}
+
+function mapQuestions(questions: z.infer<typeof aiFunctionQuestionSchema>[]): AiHabitQuestionSet {
+  return {
+    kind: 'questions',
+    questions: questions.map((question) => ({
+      allowsOther: question.allows_other,
+      id: question.id,
+      optional: question.optional,
+      options: question.options,
+      question: question.question,
+    })),
+  }
+}
+
+export async function requestAiHabitPlan(options: GenerateAiHabitPlanOptions): Promise<AiHabitDraft[] | AiHabitQuestionSet> {
   const parsed = parseInput(aiPromptSchema, options)
   const timeZone = options.timeZone?.trim() || getBrowserTimeZone()
   const referenceDate = options.referenceDate?.trim() || getBrowserDate(timeZone)
   try {
-    const { data, error } = await insforge.functions.invoke(AI_FUNCTION_SLUG, { body: { prompt: parsed.prompt, reference_date: referenceDate, time_zone: timeZone } })
+    const { data, error } = await insforge.functions.invoke(AI_FUNCTION_SLUG, { body: {
+      answers: options.answers?.map((answer) => ({
+        no_preference: answer.noPreference,
+        option_id: answer.optionId,
+        other_text: answer.otherText,
+        question_id: answer.questionId,
+      })),
+      mode: options.mode,
+      prompt: parsed.prompt,
+      reference_date: referenceDate,
+      time_zone: timeZone,
+    } })
     if (error) throw error
     const response = data as AiFunctionResponse | undefined
+    if (options.mode === 'guided' && !options.answers?.length && response?.questions) {
+      const questions = response.questions.map((question) => aiFunctionQuestionSchema.parse(question))
+      if (questions.length > 5) throw new AppError('validation', 'La IA devolvió demasiadas preguntas.')
+      return mapQuestions(questions)
+    }
     if (!response || !Array.isArray(response.habits) || response.habits.length > 10) throw new AppError('validation', 'La IA no devolvió borradores válidos.')
     const subjectIds = new Set(options.subjectIds ?? [])
     const groupIds = new Set(options.personalGroupIds ?? [])
@@ -114,6 +172,11 @@ export async function requestAiHabitDrafts(options: GenerateAiHabitDraftOptions)
   } catch (error) {
     throw toAppError(error, 'No se pudieron preparar los hábitos.')
   }
+}
+
+export async function requestAiHabitDrafts(options: GenerateAiHabitDraftOptions): Promise<AiHabitDraft[]> {
+  const result = await requestAiHabitPlan({ ...options, mode: 'quick' })
+  return result as AiHabitDraft[]
 }
 
 export { habitInputSchema }

@@ -21,6 +21,7 @@ interface EventFormProps {
   isLoading: boolean
   kind: EventKind
   onCancel: () => void
+  onKindChange?: (kind: EventKind) => void
   onSubmit: (input: EventInput) => Promise<void>
   personalGroups: Pick<PersonalGroup, 'id' | 'name'>[]
   subjects: Pick<Subject, 'abbreviation' | 'id' | 'name'>[]
@@ -199,12 +200,14 @@ export function EventForm({
   isLoading,
   kind,
   onCancel,
+  onKindChange,
   onSubmit,
   personalGroups,
   subjects,
   submitLabel,
 }: EventFormProps) {
   const isAcademic = kind === 'academic'
+  const isCreating = !event && !initialInput
   const eventLabel = isAcademic ? 'evento académico' : 'evento personal'
   const {
     control,
@@ -267,6 +270,18 @@ export function EventForm({
           Completa la información esencial y podrás editarla más adelante.
         </p>
       </div>
+
+      {isCreating && onKindChange ? (
+        <SelectField
+          id="event-kind"
+          label="Tipo de evento"
+          onChange={(event) => onKindChange(event.target.value as EventKind)}
+          value={kind}
+        >
+          <option value="academic">Académico</option>
+          <option value="personal">Personal</option>
+        </SelectField>
+      ) : null}
 
       <TextField
         autoComplete="off"

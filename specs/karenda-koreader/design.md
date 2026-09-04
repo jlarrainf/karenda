@@ -341,8 +341,11 @@ recibirán un snapshot ya validado y no consultarán InsForge directamente.
   antes de convertir; los enlaces seguros se conservarán como texto visible, no
   como acciones. Se conservarán encabezados, énfasis, listas, citas y código del
   subconjunto soportado, incluyendo tablas GFM básicas. Las fórmulas se
-  normalizarán a símbolos legibles y generarán cursiva matemática, `sup`, `sub` y
-  etiquetas de flechas parametrizadas sin introducir KaTeX/MathJax.
+   normalizarán a símbolos legibles, incluyendo `\ddagger` como `‡`, y generarán
+   cursiva matemática, `sup`, `sub` y etiquetas de flechas parametrizadas sin
+   introducir KaTeX/MathJax. Los elementos HTML `ol` y `ul` recibirán `1em` de
+   margen y `1em` de padding interno para que sus marcadores no se recorten en
+   el `TextViewer`.
 - Un snapshot existente se mostrará sin red. Cuando falte, `main.lua` podrá
   mostrar un estado de carga mientras ejecuta la sincronización manual inicial.
 - La vista raíz activa se guardará en la instancia del plugin para que al cerrar

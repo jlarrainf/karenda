@@ -195,6 +195,11 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
   automáticos y verificar los mensajes públicos.
 - [x] **Tarea 96: Probar IA de hábitos y límites** (20-30 min). Cubrir contrato,
   validación, estados, guardado parcial y respuestas `429` en servicio y UI.
+- [x] **Tarea 97: Añadir modos rápido y guiado para hábitos** (20-30 min).
+  Definir preguntas serializables, respuestas y flujo de revisión reutilizable
+  en web y Android.
+- [x] **Tarea 98: Normalizar hábitos cuantitativos** (20-30 min). Corregir
+  combinaciones contradictorias de tipo, unidad y meta antes de validar.
 
 - [ ] **Tarea 89: Probar flujos críticos en navegador** (20-30 min).
   Verificar creación, registro, historial, estadísticas, notas, tareas y
@@ -211,3 +216,60 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
 - [x] **Tarea 93: Documentar ingesta futura de KOReader** (20-30 min).
   Redactar una spec posterior para el scope write:habit_logs, vinculación,
   agregación local e idempotencia; no modificar el plugin en esta fase.
+
+## Fase 16: Aplicación Android Con Capacitor
+
+Estas tareas siguen `specs/005-android-app.md` y deben actualizar también
+`docs/ui-design.md`, `plan.md` y `docs/traceability.md` cuando cambie un
+contrato o una superficie visible.
+
+- [x] **Tarea 97: Definir el contrato Android** (20-30 min). Crear la spec de
+  alcance, estados offline, navegación Atrás, almacenamiento de sesión y
+  límites de permisos.
+- [x] **Tarea 98: Documentar la dirección UI Android** (20-30 min). Añadir
+  barras del sistema, áreas seguras, teclado, enlaces externos y estados de red
+  antes de cambiar componentes.
+- [x] **Tarea 99: Crear la base Capacitor** (20-30 min). Instalar Capacitor,
+  definir `capacitor.config.ts`, mantener `webDir` apuntando al build local y
+  generar `android/`.
+- [ ] **Tarea 100: Añadir adaptadores de plataforma** (20-30 min). Separar
+  conectividad, ciclo de vida, enlaces y portapapeles sin duplicar servicios de
+  InsForge.
+- [ ] **Tarea 101: Implementar estado offline** (20-30 min). Mostrar el estado
+  de conexión en español y bloquear confirmaciones engañosas sin crear caché de
+  dominio.
+- [ ] **Tarea 102: Preparar sesión segura** (20-30 min). Sustituir la
+  persistencia web temporal del refresh token por un puente de almacenamiento
+  seguro antes del APK de producción.
+- [ ] **Tarea 103: Configurar identidad y build** (20-30 min). Fijar
+  `applicationId`, iconos, splash, versión, logs de producción y firma fuera
+  del repositorio.
+- [ ] **Tarea 104: Verificar Android** (20-30 min). Probar arranque, login,
+  rutas, botón Atrás, teclado, rotación, suspensión, red y enlaces en emulador
+  y dispositivo real.
+- [ ] **Tarea 105: Auditar y empaquetar APK personal** (20-30 min). Ejecutar
+  calidad, revisar secretos y generar un APK release instalable sin publicar en
+  Google Play.
+- [ ] **Tarea 106: Diseñar la transición a caché de lectura** (20-30 min).
+  Documentar una fase posterior con cifrado, `synced_at`, caducidad y limpieza
+  por cuenta, sin activarla todavía.
+- [x] **Tarea 107: Ajustar el encabezado móvil y la barra de estado** (20-30 min).
+  Ocultar el encabezado al desplazarse hacia abajo, mostrarlo al desplazarse
+  hacia arriba y mantener una cubierta sólida para el área de la barra de estado.
+- [x] **Tarea 108: Refinar el cajón móvil** (20-30 min). Respetar el área segura
+  superior y evitar repetir en el cajón las rutas principales ya visibles en el
+  encabezado.
+
+## Fase 17: Creación Asistida De Eventos En Android
+
+Estas tareas extienden el contrato compartido de eventos y deben conservar
+la paridad entre el build web y los assets empaquetados por Capacitor.
+
+- [x] **Tarea 109: Añadir modo guiado a eventos asistidos** (20-30 min).
+  Implementar preguntas de relación, respuestas, `Otro` y propuestas de
+  creación de asignaturas o grupos con confirmación explícita.
+- [x] **Tarea 110: Endurecer la preparación de borradores** (20-30 min).
+  Aceptar relaciones textuales desconocidas sin romper la respuesta y mantener
+  el fallback estructurado del servicio server-side.
+- [x] **Tarea 111: Verificar eventos asistidos en Android** (20-30 min).
+  Ejecutar tests, typecheck, lint, build web y sincronización/build Android.

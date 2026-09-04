@@ -1,12 +1,17 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import type { AiEventDraft, AiReviewFlag } from '../../../types/aiEvents.ts'
+import type {
+  AiEventAnswer,
+  AiEventDraft,
+  AiEventQuestionSet,
+  AiReviewFlag,
+} from '../../../types/aiEvents.ts'
 import type { PersonalGroup, Subject } from '../../../types/domain.ts'
 import { toAppError } from '../../../services/errors.ts'
 import {
   eventInputSchema,
   type EventInput,
 } from '../../../services/validation.ts'
-import { requestAiEventDrafts } from '../../../services/aiEventService.ts'
+import { requestAiEventPlan } from '../../../services/aiEventService.ts'
 import { Button } from '../../../components/ui/Button.tsx'
 import { TextAreaField } from '../../../components/ui/FormField.tsx'
 import { EventForm } from './EventForm.tsx'
@@ -20,11 +25,13 @@ const reviewFlagLabels: Record<AiReviewFlag, string> = {
   guessed_date: 'La fecha fue inferida a partir del contexto.',
   uncertain_duration: 'La duración o fecha de término necesita revisión.',
   invalid_status: 'El estado no era claro; se dejó como Pendiente.',
+  new_subject: 'Se propondrá crear una asignatura nueva.',
   new_personal_group: 'Se propondrá crear un grupo personal nuevo.',
 }
 
 export interface AiEventSaveResult {
   created: number
+  createdSubjects?: number
   createdGroups?: number
   failedIndexes: number[]
   errorMessage?: string
@@ -76,6 +83,10 @@ function getRelationLabel(
   const input = draft.input
 
   if (input.kind === 'academic') {
+    if (draft.newSubjectName) {
+      return `Nueva asignatura: ${draft.newSubjectName}`
+    }
+
     return subjects.find((subject) => subject.id === input.subjectId)?.name ??
       'Asignatura pendiente'
   }
@@ -90,7 +101,16 @@ function getRelationLabel(
 
 function getDraftValidationError(draft: AiEventDraft): string | null {
   const result = eventInputSchema.safeParse(draft.input)
-  return result.success
+
+  if (result.success) {
+    return null
+  }
+
+  const onlyMissingSubject = result.error.issues.every(
+    (issue) => issue.path[0] === 'subjectId',
+  )
+
+  return onlyMissingSubject && draft.input.kind === 'academic' && draft.newSubjectName
     ? null
     : result.error.issues[0]?.message ?? 'Revisa los datos de este evento.'
 }
@@ -110,7 +130,14 @@ export function AiEventPromptPanel({
   subjects,
 }: AiEventPromptPanelProps) {
   const [prompt, setPrompt] = useState('')
+  const [mode, setMode] = useState<'quick' | 'guided'>('quick')
   const [drafts, setDrafts] = useState<AiEventDraft[]>([])
+  const [questionSet, setQuestionSet] = useState<AiEventQuestionSet | null>(null)
+  const [questionIndex, setQuestionIndex] = useState(0)
+  const [answers, setAnswers] = useState<AiEventAnswer[]>([])
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
+  const [otherText, setOtherText] = useState('')
+  const [noPreference, setNoPreference] = useState(false)
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -129,11 +156,25 @@ export function AiEventPromptPanel({
     [drafts],
   )
   const editingDraft = drafts.find((draft) => draft.draftId === editingDraftId) ?? null
+  const currentQuestion = questionSet?.questions[questionIndex] ?? null
   const proposedGroupNames = useMemo(() => {
     const names = new Map<string, string>()
 
     for (const draft of drafts) {
       const name = draft.newPersonalGroupName?.trim()
+
+      if (name) {
+        names.set(normalizeGroupName(name), name)
+      }
+    }
+
+    return [...names.values()]
+  }, [drafts])
+  const proposedSubjectNames = useMemo(() => {
+    const names = new Map<string, string>()
+
+    for (const draft of drafts) {
+      const name = draft.newSubjectName?.trim()
 
       if (name) {
         names.set(normalizeGroupName(name), name)
@@ -160,15 +201,88 @@ export function AiEventPromptPanel({
     setIsGenerating(true)
 
     try {
-      const nextDrafts = await requestAiEventDrafts({
+      const plan = await requestAiEventPlan({
+        personalGroupIds: personalGroups.map((group) => group.id),
+        mode,
+        prompt,
+        subjectIds: subjects.map((subject) => subject.id),
+      })
+
+      if (Array.isArray(plan)) {
+        setDrafts(plan)
+        setQuestionSet(null)
+        setEditingDraftId(null)
+      } else {
+        setDrafts([])
+        setQuestionSet(plan)
+        setQuestionIndex(0)
+        setAnswers([])
+        setSelectedOptionId(null)
+        setOtherText('')
+        setNoPreference(false)
+      }
+    } catch (generationError) {
+      setDrafts([])
+      setQuestionSet(null)
+      setError(
+        toAppError(generationError, 'No se pudieron preparar los eventos.').message,
+      )
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleSubmitQuestion = async () => {
+    if (!currentQuestion || !questionSet || isGenerating) {
+      return
+    }
+
+    if (!noPreference && !selectedOptionId && !otherText.trim()) {
+      setError('Selecciona una alternativa, escribe otra respuesta o elige «No me importa».')
+      return
+    }
+
+    const nextAnswers = [
+      ...answers,
+      {
+        noPreference,
+        optionId: selectedOptionId,
+        otherText: otherText.trim() || null,
+        questionId: currentQuestion.id,
+      },
+    ]
+
+    if (questionIndex < questionSet.questions.length - 1) {
+      setAnswers(nextAnswers)
+      setQuestionIndex((index) => index + 1)
+      setSelectedOptionId(null)
+      setOtherText('')
+      setNoPreference(false)
+      setError(null)
+      return
+    }
+
+    setIsGenerating(true)
+    setError(null)
+
+    try {
+      const plan = await requestAiEventPlan({
+        answers: nextAnswers,
+        mode: 'guided',
         personalGroupIds: personalGroups.map((group) => group.id),
         prompt,
         subjectIds: subjects.map((subject) => subject.id),
       })
-      setDrafts(nextDrafts)
+
+      if (!Array.isArray(plan)) {
+        throw new Error('La IA no devolvió borradores después de las preguntas.')
+      }
+
+      setDrafts(plan)
+      setQuestionSet(null)
+      setAnswers([])
       setEditingDraftId(null)
     } catch (generationError) {
-      setDrafts([])
       setError(
         toAppError(generationError, 'No se pudieron preparar los eventos.').message,
       )
@@ -183,11 +297,18 @@ export function AiEventPromptPanel({
       return
     }
 
-    if (proposedGroupNames.length > 0 && !hasConfirmedNewGroups) {
+    if (
+      (proposedGroupNames.length > 0 || proposedSubjectNames.length > 0) &&
+      !hasConfirmedNewGroups
+    ) {
       setHasConfirmedNewGroups(true)
       setError(null)
+      const proposedCatalogItems = [
+        ...proposedSubjectNames.map((name) => `la asignatura «${name}»`),
+        ...proposedGroupNames.map((name) => `el grupo personal «${name}»`),
+      ]
       setSuccessMessage(
-        `Se propondrá crear ${proposedGroupNames.length === 1 ? 'el grupo' : 'los grupos'} ${proposedGroupNames.map((name) => `«${name}»`).join(', ')}. Pulsa «Confirmar y guardar» para continuar.`,
+        `Se propondrá crear ${proposedCatalogItems.join(' y ')}. Pulsa «Confirmar y guardar» para continuar.`,
       )
       return
     }
@@ -222,8 +343,13 @@ export function AiEventPromptPanel({
           ? ' También se creó 1 grupo personal.'
           : ` También se crearon ${result.createdGroups} grupos personales.`
         : ''
+      const subjectMessage = result.createdSubjects
+        ? result.createdSubjects === 1
+          ? ' También se creó 1 asignatura.'
+          : ` También se crearon ${result.createdSubjects} asignaturas.`
+        : ''
 
-      setSuccessMessage(`${eventMessage}${groupMessage}`)
+      setSuccessMessage(`${eventMessage}${subjectMessage}${groupMessage}`)
       setHasGenerated(false)
     } catch (saveError) {
       setHasConfirmedNewGroups(false)
@@ -240,16 +366,27 @@ export function AiEventPromptPanel({
           ? {
               ...draft,
               input,
+              newSubjectName:
+                input.kind === 'academic' && input.subjectId === null
+                  ? draft.newSubjectName
+                  : null,
               newPersonalGroupName:
                 input.kind === 'personal' && input.personalGroupId === null
                   ? draft.newPersonalGroupName
                   : null,
               reviewFlags:
-                input.kind === 'personal' &&
-                input.personalGroupId === null &&
-                draft.newPersonalGroupName
-                  ? ['new_personal_group']
-                  : [],
+                [
+                  ...(input.kind === 'academic' &&
+                  input.subjectId === null &&
+                  draft.newSubjectName
+                    ? (['new_subject'] as AiReviewFlag[])
+                    : []),
+                  ...(input.kind === 'personal' &&
+                  input.personalGroupId === null &&
+                  draft.newPersonalGroupName
+                    ? (['new_personal_group'] as AiReviewFlag[])
+                    : []),
+                ],
             }
           : draft,
       ),
@@ -302,6 +439,90 @@ export function AiEventPromptPanel({
           subjects={subjects}
           submitLabel="Aplicar cambios"
         />
+      ) : currentQuestion && questionSet ? (
+        <div className="space-y-6" role="dialog" aria-labelledby="ai-event-question-title">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand">
+              Pregunta {questionIndex + 1} de {questionSet.questions.length}
+            </p>
+            <h2 className="mt-2 text-xl font-bold tracking-tight text-ink" id="ai-event-question-title">
+              {currentQuestion.question}
+            </h2>
+          </div>
+
+          <div className="grid gap-2">
+            {currentQuestion.options.map((option) => (
+              <button
+                aria-pressed={selectedOptionId === option.id && !noPreference}
+                className={`min-h-11 rounded-control border px-4 py-3 text-left text-sm font-semibold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-soft ${selectedOptionId === option.id && !noPreference ? 'border-brand bg-brand-soft text-brand' : 'border-border text-ink hover:bg-surface-subtle'}`}
+                key={option.id}
+                onClick={() => {
+                  setSelectedOptionId(option.id)
+                  setOtherText('')
+                  setNoPreference(false)
+                }}
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))}
+
+            {currentQuestion.allowsOther ? (
+              <>
+                <button
+                  aria-pressed={selectedOptionId === null && Boolean(otherText) && !noPreference}
+                  className={`min-h-11 rounded-control border px-4 py-3 text-left text-sm font-semibold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-soft ${selectedOptionId === null && otherText && !noPreference ? 'border-brand bg-brand-soft text-brand' : 'border-border text-ink hover:bg-surface-subtle'}`}
+                  onClick={() => {
+                    setSelectedOptionId(null)
+                    setNoPreference(false)
+                  }}
+                  type="button"
+                >
+                  Otro
+                </button>
+                <input
+                  aria-label="Otra respuesta"
+                  className="min-h-11 rounded-control border border-border bg-surface px-3 text-sm text-ink"
+                  onChange={(event) => {
+                    setOtherText(event.target.value)
+                    setSelectedOptionId(null)
+                    setNoPreference(false)
+                  }}
+                  placeholder="Escribe tu respuesta"
+                  value={otherText}
+                />
+              </>
+            ) : null}
+
+            <button
+              aria-pressed={noPreference}
+              className={`min-h-11 rounded-control border px-4 py-3 text-left text-sm font-semibold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-soft ${noPreference ? 'border-brand bg-brand-soft text-brand' : 'border-border text-ink hover:bg-surface-subtle'}`}
+              onClick={() => {
+                setNoPreference(true)
+                setSelectedOptionId(null)
+                setOtherText('')
+              }}
+              type="button"
+            >
+              No me importa
+            </button>
+          </div>
+
+          {error ? (
+            <p aria-live="assertive" className="rounded-control bg-danger-soft px-4 py-3 text-sm leading-6 text-danger" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
+            <Button disabled={isGenerating} onClick={onCancel} variant="ghost">
+              Cancelar
+            </Button>
+            <Button isLoading={isGenerating} loadingLabel="Preparando eventos…" onClick={() => void handleSubmitQuestion()}>
+              {questionIndex === questionSet.questions.length - 1 ? 'Preparar eventos' : 'Continuar'}
+            </Button>
+          </div>
+        </div>
       ) : (
         <div className="space-y-6">
           <div>
@@ -311,6 +532,34 @@ export function AiEventPromptPanel({
             <p className="mt-2 text-sm leading-6 text-ink-muted">
               Describe uno o varios compromisos y recibirás borradores para revisar.
             </p>
+          </div>
+
+          <div aria-label="Modo de creación" className="flex flex-wrap items-center justify-between gap-4 rounded-control border border-border bg-surface-subtle px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-ink">Modo de creación</p>
+              <p className="text-xs leading-5 text-ink-muted">
+                {mode === 'guided'
+                  ? 'Responde preguntas para asociar mejor cada evento.'
+                  : 'La IA propone relaciones a partir de tu descripción.'}
+              </p>
+            </div>
+            <button
+              aria-checked={mode === 'guided'}
+              aria-label={`Cambiar entre creación rápida y guiada (actual: ${mode === 'guided' ? 'Guiada' : 'Rápida'})`}
+              className="relative flex h-10 w-32 shrink-0 items-center rounded-control border-2 border-brand bg-surface px-1 text-xs font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-soft"
+              onClick={() => {
+                setMode((current) => (current === 'quick' ? 'guided' : 'quick'))
+                setError(null)
+                setQuestionSet(null)
+                setDrafts([])
+              }}
+              role="switch"
+              type="button"
+            >
+              <span aria-hidden="true" className={`absolute inset-y-1 w-[3.75rem] rounded-control bg-brand transition-transform duration-state ${mode === 'guided' ? 'translate-x-[3.75rem]' : 'translate-x-0'}`} />
+              <span className={`relative z-10 w-1/2 text-center ${mode === 'quick' ? 'text-surface' : 'text-ink-muted'}`}>Rápida</span>
+              <span className={`relative z-10 w-1/2 text-center ${mode === 'guided' ? 'text-surface' : 'text-ink-muted'}`}>Guiada</span>
+            </button>
           </div>
 
           <form aria-busy={isGenerating} onSubmit={(event) => void handleGenerate(event)}>
@@ -396,6 +645,12 @@ export function AiEventPromptPanel({
                         </p>
                       ) : null}
 
+                      {draft.newSubjectName ? (
+                        <p className="text-sm leading-6 text-warning" role="status">
+                          Se propondrá crear la asignatura «{draft.newSubjectName}» al guardar.
+                        </p>
+                      ) : null}
+
                       {draft.newPersonalGroupName ? (
                         <p className="text-sm leading-6 text-warning" role="status">
                           Se propondrá crear el grupo «{draft.newPersonalGroupName}» al guardar.
@@ -435,6 +690,13 @@ export function AiEventPromptPanel({
                 })}
               </ol>
 
+              {proposedSubjectNames.length > 0 ? (
+                <p className="border-t border-border pt-4 text-sm leading-6 text-warning" role="status">
+                  Al guardar se crearán, previa confirmación, las asignaturas:{' '}
+                  {proposedSubjectNames.map((name) => `«${name}»`).join(', ')}.
+                </p>
+              ) : null}
+
               {proposedGroupNames.length > 0 ? (
                 <p className="border-t border-border pt-4 text-sm leading-6 text-warning" role="status">
                   Al guardar se crearán, previa confirmación, los grupos personales:{' '}
@@ -447,7 +709,7 @@ export function AiEventPromptPanel({
                   Cancelar
                 </Button>
                 <Button disabled={!canSave} isLoading={isSaving} onClick={() => void handleSave()}>
-                  {proposedGroupNames.length > 0 && !hasConfirmedNewGroups
+                  {(proposedGroupNames.length > 0 || proposedSubjectNames.length > 0) && !hasConfirmedNewGroups
                     ? 'Confirmar y guardar'
                     : `Guardar eventos (${drafts.length})`}
                 </Button>

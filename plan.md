@@ -483,3 +483,24 @@ validarán contratos, RLS y restricciones. La implementación se dividirá en:
 
 Cada incremento actualizará esta spec, tasks.md y docs/traceability.md en el
 mismo cambio.
+
+## 14. Aplicación Android
+
+La aplicación Android se mantendrá en `android/` dentro del mismo repositorio y
+se construirá con Capacitor desde los assets locales del build de Vite. No se
+usará una TWA ni se cargará una URL remota en producción. Web y Android
+compartirán servicios, validaciones, contratos y funciones de InsForge; Android
+añadirá únicamente adaptadores para ciclo de vida, enlaces, conectividad y
+almacenamiento seguro de sesión.
+
+La primera versión será online-first y no añadirá una base de datos local. La
+interfaz informará la falta de conexión y no mostrará escrituras como exitosas
+sin confirmación de InsForge. Una caché cifrada de solo lectura será una fase
+posterior con especificación propia, expiración, limpieza por cuenta y etiqueta
+de antigüedad. Notificaciones, widgets y accesos rápidos también requerirán
+specs independientes.
+
+El trabajo se dividirá en: contrato Android y decisiones de UI; spike de
+Capacitor; shell y build nativo; adaptadores de sesión y plataforma; prueba
+funcional en emulador y dispositivo real; APK personal firmado; y auditoría de
+secretos, navegación, permisos, accesibilidad y trazabilidad.

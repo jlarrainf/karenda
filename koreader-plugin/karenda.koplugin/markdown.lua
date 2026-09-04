@@ -158,6 +158,7 @@ local math_replacements = {
     { "\\Psi", "Ψ" },
     { "\\Omega", "Ω" },
     { "\\in", "∈" },
+    { "\\ddagger", "‡" },
     { "\\vdash", "⊢" },
 }
 
@@ -727,6 +728,13 @@ local function plainHtmlFallback(markdown)
     return "<p>" .. text .. "</p>"
 end
 
+local function applyListInsets(html)
+    local list_style = ' style="margin-left: 1em; padding-left: 1em;"'
+    html = html:gsub("<ol>", "<ol" .. list_style .. ">")
+    html = html:gsub("<ul>", "<ul" .. list_style .. ">")
+    return html
+end
+
 function Markdown.toPlainText(markdown)
     if type(markdown) ~= "string" or markdown == "" then
         return ""
@@ -814,7 +822,7 @@ function Markdown.toHtml(markdown)
             return slot.html
         end)
     end
-    return html
+    return applyListInsets(html)
 end
 
 Markdown.escapeHtml = escapeHtml

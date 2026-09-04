@@ -33,6 +33,23 @@ const defaultProps = {
 }
 
 describe('EventForm', () => {
+  it('allows choosing the event kind while creating', async () => {
+    const user = userEvent.setup()
+    const onKindChange = vi.fn()
+
+    render(
+      <EventForm
+        {...defaultProps}
+        onKindChange={onKindChange}
+        onSubmit={vi.fn().mockResolvedValue(undefined)}
+      />,
+    )
+
+    await user.selectOptions(screen.getByLabelText('Tipo de evento'), 'personal')
+
+    expect(onKindChange).toHaveBeenCalledWith('personal')
+  })
+
   it('shows required academic field errors before submitting', async () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn().mockResolvedValue(undefined)
