@@ -1,6 +1,11 @@
 import { z } from 'zod'
 import { insforge } from '../lib/insforge/client.ts'
-import type { AiEventDraft, AiReviewFlag } from '../types/aiEvents.ts'
+import type {
+  AiEventAnswer,
+  AiEventDraft,
+  AiEventQuestionSet,
+  AiReviewFlag,
+} from '../types/aiEvents.ts'
 import {
   aiEventDraftResponseSchema,
   aiReviewFlagSchema,
@@ -40,12 +45,20 @@ interface AiFunctionEvent {
   status: EventInput['status']
   location: string | null
   description: string | null
+  new_subject_name: string | null
   new_personal_group_name: string | null
   review_flags: AiReviewFlag[]
 }
 
 interface AiFunctionResponse {
-  events: AiFunctionEvent[]
+  events?: AiFunctionEvent[]
+  questions?: Array<{
+    id: string
+    question: string
+    options: Array<{ id: string; label: string }>
+    allows_other: boolean
+    optional: boolean
+  }>
 }
 
 function getBrowserTimeZone(): string {
@@ -72,9 +85,18 @@ function getNormalizedFlags(
   flags: AiReviewFlag[],
   kind: EventInput['kind'],
   subjectId: string | null,
+  newSubjectName: string | null,
   newPersonalGroupName: string | null,
 ) {
   const normalized = [...new Set(flags)]
+
+  if (
+    kind === 'academic' &&
+    newSubjectName !== null &&
+    !normalized.includes('new_subject')
+  ) {
+    normalized.push('new_subject')
+  }
 
   if (kind === 'academic' && subjectId === null && !normalized.includes('missing_subject')) {
     normalized.push('missing_subject')
@@ -122,6 +144,7 @@ function mapFunctionEvent(
     event.review_flags,
     event.kind,
     event.subject_id,
+    event.new_subject_name,
     event.new_personal_group_name,
   )
 
@@ -139,6 +162,7 @@ function mapFunctionEvent(
   return {
     draftId: `ai-draft-${index + 1}`,
     input,
+    newSubjectName: event.new_subject_name,
     newPersonalGroupName: event.new_personal_group_name,
     reviewFlags,
   }
@@ -160,29 +184,91 @@ function parseFunctionResponse(
   )
 }
 
-export async function generateAiEventDrafts(
-  options: GenerateAiEventDraftOptions,
-): Promise<AiEventDraft[]> {
+export interface GenerateAiEventPlanOptions extends GenerateAiEventDraftOptions {
+  mode: 'quick' | 'guided'
+  answers?: AiEventAnswer[]
+}
+
+function mapQuestionSet(response: AiFunctionResponse): AiEventQuestionSet | null {
+  if (!response.questions) {
+    return null
+  }
+
+  return {
+    kind: 'questions',
+    questions: response.questions.map((question) => ({
+      allowsOther: question.allows_other,
+      id: question.id,
+      optional: question.optional,
+      options: question.options,
+      question: question.question,
+    })),
+  }
+}
+
+export async function requestAiEventPlan(
+  options: GenerateAiEventPlanOptions,
+): Promise<AiEventDraft[] | AiEventQuestionSet> {
   const parsedOptions = parseInput(aiPromptSchema, options)
   const timeZone = options.timeZone?.trim() || getBrowserTimeZone()
   const referenceDate = options.referenceDate?.trim() || getBrowserDate(timeZone)
-  const { data, error } = await insforge.functions.invoke(AI_FUNCTION_SLUG, {
-    body: {
-      prompt: parsedOptions.prompt,
-      reference_date: referenceDate,
-      time_zone: timeZone,
-    },
-  })
 
-  if (error) {
+  try {
+    const { data, error } = await insforge.functions.invoke(AI_FUNCTION_SLUG, {
+      body: {
+        ...(options.answers
+          ? {
+              answers: options.answers.map((answer) => ({
+                no_preference: answer.noPreference,
+                option_id: answer.optionId,
+                other_text: answer.otherText,
+                question_id: answer.questionId,
+              })),
+            }
+          : {}),
+        mode: options.mode,
+        prompt: parsedOptions.prompt,
+        reference_date: referenceDate,
+        time_zone: timeZone,
+      },
+    })
+
+    if (error) {
+      throw error
+    }
+
+    const response = data as AiFunctionResponse | undefined
+
+    if (options.mode === 'guided' && !options.answers?.length) {
+      const questionSet = response ? mapQuestionSet(response) : null
+
+      if (questionSet) {
+        if (questionSet.questions.length > 5) {
+          throw new AppError('validation', 'La IA devolvió demasiadas preguntas.')
+        }
+
+        return questionSet
+      }
+    }
+
+    if (!response || !Array.isArray(response.events) || response.events.length > 20) {
+      throw new AppError('validation', 'La IA no devolvió borradores válidos.')
+    }
+
+    const subjectIds = new Set(options.subjectIds ?? [])
+    const personalGroupIds = new Set(options.personalGroupIds ?? [])
+
+    return parseFunctionResponse(response, subjectIds, personalGroupIds)
+  } catch (error) {
     throw toAppError(error, 'No se pudieron preparar los eventos.')
   }
+}
 
-  const response = data as AiFunctionResponse | undefined
-  const subjectIds = new Set(options.subjectIds ?? [])
-  const personalGroupIds = new Set(options.personalGroupIds ?? [])
-
-  return parseFunctionResponse(response, subjectIds, personalGroupIds)
+export async function generateAiEventDrafts(
+  options: GenerateAiEventDraftOptions,
+): Promise<AiEventDraft[]> {
+  const result = await requestAiEventPlan({ ...options, mode: 'quick' })
+  return result as AiEventDraft[]
 }
 
 export async function requestAiEventDrafts(

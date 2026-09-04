@@ -90,6 +90,11 @@ local snapshot = {
 
 Repasar **derivadas** y *relaciones*.
 
+1. Primera tarea
+2. Segunda tarea
+
+- Punto visible
+
 $$
 \rho: p_0 \xrightarrow{a_1} p_1 \xrightarrow{a_2} p_2 \dots \xrightarrow{a_n} p_n
 $$
@@ -320,6 +325,19 @@ assert(note_viewer.text_format == "html")
 assert(not note_viewer.is_txt)
 assert(note_viewer.text:find("<h1>Plan de estudio</h1>", 1, true))
 assert(note_viewer.text:find("<strong>derivadas</strong>", 1, true))
+assert(note_viewer.text:find('<ol style="margin-left: 1em; padding-left: 1em;">', 1, true))
+assert(note_viewer.text:find('<ul style="margin-left: 1em; padding-left: 1em;">', 1, true))
+local note_page = note_viewer.box_widget.document:openPage(1)
+local ordered_marker_inset = false
+for _, line in ipairs(note_page:getPageText()) do
+    for _, word in ipairs(line) do
+        if word.word == "1." and word.x0 > note_viewer.text_padding then
+            ordered_marker_inset = true
+        end
+    end
+end
+note_page:close()
+assert(ordered_marker_inset)
 assert(note_viewer.text:find("<h3>Clase 00", 1, true))
 assert(note_viewer.text:find("⟶", 1, true))
 assert(note_viewer.text:find("<i>a</i><sub>1</sub>", 1, true))

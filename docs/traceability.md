@@ -22,12 +22,14 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | RF-09 | Errores de asociación, triggers y eliminación protegida | `errors.test.ts`, `catalogStore.test.ts`, migración revisada | Automatizado + estático |
 | RF-10 | `EventForm`, `eventService` y relaciones académicas | `EventForm.test.tsx`, `validation.test.ts`, `domainServices.test.ts` | Automatizado |
 | RF-11 | `EventForm`, `eventService` y relaciones personales | `EventForm.test.tsx`, `validation.test.ts` | Automatizado |
+| RF-11.1 | `CalendarPage` y selector de tipo en `EventForm` | `EventForm.test.tsx`, typecheck y build | Automatizado + estático |
 | RF-12 | Fechas de duración, todo el día y mapper FullCalendar | `EventForm.test.tsx`, `dateUtils.test.ts`, `calendarEventMapper.test.ts` | Automatizado |
 | RF-13 | Validación de rangos inclusivos | `validation.test.ts`, `EventForm.test.tsx` | Automatizado |
 | RF-14 | Edición completa y validación combinada | `eventService.ts`, `domainServices.test.ts`, `EventForm.test.tsx` | Automatizado |
 | RF-15 | `EventDetail`, `ConfirmDialog`, `calendarStore` | Confirmación en `EventDetail.test.tsx`; prueba de servicio real pendiente | Parcial |
 | RF-16 | Estados explícitos, detalle y mapper | `calendarEventMapper.test.ts`, `EventDetail.test.tsx`, `calendarStore.test.ts` | Automatizado |
 | RF-17 | `CalendarPage` y navegación de Agenda | `CalendarPage.test.tsx`, `AgendaView.test.tsx`; navegación E2E autenticada pendiente | Parcial |
+| RF-17.1 | `CalendarPage` y fecha inicial de `AgendaView` | typecheck, build y revisión de UI | Automatizado + estático |
 | RF-18 | `AgendaView` y `listUpcomingEvents` | `AgendaView.test.tsx`, `domainServices.test.ts` | Automatizado |
 | RF-19 | FullCalendar `dayGridMonth` | Configuración revisada; prueba de navegador autenticada pendiente | Parcial |
 | RF-20 | FullCalendar `timeGridWeek` | Configuración revisada; prueba de navegador autenticada pendiente | Parcial |
@@ -49,6 +51,7 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | RF-IA-03 | Catálogo cargado server-side con cliente autenticado | Inspección de función y RLS del SDK | Estático |
 | RF-IA-04 | Fallback secuencial de OpenRouter | Inspección del orden de modelos en la función | Estático |
 | RF-IA-05 | Validación de respuesta y banderas de revisión | `aiEventService.test.ts`, `validation.test.ts` | Automatizado |
+| RF-IA-05.1 | Modo guiado, preguntas serializables y respuestas | `aiEventService.test.ts`, `AiEventPromptPanel.test.tsx`, inspección de función | Automatizado + estático |
 | RF-IA-06 | `AiEventPromptPanel` y reutilización de `EventForm` | `AiEventPromptPanel.test.tsx` | Automatizado |
 | RF-IA-07 | Confirmación y guardado a través de `calendarStore` | `CalendarPage.test.tsx`, `AiEventPromptPanel.test.tsx` | Automatizado |
 | RF-IA-08 | Validación existente de `eventInputSchema` | `validation.test.ts`, `AiEventPromptPanel.test.tsx` | Automatizado |
@@ -56,6 +59,7 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | RF-IA-10 | `OPENROUTER_API_KEY` solo en función server-side | Secreto InsForge, búsqueda estática y bundle de producción | Automatizado + estático |
 | RF-IA-11 | Función sin escrituras de prompt/respuesta | Inspección de función desplegada | Estático |
 | RF-IA-12 | `CalendarPage` crea grupos confirmados y asocia eventos | `CalendarPage.test.tsx`, `validation.test.ts` | Automatizado |
+| RF-IA-13 | `CalendarPage` crea asignaturas confirmadas y asocia eventos | `CalendarPage.test.tsx`, `validation.test.ts` | Automatizado |
 
 ## Criterios De Aceptación De Creación Asistida
 
@@ -64,6 +68,7 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | CA-IA-01 a CA-IA-06 | `aiEventService.test.ts`, `validation.test.ts`, `AiEventPromptPanel.test.tsx`, `CalendarPage.test.tsx`; inspección de función | Automatizado + estático |
 | CA-IA-07 | Búsqueda estática del secreto y bundle de producción | Automatizado |
 | CA-IA-08 | `npm test`, lint, typecheck, build y documentación | Automatizado |
+| CA-IA-09 | Flujo guiado, `Otro`, propuestas de catálogo y segunda generación | `AiEventPromptPanel.test.tsx`, `aiEventService.test.ts`, typecheck y build | Automatizado + estático |
 
 ## Creación Asistida De Hábitos Con IA
 
@@ -72,8 +77,8 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | RF-H-29 a RF-H-32 | `karenda-ai-habit-drafts`, `errors.ts`, `aiHabitService` | `aiHabitService.test.ts`, `errors.test.ts`, revisión de función | Automatizado + estático |
 | RF-H-33 a RF-H-35 | `AiHabitPromptPanel`, `HabitForm`, `habitService` | `aiHabitService.test.ts`, validación y búsqueda estática de secretos | Automatizado + estático |
 | CA-H-16 a CA-H-19 | Panel de borradores y manejo compartido de `429` | Tests unitarios; E2E autenticado pendiente | Automatizado + parcial |
-| RF-H-36 a RF-H-40 | Switch rápido/guiado, contrato de preguntas y normalización cuantitativa | `aiHabitService.test.ts`, typecheck y revisión de función | Automatizado + estático |
-| CA-H-20 a CA-H-22 | “Estudiar 1 hora”, preguntas guiadas y cambio de modo | `aiHabitService.test.ts`; E2E autenticado pendiente | Automatizado + parcial |
+| RF-H-36 a RF-H-41 | Switch rápido/guiado, contrato de preguntas, normalización cuantitativa y filtros colapsables | `aiHabitService.test.ts`, typecheck, build y revisión de UI | Automatizado + estático |
+| CA-H-20 a CA-H-23 | “Estudiar 1 hora”, preguntas guiadas, cambio de modo y conservación de filtros | `aiHabitService.test.ts`, typecheck y build; E2E autenticado pendiente | Automatizado + parcial |
 
 ## Requisitos No Funcionales
 
@@ -108,6 +113,7 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | CA-02 | Formularios, stores y servicios de catálogo | Automatizado |
 | CA-03 | Errores y triggers de asociaciones | Automatizado + estático |
 | CA-04 | Formularios y detalle de eventos; flujo browser pendiente | Parcial |
+| CA-04.1 | Acción única y selector de tipo dentro del formulario; flujo browser pendiente | Parcial |
 | CA-05 | Validaciones, fechas locales y mapper | Automatizado |
 | CA-06 | Estados en detalle, Agenda y calendario | Automatizado |
 | CA-07 | Componentes y Agenda; recorrido autenticado pendiente | Parcial |
@@ -142,6 +148,8 @@ credenciales de prueba.
 | RF-H-18 a RF-H-20 | CalendarDisplayItem y proyección FullCalendar/Agenda | Tests de rango, visibilidad y solo lectura | Automatizado + parcial |
 | RF-H-21 a RF-H-24 | RecurringTaskForm, recurring_task_schedule_versions, habitService y recurringTaskStore | Tests de servicio, store y formulario; RLS runtime aprobada; E2E pendiente | Automatizado + parcial |
 | RF-H-25 a RF-H-28 | Filtros, feedback, RLS y ausencia de permisos de notificación | Tests locales, migración revisada y RLS runtime; E2E pendiente | Parcial |
+| RF-H-42 a RF-H-43 | Sincronización de la fecha local al entrar en `Hoy` y `HabitListSkeleton` para la carga inicial y los cambios de fecha | Tests del store, typecheck, lint, build y revisión de accesibilidad | Automatizado + estático |
+| RF-H-44 | Orden de acciones del encabezado compartido entre web y Android | Test de componente, typecheck, lint y build | Automatizado + estático |
 
 ### Requisitos No Funcionales
 
@@ -160,6 +168,8 @@ credenciales de prueba.
 | CA-H-09 a CA-H-11 | Estadísticas, notas y proyección de calendario | Tests de motor/proyección; UI autenticada pendiente | Automatizado + parcial |
 | CA-H-12 a CA-H-13 | Flujos de tareas, filtros, errores y responsive | Tests locales, lint y build; E2E pendiente | Parcial |
 | CA-H-14 a CA-H-15 | Integración RLS, revisión de snapshot v1 y alcance web-only | SQL revisado, snapshot sin cambios y RLS runtime en siete tablas; E2E pendiente | Parcial |
+| CA-H-24 | Fecha local actual al abrir `Hoy` y esqueleto visible mientras cargan hábitos/ocurrencias | Tests del store, typecheck, lint, build y revisión de accesibilidad; E2E autenticado pendiente | Automatizado + parcial |
+| CA-H-25 | Orden `Nuevo hábito` y `Agregar con IA` en ambas plataformas | Test de componente, typecheck, lint y build; E2E autenticado pendiente | Automatizado + parcial |
 
 ### Brechas Y Riesgos A Vigilar
 
@@ -208,13 +218,13 @@ credenciales de prueba.
 | RF-A-07 | Configuración pública y secretos fuera del código | Revisión estática del bundle; auditoría final pendiente | Parcial |
 | RF-A-08 | Persistencia web temporal documentada; puente seguro pendiente | Revisión de sesión en dispositivo | Planificado |
 | RF-A-09 | Encabezado compacto con ocultación al desplazarse y cubierta sólida de barra de estado | Test de visibilidad del layout; smoke Android pendiente | Parcial |
-| RF-A-10 | `public/karenda-app-icon.png`, foreground adaptativo y recursos mipmap del launcher | Inspección de recursos, comprobación RGBA y builds Android debug/release | Automatizado |
-| RF-A-11 | Variantes `splash.png` con el ícono oficial sobre el lienzo neutro | Inspección visual de splash y builds Android debug/release | Automatizado |
+| RF-A-10 | Cajón móvil bajo el área segura, cubierta sólida y solo rutas secundarias | Test del cajón; smoke Android pendiente | Parcial |
+| RF-A-11 | Flujo IA de eventos rápido/guiado, preguntas, `Otro` y propuestas de catálogo | `AiEventPromptPanel.test.tsx`, `aiEventService.test.ts`, typecheck y build Android | Automatizado + estático |
 | RNF-A-01 a RNF-A-03 | `capacitor.config.ts`, `webDir` local y `android/` | Lint, typecheck, build y `cap doctor` | Automatizado |
 | RNF-A-04 a RNF-A-06 | HTTPS, `SystemBars` con variables CSS de insets, `applicationId` provisional y firma fuera del repositorio | Lint, build Android y auditoría de release pendiente | Parcial |
 | CA-A-01 | Shell Android con assets locales | APK debug generado; instalación pendiente | Parcial |
 | CA-A-02 a CA-A-04 | InsForge y estado offline | Tests web; emulador/teléfono y RLS pendiente | Parcial |
 | CA-A-05 a CA-A-07 | Áreas seguras mediante `SystemBars`, navegación y configuración nativa; APK release pendiente | Test de layout y build; smoke físico, análisis de secretos e instalación pendientes | Parcial |
 | CA-A-08 | Encabezado sensible al desplazamiento y fondo sólido de barra de estado | Tests de layout; smoke físico pendiente | Parcial |
-| CA-A-09 | Ícono oficial compartido entre web y launcher Android | Inspección de variantes y builds Android debug/release | Automatizado |
-| CA-A-10 | Splash nativo de Android con la marca oficial | Inspección de variantes y builds Android debug/release | Automatizado |
+| CA-A-09 | Cajón móvil respeta la barra de estado y evita repetir navegación principal | Test del layout; smoke físico pendiente | Parcial |
+| CA-A-10 | Preparación y confirmación de eventos asistidos desde Android | Tests de servicio/panel, build web y sincronización de Capacitor | Automatizado + parcial |

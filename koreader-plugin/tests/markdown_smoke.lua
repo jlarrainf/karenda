@@ -31,6 +31,8 @@ local brace_text = Markdown.toPlainText([[ $\Sigma = \{0, 1\}$ ]])
 assert(brace_text:find("Σ = {0, 1}", 1, true))
 local turnstile_text = Markdown.toPlainText([[$\vdash_A$]])
 assert(turnstile_text:find("⊢_A", 1, true))
+local ddagger_text = Markdown.toPlainText([[$\ddagger$]])
+assert(ddagger_text:find("‡", 1, true))
 
 local rich = Markdown.toHtml([[### Clase 00 - Repaso de fundamentos
 
@@ -85,6 +87,15 @@ assert(not brace_html:find("\\{", 1, true))
 local turnstile_html = Markdown.toHtml([[$\vdash_A$]])
 assert(turnstile_html:find("⊢<sub><i>A</i></sub>", 1, true))
 assert(not turnstile_html:find("vdash", 1, true))
+local ddagger_html = Markdown.toHtml([[$\ddagger$]])
+assert(ddagger_html:find("‡", 1, true))
+assert(not ddagger_html:find("ddagger", 1, true))
+local list_html = Markdown.toHtml([[1. Primer elemento
+2. Segundo elemento
+
+- Punto]])
+assert(list_html:find('<ol style="margin-left: 1em; padding-left: 1em;">', 1, true))
+assert(list_html:find('<ul style="margin-left: 1em; padding-left: 1em;">', 1, true))
 
 local unsafe_fence = Markdown.toHtml([[```" onload="alert(1)
 texto sin atributos

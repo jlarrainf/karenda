@@ -91,6 +91,39 @@ function getCalendarView(viewType: string): CalendarView | null {
   return null
 }
 
+function normalizeCatalogName(value: string): string {
+  return value
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase()
+}
+
+function deriveSubjectCode(name: string): string {
+  const words = normalizeCatalogName(name)
+    .replace(/[^a-z0-9áéíóúüñ]+/gi, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+  const initials = words.map((word) => word[0]).join('').toLocaleUpperCase()
+  const firstWord = words[0]?.toLocaleUpperCase() ?? 'NUEVA'
+
+  return (words.length > 1 ? initials : firstWord).slice(0, 40) || 'NUEVA'
+}
+
+function deriveSubjectAbbreviation(name: string): string {
+  return deriveSubjectCode(name).slice(0, 12)
+}
+
+function hasOnlyMissingSubjectError(input: EventInput): boolean {
+  const result = eventInputSchema.safeParse(input)
+
+  return (
+    !result.success &&
+    result.error.issues.every((issue) => issue.path[0] === 'subjectId')
+  )
+}
+
 const calendarButtonText = { today: 'Hoy' }
 const calendarHeaderToolbar = {
   center: 'title',
@@ -117,7 +150,6 @@ export function CalendarPage({
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [isAiPromptOpen, setIsAiPromptOpen] = useState(false)
   const [areFiltersOpen, setAreFiltersOpen] = useState(false)
-  const [localAgendaStartDate, setLocalAgendaStartDate] = useState(todayDate)
   const calendarRef = useRef<FullCalendar | null>(null)
   const lastRequestedCalendarRangeKey = useRef<string | null>(null)
   const storeEvents = useCalendarStore((state) => state.events)
@@ -157,6 +189,7 @@ export function CalendarPage({
   const clearRecurringTaskError = useRecurringTaskStore((state) => state.clearError)
   const storeSubjects = useCatalogStore((state) => state.subjects)
   const storePersonalGroups = useCatalogStore((state) => state.personalGroups)
+  const createSubject = useCatalogStore((state) => state.createSubject)
   const createPersonalGroup = useCatalogStore((state) => state.createPersonalGroup)
   const catalogError = useCatalogStore((state) => state.error)
   const loadCatalog = useCatalogStore((state) => state.load)
@@ -239,7 +272,7 @@ export function CalendarPage({
   const visibleCalendarItemCount = filteredEvents.length + calendarDisplayItems.length
   const activeFilterCount = countActiveCalendarFilters(filters)
   const hasFilters = hasActiveCalendarFilters(filters)
-  const resolvedAgendaStartDate = agendaStartAt ?? localAgendaStartDate
+  const resolvedAgendaStartDate = agendaStartAt ?? todayDate
 
   const normalizeGroupName = (value: string): string =>
     value
@@ -287,24 +320,6 @@ export function CalendarPage({
 
     if (events === undefined) {
       void loadAgenda(getTodayDateValue())
-    }
-  }
-
-  const handleAgendaNavigation = (days: number) => {
-    const nextDate = shiftDateKey(resolvedAgendaStartDate, days)
-    setLocalAgendaStartDate(nextDate)
-
-    if (events === undefined) {
-      void loadAgenda(nextDate, true)
-    }
-  }
-
-  const handleAgendaToday = () => {
-    const today = getTodayDateValue()
-    setLocalAgendaStartDate(today)
-
-    if (events === undefined) {
-      void loadAgenda(today, true)
     }
   }
 
@@ -459,11 +474,15 @@ export function CalendarPage({
   const handleSaveAiEvents = async (drafts: AiEventDraft[]): Promise<AiEventSaveResult> => {
     const invalidDraft = drafts.find((draft) => {
       const parsed = eventInputSchema.safeParse(draft.input)
-      const proposedName = draft.newPersonalGroupName?.trim() ?? ''
+      const proposedSubjectName = draft.newSubjectName?.trim() ?? ''
+      const proposedGroupName = draft.newPersonalGroupName?.trim() ?? ''
 
       return (
-        !parsed.success ||
-        (proposedName !== '' &&
+        (!parsed.success &&
+          !(proposedSubjectName !== '' && hasOnlyMissingSubjectError(draft.input))) ||
+        (proposedSubjectName !== '' &&
+          (draft.input.kind !== 'academic' || draft.input.subjectId !== null)) ||
+        (proposedGroupName !== '' &&
           (draft.input.kind !== 'personal' || draft.input.personalGroupId !== null))
       )
     })
@@ -474,6 +493,58 @@ export function CalendarPage({
         failedIndexes: drafts.map((_, index) => index),
         errorMessage: 'Revisa los borradores antes de guardarlos.',
       }
+    }
+
+    const subjectIdsByName = new Map<string, string>()
+    let createdSubjects = 0
+
+    for (const draft of drafts) {
+      const proposedName = draft.newSubjectName?.trim() ?? ''
+
+      if (!proposedName) {
+        continue
+      }
+
+      const normalizedName = normalizeCatalogName(proposedName)
+
+      if (subjectIdsByName.has(normalizedName)) {
+        continue
+      }
+
+      const existingSubject = resolvedSubjects.find(
+        (subject) => normalizeCatalogName(subject.name) === normalizedName,
+      )
+
+      if (existingSubject) {
+        subjectIdsByName.set(normalizedName, existingSubject.id)
+        continue
+      }
+
+      const createdSubject = await createSubject({
+        abbreviation: deriveSubjectAbbreviation(proposedName),
+        code: deriveSubjectCode(proposedName),
+        color: '#2F625A',
+        name: proposedName,
+      })
+
+      if (!createdSubject) {
+        const catalogErrorMessage = useCatalogStore.getState().error
+        const createdSubjectMessage = createdSubjects
+          ? ` Se crearon ${createdSubjects} asignaturas; ningún evento de esta operación se guardó todavía.`
+          : ''
+
+        return {
+          created: 0,
+          createdSubjects,
+          failedIndexes: drafts.map((_, index) => index),
+          errorMessage:
+            (catalogErrorMessage ?? 'No se pudieron crear las asignaturas.') +
+            createdSubjectMessage,
+        }
+      }
+
+      subjectIdsByName.set(normalizedName, createdSubject.id)
+      createdSubjects += 1
     }
 
     const groupIdsByName = new Map<string, string>()
@@ -511,6 +582,7 @@ export function CalendarPage({
 
         return {
           created: 0,
+          createdSubjects,
           createdGroups,
           failedIndexes: drafts.map((_, index) => index),
           errorMessage:
@@ -524,14 +596,20 @@ export function CalendarPage({
     }
 
     const inputs = drafts.map((draft) => {
+      const proposedSubjectName = draft.newSubjectName?.trim() ?? ''
       const proposedName = draft.newPersonalGroupName?.trim() ?? ''
+      const subjectId = proposedSubjectName
+        ? subjectIdsByName.get(normalizeCatalogName(proposedSubjectName))
+        : undefined
       const groupId = proposedName
         ? groupIdsByName.get(normalizeGroupName(proposedName))
         : undefined
 
-      return groupId
-        ? { ...draft.input, personalGroupId: groupId }
-        : draft.input
+      return {
+        ...draft.input,
+        ...(subjectId ? { subjectId } : {}),
+        ...(groupId ? { personalGroupId: groupId } : {}),
+      }
     })
 
     const invalidInput = inputs.find((input) => !eventInputSchema.safeParse(input).success)
@@ -539,6 +617,7 @@ export function CalendarPage({
     if (invalidInput) {
       return {
         created: 0,
+        createdSubjects,
         createdGroups,
         failedIndexes: drafts.map((_, index) => index),
         errorMessage: 'Revisa los borradores antes de guardarlos.',
@@ -556,7 +635,9 @@ export function CalendarPage({
         const eventError = useCalendarStore.getState().error ?? 'No se pudo guardar el evento.'
         errorMessage = createdGroups
           ? `${eventError} También se crearon ${createdGroups} grupos personales; los eventos pendientes conservan esa asociación.`
-          : eventError
+          : createdSubjects
+            ? `${eventError} También se crearon ${createdSubjects} asignaturas; los eventos pendientes conservan esa asociación.`
+            : eventError
         failedIndexes = Array.from(
           { length: inputs.length - index },
           (_, offset) => index + offset,
@@ -567,7 +648,7 @@ export function CalendarPage({
       created += 1
     }
 
-    return { created, createdGroups, errorMessage, failedIndexes }
+    return { created, createdGroups, createdSubjects, errorMessage, failedIndexes }
   }
 
   return (
@@ -582,12 +663,7 @@ export function CalendarPage({
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button onClick={() => openCreateForm('academic')}>
-            Nuevo evento académico
-          </Button>
-          <Button onClick={() => openCreateForm('personal')} variant="secondary">
-            Nuevo evento personal
-          </Button>
+          <Button onClick={() => openCreateForm('academic')}>Nuevo evento</Button>
           <Button onClick={openAiPrompt} variant="secondary">
             Agregar con IA
           </Button>
@@ -631,9 +707,38 @@ export function CalendarPage({
         </p>
       ) : null}
 
+      {isAiPromptOpen ? (
+        <AiEventPromptPanel
+          onCancel={() => {
+            clearCalendarError()
+            setIsAiPromptOpen(false)
+          }}
+          onSave={handleSaveAiEvents}
+          personalGroups={resolvedPersonalGroups}
+          subjects={resolvedSubjects}
+        />
+      ) : isFormOpen ? (
+        <aside
+          aria-label="Formulario de evento"
+          className="rounded-panel border border-border bg-surface p-5 sm:p-6"
+        >
+          <EventForm
+            event={editingEvent}
+            isLoading={isSaving}
+            kind={formKind}
+            key={editingEvent?.id ?? 'new-event'}
+            onCancel={closeForm}
+            onKindChange={editingEvent ? undefined : setFormKind}
+            onSubmit={handleSaveEvent}
+            personalGroups={resolvedPersonalGroups}
+            subjects={resolvedSubjects}
+          />
+        </aside>
+      ) : null}
+
       <div
         className={
-          selectedEvent || selectedDisplayItem || isFormOpen || isAiPromptOpen
+          selectedEvent || selectedDisplayItem
             ? 'grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)]'
             : ''
         }
@@ -680,31 +785,6 @@ export function CalendarPage({
 
           <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-3">
-              {calendarView === 'agenda' ? (
-                <div
-                  aria-label="Navegación de agenda"
-                  className="flex flex-wrap gap-2"
-                  role="group"
-                >
-                  <Button
-                    aria-label="Ir a la agenda anterior"
-                    onClick={() => handleAgendaNavigation(-7)}
-                    variant="secondary"
-                  >
-                    Anterior
-                  </Button>
-                  <Button onClick={handleAgendaToday} variant="secondary">
-                    Hoy
-                  </Button>
-                  <Button
-                    aria-label="Ir a la agenda siguiente"
-                    onClick={() => handleAgendaNavigation(7)}
-                    variant="secondary"
-                  >
-                    Siguiente
-                  </Button>
-                </div>
-              ) : null}
               <CalendarViewSelector onChange={handleViewChange} value={calendarView} />
             </div>
             <p aria-live="polite" className="text-sm text-ink-muted">
@@ -761,33 +841,7 @@ export function CalendarPage({
           )}
         </div>
 
-        {isAiPromptOpen ? (
-          <AiEventPromptPanel
-            onCancel={() => {
-              clearCalendarError()
-              setIsAiPromptOpen(false)
-            }}
-            onSave={handleSaveAiEvents}
-            personalGroups={resolvedPersonalGroups}
-            subjects={resolvedSubjects}
-          />
-        ) : isFormOpen ? (
-          <aside
-            aria-label="Formulario de evento"
-            className="rounded-panel border border-border bg-surface p-5 sm:p-6"
-          >
-            <EventForm
-              event={editingEvent}
-              isLoading={isSaving}
-              kind={formKind}
-              key={editingEvent?.id ?? `new-${formKind}`}
-              onCancel={closeForm}
-              onSubmit={handleSaveEvent}
-              personalGroups={resolvedPersonalGroups}
-              subjects={resolvedSubjects}
-            />
-          </aside>
-        ) : selectedDisplayItem ? (
+        {selectedDisplayItem ? (
           <CalendarDisplayDetail
             item={selectedDisplayItem}
             onClose={() => setSelectedDisplayItemId(null)}

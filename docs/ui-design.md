@@ -23,26 +23,6 @@ tarea y sus estados antes de elegir la forma, construir con un vocabulario
 reutilizable, y revisar cada superficie con `critique`, `audit` y `polish` antes
 de considerarla terminada.
 
-### Identidad De Marca
-
-La marca oficial usa el recurso `public/karenda-app-icon.png`: un calendario
-redondeado en verde petróleo con una forma blanca integrada que recuerda una K
-y una página en movimiento. La silueta conserva la lectura inmediata de
-calendario, mientras la K y la página representan la organización conjunta de
-eventos académicos, compromisos personales, hábitos y notas.
-
-El mismo recurso transparente se usará como favicon y en los puntos de entrada
-visibles de la web. En la web se acompañará con el wordmark `Karenda`; en el
-cajón de apps se mostrará solo el ícono. No se deformará, recortará ni se
-reemplazará por una K tipográfica: el calendario ocupa casi todo el lienzo
-cuadrado y solo conserva un margen transparente mínimo. Android usa además una
-derivación transparente de zona segura (`karenda_app_icon_adaptive.png`) para
-su máscara adaptativa, sin cambiar el diseño del logo principal.
-La pantalla de configuración inicial también muestra este mismo recurso junto al
-nombre de la aplicación.
-La pantalla de arranque nativa de Android lo presenta centrado sobre el lienzo
-neutro de Karenda y no conserva el recurso de bienvenida de Capacitor.
-
 ### Superficie De Bloqueo En KOReader
 
 La pantalla de bloqueo del plugin no añade una composición visual paralela para
@@ -196,7 +176,10 @@ semántico de diálogo o un patrón equivalente:
   segura inferior del dispositivo.
 - Debajo del encabezado se mantiene una navegación compacta y visible con
   `Calendario`, `Hábitos` y `Notas`, para que las tres tareas centrales no dependan de abrir
-  el cajón. El cajón conserva el resto de las rutas organizadas por secciones.
+  el cajón. El cajón muestra únicamente el resto de las rutas organizadas por
+  secciones, sin repetir esas tres áreas principales.
+- El cajón comienza debajo del área segura superior y conserva un fondo sólido
+  en la franja de la barra de estado para que el contenido no se vea por detrás.
 - En móvil se priorizan navegación, fecha, búsqueda y acción primaria; los
   filtros secundarios pueden abrirse en un panel accesible.
 
@@ -310,6 +293,9 @@ de datos.
 
 - Los formularios de eventos se presentan en un panel `surface` con una sola
   columna de lectura y grupos de fecha/hora en dos columnas desde `sm`.
+- La cabecera ofrece una única acción `Nuevo evento`; el tipo se elige dentro
+  del formulario mediante un selector visible `Académico`/`Personal`. La
+  acción `Agregar con IA` permanece separada como flujo asistido.
 - El orden de captura es título, relación con asignatura o grupo, inicio, modo
   de todo el día, término, estado, lugar y descripción.
 - La etiqueta de cada campo es visible. Los campos obligatorios se identifican
@@ -324,6 +310,23 @@ de datos.
 
 ### Creación Asistida Con IA
 
+- El panel ofrece un control persistente `Creación rápida`/`Creación guiada`.
+  Rápida queda activa por defecto; Guiada muestra una sola pregunta de relación
+  por pantalla con progreso `Pregunta N de M`, opciones de catálogo, propuesta
+  de creación y `Otro` con campo de texto.
+- Las preguntas guiadas se presentan dentro del mismo panel con semántica de
+  diálogo accesible, botones táctiles, foco visible y una acción clara para
+  avanzar o cancelar. Las respuestas no se muestran como conversación abierta.
+- Cuando la IA no identifica una asignatura o grupo, el borrador muestra el
+  nombre sugerido y permite elegir un registro existente, cambiarlo mediante
+  `Otro` o confirmar la creación durante el guardado. La creación de registros
+  se comunica como propuesta hasta la confirmación explícita.
+- El contrato de preguntas no dependerá de componentes web: cada opción tendrá
+  identificador estable y etiqueta en español, y las respuestas conservarán
+  `question_id`, `option_id`, `other_text` y `no_preference` para Android.
+- El panel `Agregar eventos con IA` aparece inmediatamente debajo de las
+  acciones de creación y antes de la agenda cuando está activo; conserva su
+  panel accesible y no obliga a buscarlo junto al calendario.
 - El encabezado del calendario añade una acción secundaria `Agregar con IA`,
   ubicada junto a las acciones de creación manual. La acción abre el mismo
   espacio lateral de trabajo y no desplaza ni oculta el calendario en
@@ -380,9 +383,9 @@ de datos.
 - La Agenda usa una lista de lectura rápida agrupada por fecha. Cada grupo tiene
   un encabezado de fecha, y cada fila muestra título, horario o `Todo el día`,
   relación, color y estado textual.
-- La Agenda conserva la barra de navegación con `Anterior`, `Siguiente` y `Hoy`.
-  `Hoy` devuelve el inicio de la lista a la fecha local actual; los otros
-  controles desplazan el inicio de la lista en pasos de siete días.
+- La Agenda comienza en la fecha local actual y no muestra controles de
+  desplazamiento propios; la navegación temporal permanece disponible en las
+  vistas de calendario que la necesitan.
 - Los botones nativos del toolbar de FullCalendar usan texto e iconos oscuros
   en estado normal y deshabilitado; solo el estado activo usa texto claro sobre
   el fondo de marca.
@@ -432,6 +435,9 @@ de datos.
 - Hábitos es una superficie principal, no una pantalla de administración.
   Su encabezado muestra la fecha activa, Hoy, Nuevo hábito y el acceso a
   Tareas recurrentes.
+- Las acciones principales del encabezado aparecen en el orden `Nuevo hábito`
+  y después `Agregar con IA`, para priorizar la creación manual y mantener la
+  misma jerarquía que Calendario.
 - La vista Hoy prioriza una lista compacta y accionable. Cada fila muestra
   nombre, relación opcional, meta, progreso y estado textual. Las acciones de
   alta frecuencia aparecen directamente: Completar, Registrar y Omitir.
@@ -470,6 +476,11 @@ de datos.
 - Los estados requeridos son vacío inicial, sin hábitos para hoy, carga, error,
   guardado, guardado parcial, registro corregido, historial vacío, estadística
   desactivada y hábito archivado.
+- Al entrar o volver a `Hoy`, la superficie solicitará siempre la fecha local
+  actual y no reutilizará como fecha inicial una selección histórica anterior.
+- Mientras se cargan los hábitos y sus ocurrencias, la región principal mostrará
+  esqueletos de grupos y filas con `aria-busy`; no mostrará un estado vacío
+  prematuro.
 - La vista de hábitos tendrá filtros visibles por estado, tipo de seguimiento,
   relación y archivado; los hábitos archivados estarán excluidos inicialmente.
   La edición de una regla futura se abrirá como un flujo separado con fecha
@@ -561,9 +572,13 @@ de datos.
   subtítulos escalonados, negrita, cursiva y fórmulas renderizadas. Las variables
   matemáticas se distinguirán de los operadores y los exponentes/subíndices no
   se mostrarán como caret o guion bajo crudos; símbolos lógicos como `⊢` conservarán
-  sus subíndices. Las etiquetas de flecha se elevarán sin convertir sus elementos
-  contiguos en bloques, para que una fórmula de bloque permanezca en una línea
-  cuando quepa en la pantalla. La navegación de filtros usará una jerarquía de ancho completo:
+  sus subíndices y `\ddagger` se normalizará al símbolo `‡`. Las etiquetas de flecha
+ se elevarán sin convertir sus elementos contiguos en bloques, para que una fórmula
+ de bloque permanezca en una línea cuando quepa en la pantalla. Las listas HTML
+  `ol` y `ul` reservarán `1em` de margen y `1em` de padding interno para que sus
+  marcadores no queden recortados en el borde izquierdo del `TextViewer`; el
+ ajuste será local a la lectura Markdown y no cambiará la geometría del
+ calendario. La navegación de filtros usará una jerarquía de ancho completo:
   `Todos los ramos` será la acción académica principal, las asignaturas se
   distribuirán en filas legibles y los grupos personales conservarán una sección
   independiente.
@@ -657,6 +672,19 @@ de datos.
   se hayan podido guardar. En móvil los botones se apilarán; en escritorio la
   acción primaria permanecerá al final del flujo y los mensajes usarán
   `aria-live`.
+- El panel tendrá un switch `Creación rápida` / `Creación guiada`, con la
+  primera opción activa por defecto. El modo guiado abrirá un diálogo accesible
+  con una pregunta por pantalla, alternativas de selección única, `Otro` con
+  campo de texto y `No me importa`; mostrará progreso `Pregunta N de M`.
+- El contrato de preguntas no dependerá de componentes web: cada opción tendrá
+  identificador estable y etiqueta en español, y las respuestas conservarán
+  `question_id`, `option_id`, `other_text` y `no_preference` para Android.
+- El selector de modo mostrará siempre `Rápida` y `Guiada` dentro de un control
+  con borde, thumb y contraste suficiente; el estado activo no dependerá solo
+  del color.
+- Los filtros de Hábitos se mostrarán en un panel colapsable, cerrado por
+  defecto, con `Mostrar filtros`/`Ocultar filtros`, `aria-expanded` y un
+  resumen de filtros activos. Al cerrarlo conservará todos sus valores.
 
 ## Estados Y Calidad
 

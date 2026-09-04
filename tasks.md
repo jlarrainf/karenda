@@ -256,10 +256,20 @@ contrato o una superficie visible.
 - [x] **Tarea 107: Ajustar el encabezado móvil y la barra de estado** (20-30 min).
   Ocultar el encabezado al desplazarse hacia abajo, mostrarlo al desplazarse
   hacia arriba y mantener una cubierta sólida para el área de la barra de estado.
-- [x] **Tarea 108: Integrar identidad visual en web y Android** (20-30 min).
-  Aplicar el ícono oficial de Karenda al favicon, los puntos de marca de la web
-  y las variantes normal, redonda y adaptativa del launcher Android.
-- [x] **Tarea 109: Completar la identidad visual nativa** (15-20 min).
-  Aplicar el recurso oficial al splash de Android, retirar los recursos de
-  plantilla de Capacitor y mostrar la marca también en la pantalla de
-  configuración inicial de la web.
+- [x] **Tarea 108: Refinar el cajón móvil** (20-30 min). Respetar el área segura
+  superior y evitar repetir en el cajón las rutas principales ya visibles en el
+  encabezado.
+
+## Fase 17: Creación Asistida De Eventos En Android
+
+Estas tareas extienden el contrato compartido de eventos y deben conservar
+la paridad entre el build web y los assets empaquetados por Capacitor.
+
+- [x] **Tarea 109: Añadir modo guiado a eventos asistidos** (20-30 min).
+  Implementar preguntas de relación, respuestas, `Otro` y propuestas de
+  creación de asignaturas o grupos con confirmación explícita.
+- [x] **Tarea 110: Endurecer la preparación de borradores** (20-30 min).
+  Aceptar relaciones textuales desconocidas sin romper la respuesta y mantener
+  el fallback estructurado del servicio server-side.
+- [x] **Tarea 111: Verificar eventos asistidos en Android** (20-30 min).
+  Ejecutar tests, typecheck, lint, build web y sincronización/build Android.

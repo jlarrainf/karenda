@@ -477,7 +477,7 @@ fórmulas a una notación tipográfica legible para tinta electrónica. La salid
 deberá conservar encabezados, negrita, cursiva, listas, citas y código del
 subconjunto soportado, y representará variables matemáticas en cursiva mediante
 etiquetas generadas, exponentes/subíndices con `sup`/`sub` y comandos comunes
-como `\\Sigma`, `\\harpoonup`, `\\vdash`, `\\subseteq`, `\\cup`, `\\cap`,
+como `\\Sigma`, `\\harpoonup`, `\\vdash`, `\\ddagger`, `\\subseteq`, `\\cup`, `\\cap`,
 `\\setminus` y `\\equiv` mediante sus símbolos Unicode. Los símbolos lógicos
 con subíndice, como `\\vdash_A`, deberán conservar el símbolo `⊢` y representar
 `A` como subíndice. Las flechas parametrizadas como
@@ -487,6 +487,10 @@ delimitadores `$` ni comandos LaTeX crudos cuando exista una conversión segura.
 Una fórmula de bloque con varias flechas deberá conservar su flujo horizontal
 cuando quepa en el ancho disponible; la etiqueta elevada no introducirá saltos
 de línea entre la flecha y los elementos contiguos.
+Los elementos de lista HTML `ol` y `ul` recibirán un margen de `1em` y un padding
+interno de `1em` para mantener visibles sus marcadores en el borde izquierdo del
+`TextViewer`; este ajuste será local a la lectura Markdown y no cambiará la
+geometría del calendario.
 
 ### KR-REQ-032: Notas con lectura como vista principal
 

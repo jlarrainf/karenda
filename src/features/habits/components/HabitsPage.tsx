@@ -243,6 +243,44 @@ function HabitRow({
   )
 }
 
+function HabitListSkeleton() {
+  return (
+    <div
+      aria-busy="true"
+      aria-label="Cargando hábitos"
+      className="space-y-5"
+      role="status"
+    >
+      <span className="sr-only">Cargando hábitos…</span>
+      {[0, 1].map((groupIndex) => (
+        <section
+          aria-hidden="true"
+          className="overflow-hidden rounded-panel border border-border bg-surface"
+          key={groupIndex}
+        >
+          <div className="border-b border-border px-4 py-3 sm:px-5">
+            <div className="motion-safe:animate-pulse h-5 w-28 rounded bg-surface-strong" />
+          </div>
+          <div className="divide-y divide-border">
+            {[0, 1].map((rowIndex) => (
+              <div className="space-y-4 px-4 py-4 sm:px-5" key={rowIndex}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="motion-safe:animate-pulse h-5 w-3/4 rounded bg-surface-strong" />
+                    <div className="motion-safe:animate-pulse h-4 w-1/2 rounded bg-surface-subtle" />
+                  </div>
+                  <div className="motion-safe:animate-pulse h-6 w-24 rounded-full bg-surface-strong" />
+                </div>
+                <div className="motion-safe:animate-pulse h-11 w-32 rounded-control bg-surface-subtle" />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  )
+}
+
 function TodayView({
   date,
   habits,
@@ -837,7 +875,6 @@ export function HabitsPage() {
   const range = useHabitStore((state) => state.range)
   const selectedDate = useHabitStore((state) => state.selectedDate)
   const view = useHabitStore((state) => state.view)
-  const isLoaded = useHabitStore((state) => state.isLoaded)
   const isLoading = useHabitStore((state) => state.isLoading)
   const isSaving = useHabitStore((state) => state.isSaving)
   const error = useHabitStore((state) => state.error)
@@ -869,11 +906,12 @@ export function HabitsPage() {
   const [statusFilter, setStatusFilter] = useState<HabitStatusFilter>('all')
   const [relationFilter, setRelationFilter] = useState<HabitRelationFilter>('all')
   const [trackingFilter, setTrackingFilter] = useState<HabitTrackingFilter>('all')
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   useEffect(() => {
     void loadCatalog()
-    void load()
-  }, [load, loadCatalog])
+    if (view !== 'tasks') void load(view === 'today' ? getTodayDate() : undefined)
+  }, [load, loadCatalog, view])
 
   useEffect(() => {
     if (view === 'history' && range.startDate === range.endDate) {
@@ -911,6 +949,12 @@ export function HabitsPage() {
       (relationFilter === 'all' || relation === relationFilter)
     )
   })
+  const activeFilterCount =
+    Number(search.trim().length > 0) +
+    Number(statusFilter !== 'all') +
+    Number(trackingFilter !== 'all') +
+    Number(relationFilter !== 'all') +
+    Number(includeArchived)
   const currentDateLabel = formatDate(selectedDate)
 
   const navigateDate = (date: string) => {
@@ -981,12 +1025,6 @@ export function HabitsPage() {
         </div>
         <div className="flex flex-wrap gap-3">
           <Button
-            onClick={() => setAiPanelOpen(true)}
-            variant="secondary"
-          >
-            Agregar con IA
-          </Button>
-          <Button
             onClick={() => {
               setEditingHabit(null)
               setFutureHabit(null)
@@ -994,6 +1032,9 @@ export function HabitsPage() {
             }}
           >
             Nuevo hábito
+          </Button>
+          <Button onClick={() => setAiPanelOpen(true)} variant="secondary">
+            Agregar con IA
           </Button>
         </div>
       </header>
@@ -1068,7 +1109,34 @@ export function HabitsPage() {
         </div>
       ) : null}
       {view !== 'tasks' ? (
-        <div className="grid gap-4 rounded-panel border border-border bg-surface-subtle p-4 sm:grid-cols-2 xl:grid-cols-4">
+        <>
+          <button
+            aria-controls="habit-filters"
+            aria-expanded={filtersOpen}
+            className="flex min-h-11 w-full items-center justify-between gap-4 rounded-panel border border-border bg-surface-subtle px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-soft sm:px-5"
+            onClick={() => setFiltersOpen((current) => !current)}
+            type="button"
+          >
+            <span>
+              <span className="block text-sm font-semibold text-ink">
+                {filtersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
+              </span>
+              <span className="mt-1 block text-xs text-ink-muted">
+                {activeFilterCount > 0
+                  ? `${activeFilterCount} ${activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}`
+                  : 'Sin filtros activos'}
+              </span>
+            </span>
+            <span aria-hidden="true" className="text-xl leading-none text-brand">
+              {filtersOpen ? '−' : '+'}
+            </span>
+          </button>
+          {filtersOpen ? <div
+            className="grid gap-4 rounded-panel border border-border bg-surface-subtle p-4 sm:grid-cols-2 xl:grid-cols-4"
+            id="habit-filters"
+            role="region"
+            aria-label="Filtros de hábitos"
+          >
           <TextField
             id="habit-search"
             label="Buscar hábito"
@@ -1132,7 +1200,8 @@ export function HabitsPage() {
               {formatShortDate(selectedDate)}
             </p>
           ) : null}
-        </div>
+          </div> : null}
+        </>
       ) : null}
       {catalogError ? (
         <p
@@ -1158,14 +1227,7 @@ export function HabitsPage() {
           Cargando relaciones…
         </p>
       ) : null}
-      {isLoading && !isLoaded && view !== 'tasks' ? (
-        <p
-          className="rounded-panel border border-border bg-surface px-5 py-8 text-sm text-ink-muted"
-          role="status"
-        >
-          Cargando hábitos…
-        </p>
-      ) : null}
+      {isLoading && !formOpen && view !== 'tasks' ? <HabitListSkeleton /> : null}
 
       {formOpen ? (
         <HabitForm
@@ -1183,7 +1245,7 @@ export function HabitsPage() {
           subjects={subjects}
         />
       ) : null}
-      {!formOpen && view === 'today' ? (
+      {!formOpen && !isLoading && view === 'today' ? (
         <TodayView
           date={selectedDate}
           habits={visibleHabits}
@@ -1212,7 +1274,7 @@ export function HabitsPage() {
           }}
         />
       ) : null}
-      {!formOpen && view === 'history' ? (
+      {!formOpen && !isLoading && view === 'history' ? (
         <HistoryView
           habits={visibleHabits}
           occurrences={occurrences}
@@ -1221,7 +1283,7 @@ export function HabitsPage() {
           onLog={saveHabitLog}
         />
       ) : null}
-      {!formOpen && view === 'statistics' ? (
+      {!formOpen && !isLoading && view === 'statistics' ? (
         <StatisticsView
           habits={visibleHabits}
           range={range}

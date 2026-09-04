@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { requestAiEventDrafts } from './aiEventService.ts'
+import { requestAiEventDrafts, requestAiEventPlan } from './aiEventService.ts'
 
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
@@ -31,6 +31,7 @@ describe('aiEventService', () => {
             is_all_day: false,
             kind: 'academic',
             location: 'Sala 12',
+            new_subject_name: null,
             new_personal_group_name: null,
             personal_group_id: null,
             review_flags: [],
@@ -54,6 +55,7 @@ describe('aiEventService', () => {
 
     expect(mocks.invoke).toHaveBeenCalledWith('karenda-ai-event-drafts', {
       body: {
+        mode: 'quick',
         prompt: 'El viernes tengo un control de cálculo a las 10:00.',
         reference_date: '2026-09-01',
         time_zone: 'America/Santiago',
@@ -73,6 +75,7 @@ describe('aiEventService', () => {
         subjectId,
         title: 'Control de Cálculo',
       },
+      newSubjectName: null,
       newPersonalGroupName: null,
       reviewFlags: [],
     })
@@ -88,6 +91,7 @@ describe('aiEventService', () => {
             is_all_day: true,
             kind: 'academic',
             location: null,
+            new_subject_name: null,
             new_personal_group_name: null,
             personal_group_id: null,
             review_flags: ['unknown_subject'],
@@ -121,6 +125,7 @@ describe('aiEventService', () => {
             is_all_day: false,
             kind: 'academic',
             location: null,
+            new_subject_name: null,
             new_personal_group_name: null,
             personal_group_id: null,
             review_flags: [],
@@ -156,5 +161,84 @@ describe('aiEventService', () => {
       }),
     )
     expect(mocks.invoke).not.toHaveBeenCalled()
+  })
+
+  it('returns guided relation questions with a serializable answer contract', async () => {
+    mocks.invoke.mockResolvedValue({
+      data: {
+        questions: [
+          {
+            allows_other: true,
+            id: 'academic_subject',
+            optional: false,
+            options: [
+              { id: `subject:${subjectId}`, label: 'Álgebra' },
+              { id: 'create_subject:calculo', label: 'Crear asignatura «Cálculo»' },
+            ],
+            question: '¿A qué asignatura pertenece?',
+          },
+        ],
+      },
+      error: null,
+    })
+
+    const plan = await requestAiEventPlan({
+      mode: 'guided',
+      prompt: 'Control de cálculo el viernes.',
+    })
+
+    expect(plan).toEqual({
+      kind: 'questions',
+      questions: [
+        {
+          allowsOther: true,
+          id: 'academic_subject',
+          optional: false,
+          options: [
+            { id: `subject:${subjectId}`, label: 'Álgebra' },
+            { id: 'create_subject:calculo', label: 'Crear asignatura «Cálculo»' },
+          ],
+          question: '¿A qué asignatura pertenece?',
+        },
+      ],
+    })
+    expect(mocks.invoke).toHaveBeenCalledWith('karenda-ai-event-drafts', {
+      body: expect.objectContaining({ mode: 'guided' }),
+    })
+  })
+
+  it('maps an unknown subject name to a proposed subject draft', async () => {
+    mocks.invoke.mockResolvedValue({
+      data: {
+        events: [
+          {
+            description: null,
+            end_at: null,
+            is_all_day: true,
+            kind: 'academic',
+            location: null,
+            new_personal_group_name: null,
+            new_subject_name: 'Cálculo',
+            personal_group_id: null,
+            review_flags: ['unknown_subject'],
+            start_at: '2026-09-04',
+            status: 'pending',
+            subject_id: null,
+            title: 'Control de Cálculo',
+          },
+        ],
+      },
+      error: null,
+    })
+
+    const drafts = await requestAiEventDrafts({
+      prompt: 'Control de cálculo el viernes.',
+      subjectIds: [],
+    })
+
+    expect(drafts[0]).toMatchObject({
+      newSubjectName: 'Cálculo',
+      reviewFlags: ['unknown_subject', 'new_subject', 'missing_subject'],
+    })
   })
 })

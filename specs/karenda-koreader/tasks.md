@@ -124,6 +124,9 @@ pruebas autenticadas de backend.
 - [x] **KR-T26d: Renderizar Markdown enriquecido en KOReader.** Convertir el
   subconjunto seguro a HTML nativo de `TextViewer`, conservar encabezados,
   énfasis y bloques, y diferenciar variables, exponentes y símbolos matemáticos.
+- [x] **KR-T26e: Pulir compatibilidad Markdown en tinta electrónica.** Normalizar
+  `\ddagger` a `‡` y añadir margen/padding explícitos a `ol` y `ul` para que sus
+  marcadores de listas numeradas no queden recortados.
 - [x] **KR-T25i: Estabilizar controles de superficie.** Colocar la cabecera como
   primera fila, ubicar el cierre arriba a la derecha y usar un símbolo de
   actualización compacto inmediatamente a su izquierda, sin duplicar botones de

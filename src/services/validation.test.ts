@@ -109,6 +109,7 @@ describe('domain validation', () => {
           is_all_day: true,
           kind: 'personal',
           location: null,
+          new_subject_name: null,
           new_personal_group_name: 'Salud',
           personal_group_id: null,
           review_flags: ['new_personal_group'],
@@ -127,16 +128,62 @@ describe('domain validation', () => {
           {
             description: null,
             end_at: null,
-            is_all_day: true,
-            kind: 'personal',
-            location: null,
-            new_personal_group_name: 'Salud',
+          is_all_day: true,
+          kind: 'personal',
+          location: null,
+          new_subject_name: null,
+          new_personal_group_name: 'Salud',
             personal_group_id: groupId,
             review_flags: ['new_personal_group'],
             start_at: '2026-09-01',
             status: 'pending',
             subject_id: null,
             title: 'Cita médica',
+          },
+        ],
+      }).success,
+    ).toBe(false)
+  })
+
+  it('RF-IA-13 accepts an academic draft that proposes a new subject', () => {
+    const result = aiEventDraftResponseSchema.safeParse({
+      events: [
+        {
+          description: null,
+          end_at: null,
+          is_all_day: true,
+          kind: 'academic',
+          location: null,
+          new_subject_name: 'Cálculo',
+          new_personal_group_name: null,
+          personal_group_id: null,
+          review_flags: ['new_subject'],
+          start_at: '2026-09-01',
+          status: 'pending',
+          subject_id: null,
+          title: 'Control de cálculo',
+        },
+      ],
+    })
+
+    expect(result.success).toBe(true)
+    expect(
+      aiEventDraftResponseSchema.safeParse({
+        events: [
+          {
+            description: null,
+            end_at: null,
+            is_all_day: true,
+            kind: 'academic',
+            location: null,
+            new_subject_name: 'Cálculo',
+            new_personal_group_name: null,
+            personal_group_id: null,
+            review_flags: ['new_subject'],
+            start_at: '2026-09-01',
+            status: 'pending',
+            subject_id: subjectId,
+            title: 'Control de cálculo',
           },
         ],
       }).success,

@@ -54,12 +54,15 @@ proyecto InsForge configurado para Karenda.
   continuamente el gesto al desplazar hacia abajo o hacia arriba, ocultándose o
   reapareciendo sin saltos. El área de la barra de estado deberá mantener un
   fondo sólido para ocultar el contenido que se desplace por detrás de ella.
-- **RF-A-10:** Cuando se instale la aplicación, el launcher de Android deberá
-  mostrar el ícono oficial de Karenda, compartido con la web, sin conservar el
-  ícono de plantilla de Capacitor.
-- **RF-A-11:** Durante el arranque nativo, Android deberá mostrar el recurso
-  visual oficial de Karenda centrado sobre el lienzo neutro de la aplicación y
-  no la pantalla de bienvenida de plantilla de Capacitor.
+- **RF-A-10:** En pantallas móviles, el cajón de navegación deberá comenzar
+  debajo del área segura de la barra de estado, mantener un fondo sólido en esa
+  franja y mostrar únicamente las rutas secundarias que no están en el
+  encabezado compacto.
+- **RF-A-11:** Con conexión y una sesión válida, la creación asistida de
+  eventos en Android deberá ofrecer `Creación rápida` y `Creación guiada`.
+  El modo guiado podrá preguntar por asignatura o grupo, admitir `Otro` y
+  mostrar propuestas de catálogo que solo se crearán tras una confirmación
+  explícita, usando mensajes de error en español y sin guardados ficticios.
 
 ## 4. Requisitos No Funcionales
 
@@ -124,19 +127,19 @@ la lógica de dominio.
 - **CA-A-08:** En un teléfono Android, el encabezado compacto se oculta al
   desplazarse hacia abajo, reaparece al desplazarse hacia arriba y la barra de
   estado conserva un fondo sólido sin contenido visible detrás.
-- **CA-A-09:** El APK debug y el APK release configurado muestran el ícono
-  oficial de Karenda en sus variantes normal, redonda y adaptativa, usando el
-  mismo recurso visual que la web.
-- **CA-A-10:** Las variantes de splash configuradas para Android muestran el
-  ícono oficial de Karenda centrado y no muestran el recurso de Capacitor.
+- **CA-A-09:** Al abrir el menú móvil, el cajón no queda debajo de la barra de
+  estado y no repite `Calendario`, `Hábitos` ni `Notas`.
+- **CA-A-10:** Desde Android, una persona autenticada puede preparar eventos
+  con ambos modos, responder una pregunta guiada, revisar las propuestas de
+  asignatura o grupo y confirmar su creación antes de guardar los eventos.
+  Sin conexión, la confirmación queda bloqueada y se muestra el estado offline.
 
 ## 8. Verificación Requerida
 
 - `npm run lint`, `npm run typecheck`, `npm test` y `npm run build`.
 - Smoke en emulador y teléfono Android real con login, navegación, calendario,
   hábitos, notas, rotación, suspensión y recuperación.
-- Revisión visual del ícono normal, redondo y adaptativo en el launcher Android,
-  del splash en orientaciones compatibles, además de la presencia del favicon y
-  la marca oficial en la web.
 - Pruebas de conexión perdida, expiración de sesión y aislamiento RLS.
 - Revisión de configuración nativa, secretos, permisos y tamaño del paquete.
+- Verificación del flujo de eventos asistidos en Android con `AiEventPromptPanel.test.tsx`,
+  `aiEventService.test.ts`, typecheck, build web y sincronización de Capacitor.

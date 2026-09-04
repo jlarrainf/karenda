@@ -451,6 +451,17 @@ y nunca pueden solicitar secretos ni datos innecesarios.
   cuando sea inequívoca; nunca se rechazará solo por esa contradicción.
 - **RF-H-40:** El contrato guiado será independiente de React y expondrá solo
   datos serializables para que Android pueda reutilizarlo sin cambios.
+- **RF-H-41:** Los filtros de Hábitos podrán expandirse y colapsarse desde un
+  control accesible; al colapsarlos conservarán sus valores y mostrarán un
+  resumen de los filtros activos.
+- **RF-H-42:** Al entrar o volver a la vista `Hoy`, la aplicación cargará la
+  fecha civil local actual, aunque la sesión haya dejado seleccionada otra
+  fecha en una vista anterior.
+- **RF-H-43:** Mientras se cargan los hábitos y sus ocurrencias, la vista
+  mostrará un esqueleto accesible de la lista y no presentará estados vacíos
+  hasta que finalice la carga.
+- **RF-H-44:** El encabezado de Hábitos mostrará primero `Nuevo hábito` y
+  después `Agregar con IA`, conservando ese orden en web y Android.
 
 ### Criterios De Aceptación
 
@@ -469,6 +480,14 @@ y nunca pueden solicitar secretos ni datos innecesarios.
   texto libre o “No me importa” y luego genera el borrador.
 - **CA-H-22:** Cambiar a modo rápido no muestra preguntas y cambiar a modo
   guiado no genera hábitos hasta terminar la ronda de preguntas.
+- **CA-H-23:** El selector de modo muestra de forma legible sus estados rápido
+  y guiado, y los filtros pueden ocultarse y volver a abrirse sin perder la
+  búsqueda ni las selecciones.
+- **CA-H-24:** Al abrir `Hábitos` en `Hoy`, la fecha mostrada y la solicitud
+  corresponden al día local actual; durante esa solicitud se ve un esqueleto
+  de hábitos con estado de carga accesible y no el mensaje de lista vacía.
+- **CA-H-25:** Las acciones del encabezado aparecen como `Nuevo hábito` y
+  `Agregar con IA`, en ese orden, en ambas plataformas.
 
 ## 10. Referencias De Investigación
 

@@ -199,6 +199,9 @@ notas no se asocian directamente a eventos en este MVP.
   sistema deberá exigir título, fecha de inicio, hora de inicio cuando no sea de
   todo el día y estado, y deberá permitir grupo personal, lugar y descripción
   opcionales.
+- **RF-11.1 [EARS: evento]:** Cuando el usuario abra la creación manual de un
+  evento, el sistema deberá ofrecer un único formulario con un selector para
+  elegir entre evento académico y personal antes de guardar.
 - **RF-12 [EARS: evento]:** Cuando el usuario indique que un evento tiene
   duración o abarca varios días, el sistema deberá solicitar una fecha de
   término válida y deberá representarlo en todas las fechas correspondientes.
@@ -218,6 +221,9 @@ notas no se asocian directamente a eventos en este MVP.
   pantalla de calendario, el sistema deberá ofrecer navegación anterior,
   siguiente y `Hoy`, además de cambiar entre las vistas Agenda, Mes, Semana y
   Día.
+- **RF-17.1 [EARS: estado]:** Mientras la vista Agenda esté activa, el sistema
+  deberá comenzar en la fecha local actual y no mostrará controles de
+  desplazamiento propios dentro de la lista.
 - **RF-18 [EARS: estado]:** Mientras la vista Agenda esté activa, el sistema
   deberá mostrar los eventos desde la fecha actual en adelante, ordenados
   cronológicamente y agrupados por fecha, incluyendo título, horario o rango,
@@ -369,6 +375,8 @@ los criterios siguientes:
 - **CA-04:** Una cuenta puede crear eventos académicos y personales con los
   campos obligatorios definidos, y puede editar o eliminar cada evento con
   validación y confirmación.
+- **CA-04.1:** La cabecera muestra una única acción `Nuevo evento` y el tipo de
+  evento se puede cambiar dentro del formulario sin perder los datos escritos.
 - **CA-05:** Los eventos puntuales, de duración, de varios días y de todo el
   día se guardan y se muestran en sus fechas correctas; los rangos inválidos
   son rechazados antes de persistirse.
