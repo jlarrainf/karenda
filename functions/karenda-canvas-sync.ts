@@ -1,4 +1,5 @@
 import { createAdminClient, createClient } from 'npm:@insforge/sdk'
+import { sanitizeCanvasHtml, toWellFormed } from './canvasText.ts'
 
 const BASE_URL = Deno.env.get('INSFORGE_BASE_URL') ?? ''
 const ADMIN_API_KEY = Deno.env.get('API_KEY') ?? ''
@@ -93,7 +94,7 @@ function asObject(value: unknown): JsonObject {
 
 function asText(value: unknown, max = 500): string | null {
   if (typeof value !== 'string') return null
-  const normalized = value.replace(/\s+/g, ' ').trim()
+  const normalized = toWellFormed(value.replace(/\s+/g, ' ').trim())
   return normalized ? normalized.slice(0, max) : null
 }
 
@@ -228,17 +229,6 @@ async function sha256(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
-function sanitizeHtml(value: unknown): string {
-  if (typeof value !== 'string') return ''
-  return value
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
-    .replace(/\s+/g, ' ').trim()
-}
-
 function normalizeNumberWords(value: string): string[] {
   return value.toLocaleLowerCase('es').match(/\d+|[a-záéíóúüñ]+/g) ?? []
 }
@@ -283,7 +273,7 @@ function normalizeCommon(raw: JsonObject, type: CanvasItemType, courseId: string
   }
 
   const activityType = classify(title, fallback)
-  const description = asText(sanitizeHtml(raw.description ?? raw.message), 2000)
+  const description = asText(sanitizeCanvasHtml(raw.description ?? raw.message), 2000)
   const location = asText(raw.location_name ?? raw.location_address, 240)
 
   return {
@@ -492,11 +482,11 @@ async function processContent(
   const id = String(raw.id ?? raw.url ?? '')
   if (!id) return
   const title = asText(raw.title, 240) ?? 'Información de Canvas'
-  let content = sanitizeHtml(raw.message ?? raw.body)
+  let content = sanitizeCanvasHtml(raw.message ?? raw.body)
   let sourceUrl = canvasSourceUrl(raw.html_url)
   if (type === 'wiki_page' && !content && typeof raw.url === 'string') {
     const detail = await canvasObject(`/api/v1/courses/${encodeURIComponent(String(courseLink.canvas_course_id))}/pages/${encodeURIComponent(raw.url)}`, token)
-    content = sanitizeHtml(detail.body)
+    content = sanitizeCanvasHtml(detail.body)
     sourceUrl = canvasSourceUrl(detail.html_url) ?? sourceUrl
   }
   const hash = await sha256(`${title}\n${content}`)

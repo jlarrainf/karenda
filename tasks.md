@@ -307,3 +307,6 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   cuando Canvas bloquee una colección secundaria, conservar la ejecución como
   parcial, mostrar cursos vinculados en asignaturas, permitir desvincularlos sin
   borrar eventos y añadir sincronización rápida desde el calendario.
+- [x] **Tarea 122: Normalizar texto remoto de Canvas**. Reemplazar unidades
+  Unicode aisladas en anuncios y páginas antes de persistir JSON o enviarlas a
+  la IA, con una regresión automatizada para evitar nuevos `503`.
