@@ -208,7 +208,7 @@ credenciales de prueba.
 | RF-A-07 | Configuración pública y secretos fuera del código | Revisión estática del bundle; auditoría final pendiente | Parcial |
 | RF-A-08 | Persistencia web temporal documentada; puente seguro pendiente | Revisión de sesión en dispositivo | Planificado |
 | RF-A-09 | Encabezado compacto con ocultación al desplazarse y cubierta sólida de barra de estado | Test de visibilidad del layout; smoke Android pendiente | Parcial |
-| RF-A-10 | `public/karenda-app-icon.png`, recurso drawable y recursos mipmap del launcher | Inspección de recursos, comprobación RGBA y builds Android debug/release | Automatizado |
+| RF-A-10 | `public/karenda-app-icon.png`, foreground adaptativo y recursos mipmap del launcher | Inspección de recursos, comprobación RGBA y builds Android debug/release | Automatizado |
 | RNF-A-01 a RNF-A-03 | `capacitor.config.ts`, `webDir` local y `android/` | Lint, typecheck, build y `cap doctor` | Automatizado |
 | RNF-A-04 a RNF-A-06 | HTTPS, `SystemBars` con variables CSS de insets, `applicationId` provisional y firma fuera del repositorio | Lint, build Android y auditoría de release pendiente | Parcial |
 | CA-A-01 | Shell Android con assets locales | APK debug generado; instalación pendiente | Parcial |
