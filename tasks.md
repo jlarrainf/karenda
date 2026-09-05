@@ -273,6 +273,10 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   el fallback estructurado del servicio server-side.
 - [x] **Tarea 111: Verificar eventos asistidos en Android** (20-30 min).
   Ejecutar tests, typecheck, lint, build web y sincronización/build Android.
+- [x] **Tarea 124: Empaquetar paridad Canvas en Android** (20-30 min).
+  Incluir la ruta Canvas, la revisión con categorías y colores, y la acción de
+  sincronización del calendario en los assets locales; hacer que
+  `android:build` genere la APK debug y verificar el build Gradle.
 
 ## Fase 18: Sincronización Canvas UC
 

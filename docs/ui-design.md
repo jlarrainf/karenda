@@ -224,6 +224,15 @@ de datos.
 - Las notificaciones, widgets y accesos rápidos son superficies futuras. Cada
   una requerirá una decisión documentada y una prueba de permisos antes de
   incorporarse.
+- Canvas conserva la misma ruta local `/canvas` dentro del APK y no se duplica
+  con una pantalla nativa. En móvil, la conexión, el mapeo de cursos y la
+  bandeja de revisión se apilan; cada acción mantiene un objetivo táctil de
+  44 px. El calendario conserva `Sincronizar Canvas` como acción secundaria y
+  refresca sus eventos al finalizar.
+- Las tarjetas Canvas mantienen visibles el nombre y color de la asignatura,
+  la categoría canónica, la abreviación y el intervalo propuesto. La revisión
+  sigue siendo explícita en Android: no se crean ni actualizan eventos sin una
+  decisión confirmada.
 
 ### Jerarquía De Acceso
 

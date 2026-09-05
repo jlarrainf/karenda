@@ -52,9 +52,10 @@ npm run android:build
 npm run android:open
 ```
 
-`android:build` genera el frontend y sincroniza sus assets con el proyecto
-nativo. La firma de release debe configurarse fuera del repositorio; el APK de
-debug sirve únicamente para pruebas personales.
+`android:build` genera el frontend, sincroniza sus assets con el proyecto
+nativo y crea `android/app/build/outputs/apk/debug/app-debug.apk`. La firma de
+release debe configurarse fuera del repositorio; el APK de debug sirve
+únicamente para pruebas personales.
 
 ## Documentación Para Agentes Y Colaboradores
 

@@ -24,6 +24,8 @@ proyecto InsForge configurado para Karenda.
 - Estados de carga, error y falta de conexión en español, sin éxito falso.
 - Navegación Android con botón Atrás, teclado, barras del sistema y enlaces
   externos.
+- Sincronización Canvas con la misma ruta de revisión, mapeo de asignaturas,
+  categorías confirmables y acción manual del calendario que la web.
 - APK firmado para instalación personal; la publicación en Google Play queda
   fuera de esta entrega.
 
@@ -63,6 +65,11 @@ proyecto InsForge configurado para Karenda.
   El modo guiado podrá preguntar por asignatura o grupo, admitir `Otro` y
   mostrar propuestas de catálogo que solo se crearán tras una confirmación
   explícita, usando mensajes de error en español y sin guardados ficticios.
+- **RF-A-12:** Con conexión y una sesión válida, Android deberá exponer la ruta
+  Canvas, el estado de conexión, el mapeo de cursos, la bandeja de revisión y
+  las categorías canónicas mediante los mismos contratos de InsForge que la
+  web. El calendario deberá mostrar `Sincronizar Canvas` cuando corresponda y
+  actualizar los eventos visibles después de la ejecución.
 
 ## 4. Requisitos No Funcionales
 
@@ -133,13 +140,23 @@ la lógica de dominio.
   con ambos modos, responder una pregunta guiada, revisar las propuestas de
   asignatura o grupo y confirmar su creación antes de guardar los eventos.
   Sin conexión, la confirmación queda bloqueada y se muestra el estado offline.
+- **CA-A-11:** La APK de Android contiene la ruta Canvas y la acción
+  `Sincronizar Canvas` del calendario en sus assets locales. Una persona
+  autenticada puede revisar un curso, ver el color y nombre de su asignatura,
+  confirmar una propuesta con categoría y abreviación, y consultar el evento
+  actualizado sin abrir la web publicada.
 
 ## 8. Verificación Requerida
 
 - `npm run lint`, `npm run typecheck`, `npm test` y `npm run build`.
+- `npm run android:build`, que además de sincronizar Capacitor deberá generar
+  `android/app/build/outputs/apk/debug/app-debug.apk`.
 - Smoke en emulador y teléfono Android real con login, navegación, calendario,
   hábitos, notas, rotación, suspensión y recuperación.
 - Pruebas de conexión perdida, expiración de sesión y aislamiento RLS.
 - Revisión de configuración nativa, secretos, permisos y tamaño del paquete.
 - Verificación del flujo de eventos asistidos en Android con `AiEventPromptPanel.test.tsx`,
   `aiEventService.test.ts`, typecheck, build web y sincronización de Capacitor.
+- Verificación de paridad Canvas mediante `CanvasPage.test.tsx`,
+  `CalendarPage.test.tsx`, `scripts/verify-android-canvas.mjs`, inspección de
+  los assets empaquetados y build Gradle.
