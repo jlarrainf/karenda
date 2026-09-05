@@ -243,7 +243,7 @@ credenciales de prueba.
 | RF-C-21 | Categoría editable, procedencia y enlace Canvas en `EventDetail` | `EventDetail.test.tsx`, typecheck y build | Automatizado |
 | RF-C-22 | Estado de cursos Canvas en asignaturas, desvinculación reversible y confirmación | `SubjectsPage.test.tsx`, `SubjectForm.test.tsx`, migración/RPC RLS | Desplegado + automatizado |
 | RF-C-23 | Acción de sincronización Canvas en el encabezado del calendario | `CalendarPage.test.tsx`, build y E2E público | Desplegado + automatizado |
-| RF-C-24 | Recursos secundarios bloqueados producen ejecución parcial | `karenda-canvas-sync`, despliegue de función y tests de regresión del frontend | Desplegado + función compilada; smoke real pendiente |
+| RF-C-24 | Recursos secundarios bloqueados producen ejecución parcial con motivo sanitizado | `karenda-canvas-sync`, `canvasWarnings.test.ts`, despliegue de función y tests de regresión del frontend | Automatizado + desplegado; smoke real pendiente |
 | RF-C-25 | Texto HTML remoto se normaliza a Unicode bien formado antes de JSON/IA | `canvasText.test.ts`, función Canvas | Desplegado + automatizado; smoke real pendiente |
 | RF-C-26 | Anuncios resuelven ramo por curso y extraen ramo, fecha, hora, duración y abreviación | `canvasAssessment.test.ts`, `karenda-canvas-sync`, migración `20260905100000` | Desplegado en producción; piloto real pendiente |
 | RF-C-27 | Bandeja muestra categoría, código, rango temporal y color del ramo | `CanvasPage.test.tsx`, `CanvasPage` | Desplegado en producción; piloto real pendiente |

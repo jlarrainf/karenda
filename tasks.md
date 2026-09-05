@@ -333,3 +333,6 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   Añadir `https://localhost` a la allowlist CORS de conexión, sincronización y
   revisión; desplegar las tres funciones y cubrir la regresión en la
   verificación del empaquetado.
+- [x] **Tarea 129: Detallar avisos de colecciones Canvas bloqueadas** (20-30 min).
+  Identificar permisos, recursos inexistentes y respuestas temporales sin
+  exponer detalles remotos, y normalizar nombres de cursos mal formados.

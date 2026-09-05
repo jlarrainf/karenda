@@ -8,6 +8,7 @@ import {
   extractCanvasAssessment,
   type CanvasAcademicActivityType,
 } from './canvasAssessment.ts'
+import { cleanCanvasCourseName, formatCanvasResourceWarning } from './canvasWarnings.ts'
 
 const BASE_URL = Deno.env.get('INSFORGE_BASE_URL') ?? ''
 const ADMIN_API_KEY = Deno.env.get('API_KEY') ?? ''
@@ -70,7 +71,7 @@ interface SyncCounts {
 }
 
 class RequestError extends Error {
-  constructor(readonly status: number, readonly code: string, message: string) {
+  constructor(readonly status: number, readonly code: string, message: string, readonly remoteStatus?: number) {
     super(message)
   }
 }
@@ -202,7 +203,7 @@ async function canvasRequest(url: URL, token: string): Promise<Response> {
         await new Promise((resolve) => setTimeout(resolve, retrySeconds * 1000 * (attempt + 1)))
         continue
       }
-      if (!result.ok) throw new RequestError(result.status === 403 ? 403 : 502, result.status === 403 ? 'CANVAS_FORBIDDEN' : 'CANVAS_UNAVAILABLE', 'Canvas no permitió leer uno de los recursos solicitados.')
+      if (!result.ok) throw new RequestError(result.status === 403 ? 403 : 502, result.status === 403 ? 'CANVAS_FORBIDDEN' : 'CANVAS_UNAVAILABLE', 'Canvas no permitió leer uno de los recursos solicitados.', result.status)
       return result
     } catch (error) {
       if (error instanceof RequestError) throw error
@@ -581,8 +582,8 @@ async function syncCourse(
       endpointResults[name] = await canvasList(path, token)
     } catch (error) {
       if (isOptionalCanvasResourceError(error)) {
-        const courseName = asText(course.name, 160) ?? `curso ${courseId}`
-        addWarning(counts, `Canvas no permitió leer ${name} de ${courseName}.`)
+        const courseName = cleanCanvasCourseName(course.name) ?? `curso ${courseId}`
+        addWarning(counts, formatCanvasResourceWarning(name, courseName, error instanceof RequestError ? error : {}))
         endpointResults[name] = []
       } else throw error
     }
@@ -696,7 +697,7 @@ async function synchronize(connection: JsonObject, trigger: 'manual' | 'schedule
 
     for (const course of courses) {
       const courseId = String(course.id ?? '')
-      const courseName = asText(course.name, 240)
+      const courseName = cleanCanvasCourseName(course.name, 240)
       if (!courseId || !courseName) continue
       const { data: linked } = await admin.database.from('canvas_course_links').select('*')
         .eq('connection_id', connection.id).eq('canvas_course_id', courseId).maybeSingle()
