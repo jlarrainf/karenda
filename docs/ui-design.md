@@ -704,8 +704,20 @@ de datos.
   propia; `Crear asignatura` revela nombre, sigla, abreviación y color editables
   sin abandonar la revisión.
 - Cada actividad pendiente muestra primero fuente, asignatura, categoría
-  sugerida y fecha. Debajo compara el cambio propuesto con hasta cinco eventos
+  sugerida, abreviación detectada y fecha/hora. Debajo compara el cambio propuesto con hasta cinco eventos
   existentes y ofrece `Vincular con existente`, `Crear evento` e `Ignorar`.
+- La bandeja identifica siempre la asignatura a partir del curso Canvas
+  vinculado, aunque el anuncio no repita su nombre. Cada tarjeta usa una línea
+  de borde y un punto de color del ramo, acompañados por el nombre textual para
+  no depender solo del color.
+- Las categorías confirmables se muestran en este orden: `Control`, `Tarea`,
+  `Actividad`, `Proyecto`, `Entrega`, `Prueba`, `Examen` y `Seminario`.
+  Interrogación, I1 y P1 se presentan como `Prueba`; AC01, Actividad 1 y
+  variantes equivalentes muestran la abreviación detectada junto al título.
+- Cuando un anuncio aporta fecha relativa, hora o duración, la tarjeta muestra
+  inicio y término propuestos y conserva el extracto como descripción candidata.
+  Si no hay fecha explícita ni relativa, se mantiene la acción manual de
+  confirmar fecha antes de crear.
 - Las diferencias por campo se presentan en dos columnas desde `md`; en móvil
   se apilan con etiquetas `Karenda` y `Canvas`. Un conflicto usa
   `warning-soft`, conserva el valor local y exige una acción explícita.

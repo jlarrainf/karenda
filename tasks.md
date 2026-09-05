@@ -310,3 +310,8 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
 - [x] **Tarea 122: Normalizar texto remoto de Canvas**. Reemplazar unidades
   Unicode aisladas en anuncios y páginas antes de persistir JSON o enviarlas a
   la IA, con una regresión automatizada para evitar nuevos `503`.
+- [x] **Tarea 123: Normalizar categorías y extraer anuncios Canvas**. Incorporar
+  el catálogo confirmado, abreviaciones, fechas relativas, horas, duraciones,
+  ramo de origen y color en la bandeja; aplicar la migración y verificar el
+  despliegue real. El piloto autenticado queda como verificación manual del
+  usuario porque requiere un token nuevo ingresado en la pantalla segura.

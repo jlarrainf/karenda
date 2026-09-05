@@ -16,15 +16,29 @@ export interface CandidateInput {
   academicActivityType?: AcademicActivityType | null
 }
 
+export function canonicalizeAcademicActivityType(
+  value: AcademicActivityType | null | undefined,
+): AcademicActivityType {
+  if (value === 'graded_discussion' || value === 'other') return 'activity'
+  if (value === 'quiz' || value === 'oral_assessment') return 'test'
+  return value ?? 'activity'
+}
+
 export function classifyAcademicActivity(
   title: string,
-  fallback: AcademicActivityType = 'other',
+  fallback: AcademicActivityType = 'activity',
 ): AcademicActivityType {
-  const value = title.toLocaleLowerCase('es')
+  const value = title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es')
   if (/\b(examen|exam)\b/.test(value)) return 'exam'
-  if (/\b(control|prueba|test)\b/.test(value)) return 'test'
-  if (/\b(interrogaci[oó]n|oral)\b/.test(value)) return 'oral_assessment'
-  if (/\b(quiz|cuestionario)\b/.test(value)) return 'quiz'
+  if (/\b(seminario|seminar)\b/.test(value)) return 'seminar'
+  if (/\b(proyecto|proyect|project)\b/.test(value)) return 'project'
+  if (/\b(entrega|entregable|submission|submit)\b/.test(value)) return 'submission'
+  if (/\b(control)\b/.test(value)) return 'control'
+  if (/\b(interrogacion|prueba|quiz|test|oral)\b/.test(value)) return 'test'
+  if (/\b(tarea|assignment)\b/.test(value)) return 'assignment'
+  if (/\b(actividad|activity)\b/.test(value)) return 'activity'
+  if (fallback === 'graded_discussion' || fallback === 'other') return 'activity'
+  if (fallback === 'quiz' || fallback === 'oral_assessment') return 'test'
   return fallback
 }
 
@@ -54,7 +68,8 @@ export function normalizeCanvasInterval(input: CanvasIntervalInput): {
 }
 
 function words(value: string): string[] {
-  return value.toLocaleLowerCase('es').match(/\d+|[a-záéíóúüñ]+/g) ?? []
+  return (value.toLocaleLowerCase('es').match(/\d+|[a-záéíóúüñ]+/g) ?? [])
+    .map((word) => /^\d+$/.test(word) ? word.replace(/^0+(?=\d)/, '') : word)
 }
 
 export function rankCanvasCandidates(
@@ -158,8 +173,9 @@ export function validateCanvasAiProposal(value: unknown): boolean {
   const category = proposal.academic_activity_type
   const validCategory = category === null || (
     typeof category === 'string' && [
-      'assignment', 'graded_discussion', 'quiz', 'oral_assessment',
-      'test', 'exam', 'other',
+      'control', 'assignment', 'activity', 'project', 'submission',
+      'test', 'exam', 'seminar', 'graded_discussion', 'quiz',
+      'oral_assessment', 'other',
     ].includes(category)
   )
   const validNullableString = (field: string) =>

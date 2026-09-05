@@ -26,13 +26,18 @@ const dateTimeFormatter = new Intl.DateTimeFormat('es-CL', {
 })
 
 const activityLabels = {
+  control: 'Control',
   assignment: 'Tarea',
-  graded_discussion: 'Discusión evaluada',
-  quiz: 'Quiz',
-  oral_assessment: 'Interrogación oral',
-  test: 'Control o prueba',
+  activity: 'Actividad',
+  project: 'Proyecto',
+  submission: 'Entrega',
+  test: 'Prueba',
   exam: 'Examen',
-  other: 'Otra actividad',
+  seminar: 'Seminario',
+  graded_discussion: 'Actividad',
+  quiz: 'Prueba',
+  oral_assessment: 'Prueba',
+  other: 'Actividad',
 } as const
 
 function formatLocalDate(value: string): string {

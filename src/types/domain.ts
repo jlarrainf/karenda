@@ -5,12 +5,18 @@ export type LocalDate = string
 export type EventKind = 'academic' | 'personal'
 export type EventStatus = 'pending' | 'completed'
 export type AcademicActivityType =
+  | 'control'
   | 'assignment'
+  | 'activity'
+  | 'project'
+  | 'submission'
+  | 'test'
+  | 'exam'
+  | 'seminar'
+  // Legacy values remain readable for events created before the canonical catalog.
   | 'graded_discussion'
   | 'quiz'
   | 'oral_assessment'
-  | 'test'
-  | 'exam'
   | 'other'
 export type NoteTargetType = 'subject' | 'personal_group'
 
