@@ -14,8 +14,8 @@ describe('Canvas resource warnings', () => {
 
   it('distinguishes a missing collection from a transient failure', () => {
     expect(formatCanvasResourceWarning('pages', 'Sistemas Distribuidos', { remoteStatus: 404 }))
-      .toBe('Canvas no ofrece pages de Sistemas Distribuidos en este curso.')
+      .toBe('Canvas no ofrece páginas de Sistemas Distribuidos en este curso.')
     expect(formatCanvasResourceWarning('pages', 'Sistemas Distribuidos', { code: 'CANVAS_UNAVAILABLE' }))
-      .toBe('Canvas no permitió leer pages de Sistemas Distribuidos; se continuará con el resto.')
+      .toBe('Canvas no permitió leer páginas de Sistemas Distribuidos; se continuará con el resto.')
   })
 })

@@ -3,6 +3,10 @@ export interface CanvasResourceFailure {
   remoteStatus?: number
 }
 
+const RESOURCE_LABELS: Record<string, string> = {
+  pages: 'páginas',
+}
+
 export function cleanCanvasCourseName(value: unknown, max = 160): string | null {
   if (typeof value !== 'string') return null
   const normalized = value.replace(/\s+/g, ' ').trim().slice(0, max)
@@ -17,17 +21,18 @@ export function formatCanvasResourceWarning(
   failure: CanvasResourceFailure,
 ): string {
   const subject = cleanCanvasCourseName(courseName) ?? courseName
+  const label = RESOURCE_LABELS[resource] ?? resource
   if (failure.code === 'CANVAS_FORBIDDEN' || failure.remoteStatus === 403) {
-    return `Canvas bloqueó ${resource} de ${subject}: tu cuenta no tiene permiso para esa colección.`
+    return `Canvas bloqueó ${label} de ${subject}: tu cuenta no tiene permiso para esa colección.`
   }
   if (failure.code === 'CANVAS_RATE_LIMITED' || failure.remoteStatus === 429) {
-    return `Canvas limitó temporalmente la lectura de ${resource} de ${subject}; se reintentará en la próxima ejecución.`
+    return `Canvas limitó temporalmente la lectura de ${label} de ${subject}; se reintentará en la próxima ejecución.`
   }
   if (failure.remoteStatus === 404) {
-    return `Canvas no ofrece ${resource} de ${subject} en este curso.`
+    return `Canvas no ofrece ${label} de ${subject} en este curso.`
   }
   if (failure.code === 'CANVAS_INVALID_RESPONSE') {
-    return `Canvas devolvió una respuesta inesperada al leer ${resource} de ${subject}.`
+    return `Canvas devolvió una respuesta inesperada al leer ${label} de ${subject}.`
   }
-  return `Canvas no permitió leer ${resource} de ${subject}; se continuará con el resto.`
+  return `Canvas no permitió leer ${label} de ${subject}; se continuará con el resto.`
 }
