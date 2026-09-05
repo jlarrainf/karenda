@@ -220,6 +220,7 @@ credenciales de prueba.
 | RF-A-09 | Encabezado compacto con ocultación al desplazarse y cubierta sólida de barra de estado | Test de visibilidad del layout; smoke Android pendiente | Parcial |
 | RF-A-10 | Cajón móvil bajo el área segura, cubierta sólida y solo rutas secundarias | Test del cajón; smoke Android pendiente | Parcial |
 | RF-A-11 | Flujo IA de eventos rápido/guiado, preguntas, `Otro` y propuestas de catálogo | `AiEventPromptPanel.test.tsx`, `aiEventService.test.ts`, typecheck y build Android | Automatizado + estático |
+| RF-A-12 | Ruta Canvas, bandeja de revisión y sincronización manual del calendario dentro de los assets Capacitor | `CanvasPage.test.tsx`, `CalendarPage.test.tsx`, `verify-android-canvas.mjs`, `npm run android:build` y APK debug | Automatizado + build Android |
 | RNF-A-01 a RNF-A-03 | `capacitor.config.ts`, `webDir` local y `android/` | Lint, typecheck, build y `cap doctor` | Automatizado |
 | RNF-A-04 a RNF-A-06 | HTTPS, `SystemBars` con variables CSS de insets, `applicationId` provisional y firma fuera del repositorio | Lint, build Android y auditoría de release pendiente | Parcial |
 | CA-A-01 | Shell Android con assets locales | APK debug generado; instalación pendiente | Parcial |
@@ -228,6 +229,7 @@ credenciales de prueba.
 | CA-A-08 | Encabezado sensible al desplazamiento y fondo sólido de barra de estado | Tests de layout; smoke físico pendiente | Parcial |
 | CA-A-09 | Cajón móvil respeta la barra de estado y evita repetir navegación principal | Test del layout; smoke físico pendiente | Parcial |
 | CA-A-10 | Preparación y confirmación de eventos asistidos desde Android | Tests de servicio/panel, build web y sincronización de Capacitor | Automatizado + parcial |
+| CA-A-11 | Paridad Canvas en APK local, incluyendo revisión, color de ramo y acción manual del calendario | `CanvasPage.test.tsx`, `CalendarPage.test.tsx`, `verify-android-canvas.mjs` y build Gradle | Automatizado + build Android |
 
 ## Sincronización Canvas UC
 
