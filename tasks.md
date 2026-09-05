@@ -329,3 +329,7 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
 - [ ] **Tarea 127: Validar APK y sesión en dispositivo** (20-30 min). Instalar la
   APK unificada, iniciar sesión con la cuenta Karenda y confirmar que Canvas se
   mantiene disponible tras expirar/renovar la sesión.
+- [x] **Tarea 128: Permitir Canvas desde el WebView Android** (20-30 min).
+  Añadir `https://localhost` a la allowlist CORS de conexión, sincronización y
+  revisión; desplegar las tres funciones y cubrir la regresión en la
+  verificación del empaquetado.

@@ -250,4 +250,5 @@ credenciales de prueba.
 | RF-C-28 | Ventana histórica configurable por conexión entre 7 y 365 días, con cursor incremental reiniciado al cambiarla | `CanvasPage.test.tsx`, migración y función `set_lookback` | Automatizado + desplegado |
 | RF-C-29 | Avisos sanitizados de recursos bloqueados visibles en el historial aunque la bandeja no tenga propuestas | `CanvasPage.test.tsx`, conteos de `karenda-canvas-sync` | Automatizado + desplegado |
 | RF-C-30 | Sesión móvil renovable antes de consultar Canvas y mensaje diferenciado de sesión frente a red | `authService.test.ts`, cliente InsForge y build Android | Automatizado + build Android |
-| CA-C-01 a CA-C-20 | Flujo del piloto integrado, con ventana histórica, avisos de ejecución y sesión móvil | Tests, lint, typecheck, build Android, migración/RLS y smoke anónimo; E2E autenticado y piloto real pendientes | Parcial |
+| RF-C-31 | Allowlist CORS de las funciones Canvas incluye el origen fijo `https://localhost` de Capacitor | `verify-android-canvas.mjs`, preflight HTTP de las tres funciones y despliegue | Automatizado + desplegado |
+| CA-C-01 a CA-C-21 | Flujo del piloto integrado, con ventana histórica, avisos de ejecución, sesión móvil y CORS Android | Tests, lint, typecheck, build Android, preflight y smoke anónimo; E2E autenticado y piloto real pendientes | Parcial |

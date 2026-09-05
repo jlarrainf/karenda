@@ -208,6 +208,10 @@ personales de Canvas quedan fuera del alcance.
   flujo móvil de InsForge y conservar el refresh token en almacenamiento
   persistente del dispositivo; la aplicación deberá restaurarla antes de
   cargar Canvas.
+- **RF-C-31 [EARS: compatibilidad]:** Cuando Android invoque las funciones de
+  Canvas desde los assets locales de Capacitor, las respuestas deberán incluir
+  CORS para el origen fijo `https://localhost`, manteniendo la allowlist sin
+  aceptar orígenes arbitrarios.
 
 ## 6. Contratos HTTP
 
@@ -301,6 +305,10 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
   sincronización y comprobar que el valor queda reflejado en la conexión.
 - **CA-C-20:** Tras cerrar y volver a abrir Android, una sesión móvil válida
   permite cargar Canvas sin depender de una cookie de otro origen.
+- **CA-C-21:** Desde Android, las funciones de conexión, sincronización y
+  revisión responden a las solicitudes autenticadas del WebView sin bloqueo
+  CORS y las pruebas de empaquetado detectan si se retira `https://localhost`
+  de la allowlist.
 - **CA-C-11:** La edición de una asignatura identifica sus cursos Canvas
   vinculados, permite desvincularlos con confirmación y conserva sus eventos.
 - **CA-C-12:** El calendario ofrece `Sincronizar Canvas` solo cuando la
