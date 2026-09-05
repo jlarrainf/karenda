@@ -141,6 +141,14 @@ function normalizeExpiry(value: unknown): string {
   return expiry.toISOString()
 }
 
+function normalizeLookbackDays(value: unknown): number {
+  const days = typeof value === 'number' ? value : Number(value)
+  if (!Number.isInteger(days) || days < 7 || days > 365) {
+    throw new RequestError(400, 'INVALID_LOOKBACK', 'La ventana histórica debe estar entre 7 y 365 días.')
+  }
+  return days
+}
+
 async function validateCanvasToken(token: string): Promise<void> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 12_000)
@@ -164,7 +172,7 @@ async function validateCanvasToken(token: string): Promise<void> {
 async function getConnection(ownerId: string): Promise<Record<string, unknown> | null> {
   const { data, error } = await adminClient().database
     .from('canvas_connections')
-    .select('id, canvas_base_url, auth_mode, status, time_zone, token_expires_at, last_sync_at, next_sync_at, last_error_code, last_error_message, created_at, updated_at')
+    .select('id, canvas_base_url, auth_mode, status, time_zone, token_expires_at, last_sync_at, next_sync_at, content_lookback_days, last_error_code, last_error_message, created_at, updated_at')
     .eq('owner_id', ownerId)
     .maybeSingle()
   if (error) throw new RequestError(503, 'BACKEND_UNAVAILABLE', 'No se pudo cargar la conexión con Canvas.')
@@ -220,6 +228,20 @@ async function disconnect(ownerId: string): Promise<void> {
   if (update.error) throw new RequestError(503, 'BACKEND_UNAVAILABLE', 'No se pudo desconectar Canvas.')
 }
 
+async function updateLookback(ownerId: string, input: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const days = normalizeLookbackDays(input.lookbackDays)
+  const existing = await getConnection(ownerId)
+  if (!existing) throw new RequestError(409, 'RECONNECTION_REQUIRED', 'Conecta Canvas antes de cambiar la ventana histórica.')
+  const result = await adminClient().database.from('canvas_connections').update({
+    content_lookback_days: days,
+    // Re-read the selected window on the next run instead of waiting for the
+    // previous incremental cursor to reach it.
+    content_cursor_at: null,
+  }).eq('id', existing.id).eq('owner_id', ownerId)
+  if (result.error) throw new RequestError(503, 'BACKEND_UNAVAILABLE', 'No se pudo actualizar la ventana histórica de Canvas.')
+  return (await getConnection(ownerId))!
+}
+
 async function handle(request: Request): Promise<Response> {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) })
   if (!['GET', 'POST'].includes(request.method)) throw new RequestError(405, 'METHOD_NOT_ALLOWED', 'El método solicitado no está disponible.')
@@ -230,6 +252,9 @@ async function handle(request: Request): Promise<Response> {
   if (action === 'disconnect') {
     await disconnect(ownerId)
     return json(request, { connection: await getConnection(ownerId), message: 'Canvas fue desconectado. Tus datos históricos se conservaron.' })
+  }
+  if (action === 'set_lookback') {
+    return json(request, { connection: await updateLookback(ownerId, input), message: 'La ventana histórica quedó actualizada.' })
   }
   if (action !== 'connect' && action !== 'replace_token') throw new RequestError(400, 'INVALID_REQUEST', 'La operación solicitada no es válida.')
   return json(request, { connection: await connect(ownerId, input), message: 'La conexión con Canvas quedó lista.' }, 201)

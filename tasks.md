@@ -319,3 +319,13 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   ramo de origen y color en la bandeja; aplicar la migración y verificar el
   despliegue real. El piloto autenticado queda como verificación manual del
   usuario porque requiere un token nuevo ingresado en la pantalla segura.
+
+- [x] **Tarea 125: Hacer renovable la sesión de Canvas en Android** (20-30 min).
+  Usar el flujo móvil de InsForge, restaurar el refresh token desde almacenamiento
+  seguro y renovar el access token antes de consultar rutas autenticadas.
+- [x] **Tarea 126: Configurar ventana histórica y avisos de sincronización**
+  (20-30 min). Permitir 7–365 días por conexión, reiniciar el cursor al cambiar
+  el periodo y mostrar avisos parciales en el historial aunque la bandeja esté vacía.
+- [ ] **Tarea 127: Validar APK y sesión en dispositivo** (20-30 min). Instalar la
+  APK unificada, iniciar sesión con la cuenta Karenda y confirmar que Canvas se
+  mantiene disponible tras expirar/renovar la sesión.

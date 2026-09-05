@@ -12,6 +12,7 @@ import {
   listCanvasReviews,
   listCanvasSyncRuns,
   synchronizeCanvas,
+  updateCanvasLookbackDays,
 } from '../../../services/canvasService.ts'
 import { listSubjects } from '../../../services/subjectService.ts'
 import type { AcademicActivityType, CalendarEvent, Subject } from '../../../types/domain.ts'
@@ -41,6 +42,8 @@ const activityOptions: Array<[AcademicActivityType, string]> = [
   ['exam', 'Examen'],
   ['seminar', 'Seminario'],
 ]
+
+const lookbackOptions = [7, 30, 90, 180, 365]
 
 const reviewLabels: Record<CanvasReviewItem['reviewKind'], string> = {
   course_mapping: 'Vincular asignatura',
@@ -350,11 +353,33 @@ export function CanvasPage() {
     setMessage(null)
     try {
       const result = await synchronizeCanvas()
-      setMessage(result.status === 'partial' ? 'La sincronización terminó con avisos. Revisa la bandeja.' : 'Canvas se sincronizó y la bandeja fue actualizada.')
+      const warningMessages = Array.isArray(result.counts.warningMessages)
+        ? result.counts.warningMessages.filter((warning): warning is string => typeof warning === 'string')
+        : []
+      setMessage(result.status === 'partial'
+        ? warningMessages.length > 0
+          ? `La sincronización terminó con avisos: ${warningMessages.join(' ')}`
+          : 'La sincronización terminó con avisos. Consulta el historial para conocer el detalle.'
+        : 'Canvas se sincronizó y la bandeja fue actualizada.')
       await load()
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : 'No se pudo sincronizar Canvas.')
       await load()
+    } finally {
+      setBusyAction(null)
+    }
+  }
+
+  const handleLookbackChange = async (value: string) => {
+    const days = Number(value)
+    if (!Number.isInteger(days)) return
+    setBusyAction('lookback')
+    setError(null)
+    try {
+      setConnection(await updateCanvasLookbackDays(days))
+      setMessage(`Canvas volverá a leer los últimos ${days} días en la próxima sincronización.`)
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : 'No se pudo actualizar la ventana histórica de Canvas.')
     } finally {
       setBusyAction(null)
     }
@@ -436,6 +461,20 @@ export function CanvasPage() {
                 <div><dt className="font-semibold text-ink-muted">Próxima ejecución</dt><dd className="mt-1 text-ink">{formatDate(connection.nextSyncAt)}</dd></div>
                 <div><dt className="font-semibold text-ink-muted">Horario</dt><dd className="mt-1 text-ink">06:00 · Santiago</dd></div>
               </dl>
+              <label className="mt-5 block max-w-sm text-sm font-medium text-ink-muted" htmlFor="canvas-lookback">
+                Ventana histórica
+                <select
+                  className={`${fieldClassName()} mt-1`}
+                  disabled={busyAction !== null}
+                  id="canvas-lookback"
+                  aria-label="Ventana histórica"
+                  onChange={(event) => void handleLookbackChange(event.target.value)}
+                  value={connection.lookbackDays}
+                >
+                  {lookbackOptions.map((days) => <option key={days} value={days}>Últimos {days} días</option>)}
+                </select>
+                <span className="mt-1 block text-xs font-normal text-ink-muted">Incluye anuncios, páginas, actividades y eventos de los cursos. Al cambiarla, la próxima ejecución vuelve a revisar ese periodo.</span>
+              </label>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
               {canSync ? <Button isLoading={busyAction === 'sync'} loadingLabel="Sincronizando…" onClick={() => void handleSync()}>Sincronizar ahora</Button> : null}
@@ -476,7 +515,7 @@ export function CanvasPage() {
       <section aria-labelledby="canvas-history-title" className="rounded-panel border border-border bg-surface">
         <div className="border-b border-border px-5 py-4 sm:px-6"><h2 className="text-lg font-bold text-ink" id="canvas-history-title">Historial reciente</h2></div>
         {runs.length === 0 ? <EmptyState description="Las ejecuciones manuales y programadas aparecerán aquí." title="Sin sincronizaciones" /> : (
-          <ul className="divide-y divide-border">{runs.map((run) => <li className="flex flex-col gap-2 px-5 py-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6" key={run.id}><div><p className="font-semibold text-ink">{run.triggerType === 'manual' ? 'Sincronización manual' : 'Sincronización programada'}</p><p className="mt-1 text-ink-muted">{formatDate(run.startedAt)}{run.errorMessage ? ` · ${run.errorMessage}` : ''}</p></div><span className="font-semibold text-ink-muted">{run.status === 'completed' ? 'Completada' : run.status === 'partial' ? 'Con avisos' : run.status === 'running' ? 'En curso' : 'Fallida'}</span></li>)}</ul>
+          <ul className="divide-y divide-border">{runs.map((run) => <li className="flex flex-col gap-2 px-5 py-4 text-sm sm:flex-row sm:items-start sm:justify-between sm:px-6" key={run.id}><div><p className="font-semibold text-ink">{run.triggerType === 'manual' ? 'Sincronización manual' : 'Sincronización programada'}</p><p className="mt-1 text-ink-muted">{formatDate(run.startedAt)}{run.errorMessage ? ` · ${run.errorMessage}` : ''}</p>{run.warningMessages.length > 0 ? <ul className="mt-2 list-disc space-y-1 pl-5 text-warning">{run.warningMessages.map((warning) => <li key={warning}>{warning}</li>)}</ul> : null}</div><span className="font-semibold text-ink-muted">{run.status === 'completed' ? 'Completada' : run.status === 'partial' ? 'Con avisos' : run.status === 'running' ? 'En curso' : 'Fallida'}</span></li>)}</ul>
         )}
       </section>
 

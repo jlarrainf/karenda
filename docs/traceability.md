@@ -216,7 +216,7 @@ credenciales de prueba.
 | RF-A-04 | Estado de conectividad y feedback de mutaciones | Test de componente; dispositivo sin red pendiente | Parcial |
 | RF-A-05 a RF-A-06 | Adaptador de botón Atrás y apertura externa | Smoke de navegación Android | Planificado |
 | RF-A-07 | Configuración pública y secretos fuera del código | Revisión estática del bundle; auditoría final pendiente | Parcial |
-| RF-A-08 | Persistencia web temporal documentada; puente seguro pendiente | Revisión de sesión en dispositivo | Planificado |
+| RF-A-08 | Sesión nativa persistida mediante `capacitor-secure-storage-plugin` (Android Keystore/SharedPreferences cifradas) | Typecheck, build Android y revisión de plugin | Automatizado + estático |
 | RF-A-09 | Encabezado compacto con ocultación al desplazarse y cubierta sólida de barra de estado | Test de visibilidad del layout; smoke Android pendiente | Parcial |
 | RF-A-10 | Cajón móvil bajo el área segura, cubierta sólida y solo rutas secundarias | Test del cajón; smoke Android pendiente | Parcial |
 | RF-A-11 | Flujo IA de eventos rápido/guiado, preguntas, `Otro` y propuestas de catálogo | `AiEventPromptPanel.test.tsx`, `aiEventService.test.ts`, typecheck y build Android | Automatizado + estático |
@@ -247,4 +247,7 @@ credenciales de prueba.
 | RF-C-25 | Texto HTML remoto se normaliza a Unicode bien formado antes de JSON/IA | `canvasText.test.ts`, función Canvas | Desplegado + automatizado; smoke real pendiente |
 | RF-C-26 | Anuncios resuelven ramo por curso y extraen ramo, fecha, hora, duración y abreviación | `canvasAssessment.test.ts`, `karenda-canvas-sync`, migración `20260905100000` | Desplegado en producción; piloto real pendiente |
 | RF-C-27 | Bandeja muestra categoría, código, rango temporal y color del ramo | `CanvasPage.test.tsx`, `CanvasPage` | Desplegado en producción; piloto real pendiente |
-| CA-C-01 a CA-C-17 | Flujo del piloto integrado mediante PR #2 y desplegado en InsForge | 172 tests, lint, typecheck, build, E2E público de producción, migración/RLS y smoke anónimo de función; E2E autenticado y piloto real pendientes | Parcial |
+| RF-C-28 | Ventana histórica configurable por conexión entre 7 y 365 días, con cursor incremental reiniciado al cambiarla | `CanvasPage.test.tsx`, migración y función `set_lookback` | Automatizado + desplegado |
+| RF-C-29 | Avisos sanitizados de recursos bloqueados visibles en el historial aunque la bandeja no tenga propuestas | `CanvasPage.test.tsx`, conteos de `karenda-canvas-sync` | Automatizado + desplegado |
+| RF-C-30 | Sesión móvil renovable antes de consultar Canvas y mensaje diferenciado de sesión frente a red | `authService.test.ts`, cliente InsForge y build Android | Automatizado + build Android |
+| CA-C-01 a CA-C-20 | Flujo del piloto integrado, con ventana histórica, avisos de ejecución y sesión móvil | Tests, lint, typecheck, build Android, migración/RLS y smoke anónimo; E2E autenticado y piloto real pendientes | Parcial |

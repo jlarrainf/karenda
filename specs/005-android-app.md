@@ -49,9 +49,10 @@ proyecto InsForge configurado para Karenda.
 - **RF-A-07:** El APK no deberá contener claves administrativas, secretos de
   funciones ni credenciales distintas de las variables públicas necesarias para
   inicializar el cliente de usuario.
-- **RF-A-08:** La persistencia de sesión que se habilite para producción deberá
-  usar almacenamiento seguro del sistema; el almacenamiento web se considera
-  únicamente una compatibilidad temporal del spike.
+- **RF-A-08:** La persistencia de sesión de producción deberá usar el plugin
+  `capacitor-secure-storage-plugin`, respaldado por Android Keystore y
+  SharedPreferences cifradas. El almacenamiento web se conserva únicamente
+  como compatibilidad del navegador y nunca guarda la sesión nativa.
 - **RF-A-09:** En las rutas autenticadas, el encabezado compacto deberá seguir
   continuamente el gesto al desplazar hacia abajo o hacia arriba, ocultándose o
   reapareciendo sin saltos. El área de la barra de estado deberá mantener un

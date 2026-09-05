@@ -218,9 +218,9 @@ de datos.
   permitirá confirmar una escritura que no haya sido aceptada por InsForge.
 - Los enlaces que salgan de Karenda se abrirán en el navegador del sistema. El
   WebView no permitirá navegación arbitraria a otros sitios.
-- La sesión podrá restaurarse en el dispositivo solo mediante almacenamiento
-  seguro; `localStorage`, `sessionStorage` y Preferences no cifradas no serán
-  la solución definitiva para refresh tokens.
+- La sesión podrá restaurarse en el dispositivo solo mediante el plugin de
+  almacenamiento seguro del sistema; `localStorage`, `sessionStorage` y
+  Preferences no cifradas no se usarán para refresh tokens nativos.
 - Las notificaciones, widgets y accesos rápidos son superficies futuras. Cada
   una requerirá una decisión documentada y una prueba de permisos antes de
   incorporarse.
@@ -769,3 +769,20 @@ Las transiciones se limitan a cambios de estado y duran aproximadamente
 `150–250ms`, respetando `prefers-reduced-motion`. No se usarán gradientes,
 glassmorphism, iconos emoji, texto gris sobre superficies de color, radios
 excesivos ni valores visuales aislados sin documentar.
+### Canvas: conexión y diagnóstico
+
+La página Canvas debe mostrar junto al estado de conexión un control select
+``Ventana histórica`` con opciones de 7, 30, 90, 180 y 365 días. El texto debe
+explicar que controla cuánto retroceden anuncios, páginas, actividades y
+eventos del curso; al guardar se informa que la siguiente ejecución volverá a
+leer ese periodo.
+
+El historial de sincronizaciones debe mostrar los avisos sanitizados de una
+ejecución parcial debajo del estado, sin obligar a buscar una propuesta en la
+bandeja. Una bandeja vacía se mantiene como estado independiente y no debe
+presentarse como evidencia de que una sincronización no tuvo avisos.
+
+En Android, la pantalla conserva el mismo diseño responsive. Si la sesión
+necesita renovarse, el mensaje debe indicar que se inicie sesión nuevamente,
+no atribuir el problema a la conexión de red cuando el dispositivo sí tiene
+acceso.

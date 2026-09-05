@@ -6,6 +6,7 @@ import type {
   CanvasEventSource,
   CanvasReviewDecision,
   CanvasReviewItem,
+  CanvasSyncCounts,
   CanvasSyncRun,
 } from '../types/canvas.ts'
 import { requireCurrentUserId } from './authService.ts'
@@ -37,6 +38,10 @@ function mapConnection(row: Row | null): CanvasConnection | null {
         ? row.status
         : 'connected',
     timeZone: asString(row.time_zone),
+    lookbackDays:
+      typeof row.content_lookback_days === 'number' && Number.isFinite(row.content_lookback_days)
+        ? Math.min(365, Math.max(7, Math.round(row.content_lookback_days)))
+        : 30,
     tokenExpiresAt: asString(row.token_expires_at),
     lastSyncAt: asNullableString(row.last_sync_at),
     nextSyncAt: asNullableString(row.next_sync_at),
@@ -70,6 +75,7 @@ function mapReview(row: Row): CanvasReviewItem {
 }
 
 export async function getCanvasConnection(): Promise<CanvasConnection | null> {
+  await requireCurrentUserId()
   const result = await runInsForge<{ connection: Row | null }>(
     () => insforge.functions.invoke(CONNECTION_FUNCTION, { method: 'GET' }),
     'No se pudo cargar la conexión con Canvas.',
@@ -78,6 +84,7 @@ export async function getCanvasConnection(): Promise<CanvasConnection | null> {
 }
 
 export async function connectCanvas(token: string, tokenExpiresAt: string): Promise<CanvasConnection> {
+  await requireCurrentUserId()
   const result = await runInsForge<{ connection: Row }>(
     () =>
       insforge.functions.invoke(CONNECTION_FUNCTION, {
@@ -90,6 +97,7 @@ export async function connectCanvas(token: string, tokenExpiresAt: string): Prom
 }
 
 export async function disconnectCanvas(): Promise<CanvasConnection | null> {
+  await requireCurrentUserId()
   const result = await runInsForge<{ connection: Row | null }>(
     () =>
       insforge.functions.invoke(CONNECTION_FUNCTION, {
@@ -101,15 +109,33 @@ export async function disconnectCanvas(): Promise<CanvasConnection | null> {
   return mapConnection(result.connection)
 }
 
-export function synchronizeCanvas(): Promise<{
+export async function synchronizeCanvas(): Promise<{
   runId: string
   status: string
-  counts: Record<string, number>
+  counts: CanvasSyncCounts
 }> {
+  await requireCurrentUserId()
   return runInsForge(
     () => insforge.functions.invoke(SYNC_FUNCTION, { method: 'POST', body: {} }),
     'No se pudo sincronizar Canvas.',
   )
+}
+
+export async function updateCanvasLookbackDays(lookbackDays: number): Promise<CanvasConnection> {
+  const normalized = Math.round(lookbackDays)
+  if (!Number.isInteger(normalized) || normalized < 7 || normalized > 365) {
+    throw new Error('La ventana histórica debe estar entre 7 y 365 días.')
+  }
+  await requireCurrentUserId()
+  const result = await runInsForge<{ connection: Row }>(
+    () =>
+      insforge.functions.invoke(CONNECTION_FUNCTION, {
+        method: 'POST',
+        body: { action: 'set_lookback', lookbackDays: normalized },
+      }),
+    'No se pudo actualizar la ventana histórica de Canvas.',
+  )
+  return mapConnection(result.connection)!
 }
 
 export async function listCanvasCourseLinks(): Promise<CanvasCourseLink[]> {
@@ -175,18 +201,24 @@ export async function listCanvasSyncRuns(): Promise<CanvasSyncRun[]> {
         .limit(10),
     'No se pudo cargar el historial de sincronización.',
   )
-  return rows.map((row) => ({
+  return rows.map((row) => {
+    const counts = row.counts && typeof row.counts === 'object'
+      ? (row.counts as CanvasSyncCounts)
+      : {}
+    const warningMessages = Array.isArray(counts.warningMessages)
+      ? counts.warningMessages.filter((message): message is string => typeof message === 'string')
+      : []
+    return {
     id: asString(row.id),
     triggerType: row.trigger_type === 'scheduled' ? 'scheduled' : 'manual',
     status: row.status as CanvasSyncRun['status'],
-    counts:
-      row.counts && typeof row.counts === 'object'
-        ? (row.counts as Record<string, number>)
-        : {},
+    counts,
+    warningMessages,
     errorMessage: asNullableString(row.error_message),
     startedAt: asString(row.started_at),
     finishedAt: asNullableString(row.finished_at),
-  }))
+    }
+  })
 }
 
 export async function listCandidateEvents(ids: string[]): Promise<CalendarEvent[]> {
@@ -221,6 +253,7 @@ export async function applyCanvasReview(
   eventId?: string,
   overrides: Record<string, unknown> = {},
 ): Promise<void> {
+  await requireCurrentUserId()
   await runInsForge(
     () =>
       insforge.functions.invoke(REVIEW_FUNCTION, {

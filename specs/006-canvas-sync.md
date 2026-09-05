@@ -30,6 +30,10 @@ apertura multiusuario exigirá OAuth y una Developer Key institucional.
   anterior a hoy.
 - Ventana inicial de treinta días para anuncios y páginas; después se usa una
   marca incremental con cuarenta y ocho horas de solapamiento.
+- La persona puede elegir una ventana de lectura histórica entre 7 y 365 días
+  para anuncios, páginas, actividades y eventos de curso. Cambiarla reinicia
+  el cursor incremental para que la próxima sincronización vuelva a revisar
+  la ventana elegida.
 - Sincronización diaria a las 06:00 de `America/Santiago` y sincronización
   manual.
 
@@ -65,7 +69,8 @@ para seminario. Se aceptan espacios, ceros a la izquierda y el nombre largo.
 
 Una conexión contiene `owner_id`, `canvas_base_url`, `auth_mode`, `status`,
 `time_zone`, `token_expires_at`, `last_sync_at`, `next_sync_at`,
-`content_cursor_at` y metadatos de error no sensibles. Para el piloto:
+`content_cursor_at`, `content_lookback_days` y metadatos de error no sensibles.
+Para el piloto:
 
 - `canvas_base_url` es siempre `https://cursos.canvas.uc.cl`;
 - `auth_mode` es `personal_access_token`;
@@ -193,6 +198,16 @@ personales de Canvas quedan fuera del alcance.
 - **RF-C-27 [EARS: estado]:** La bandeja deberá mostrar la categoría canónica,
   la abreviación detectada, inicio/término y el color de la asignatura asociada
   antes de permitir crear o vincular.
+- **RF-C-28 [EARS: estado]:** Cuando una ejecución termine como `partial`, el
+  historial y el resultado manual deberán mostrar los avisos sanitizados,
+  aunque no se haya creado una propuesta en la bandeja.
+- **RF-C-29 [EARS: evento]:** Cuando la persona cambie la ventana histórica,
+  la función deberá validar un valor entre 7 y 365 días, guardarlo sin exponer
+  credenciales y reiniciar el cursor de contenido.
+- **RF-C-30 [EARS: estado]:** En Android, la sesión de Karenda deberá usar el
+  flujo móvil de InsForge y conservar el refresh token en almacenamiento
+  persistente del dispositivo; la aplicación deberá restaurarla antes de
+  cargar Canvas.
 
 ## 6. Contratos HTTP
 
@@ -202,6 +217,8 @@ personales de Canvas quedan fuera del alcance.
 - `POST { "action": "connect", "token": "...", "tokenExpiresAt": "ISO" }`.
 - `POST { "action": "replace_token", "token": "...", "tokenExpiresAt": "ISO" }`.
 - `POST { "action": "disconnect" }`.
+- `POST { "action": "set_lookback", "lookbackDays": 30 }` actualiza la
+  ventana histórica y devuelve la conexión segura.
 
 ### `karenda-canvas-sync`
 
@@ -278,6 +295,12 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
   IA tienen estados españoles, recuperables y sin éxito falso.
 - **CA-C-10:** La ruta Canvas funciona en web y en el frontend empaquetado de
   Android, con teclado, foco visible, objetivos táctiles y layout responsive.
+- **CA-C-18:** Los avisos de una ejecución parcial son visibles en el resultado
+  y en el historial aun cuando la bandeja de revisión esté vacía.
+- **CA-C-19:** La persona puede seleccionar la ventana histórica, ejecutar una
+  sincronización y comprobar que el valor queda reflejado en la conexión.
+- **CA-C-20:** Tras cerrar y volver a abrir Android, una sesión móvil válida
+  permite cargar Canvas sin depender de una cookie de otro origen.
 - **CA-C-11:** La edición de una asignatura identifica sus cursos Canvas
   vinculados, permite desvincularlos con confirmación y conserva sus eventos.
 - **CA-C-12:** El calendario ofrece `Sincronizar Canvas` solo cuando la

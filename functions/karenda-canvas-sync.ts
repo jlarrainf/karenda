@@ -64,6 +64,7 @@ interface SyncCounts {
   plannerItems: number
   contentAnalyzed: number
   warnings: number
+  warningMessages: string[]
 }
 
 class RequestError extends Error {
@@ -108,6 +109,14 @@ function asText(value: unknown, max = 500): string | null {
 function asIso(value: unknown): string | null {
   if (typeof value !== 'string' || !value || Number.isNaN(Date.parse(value))) return null
   return new Date(value).toISOString()
+}
+
+function addWarning(counts: SyncCounts, message: string): void {
+  counts.warnings += 1
+  const safe = asText(message, 240)
+  if (safe && !counts.warningMessages.includes(safe) && counts.warningMessages.length < 20) {
+    counts.warningMessages.push(safe)
+  }
 }
 
 function canvasSourceUrl(value: unknown): string | null {
@@ -165,11 +174,6 @@ function nextSyncAt(now = new Date()): string {
   const parts = timeZoneParts(now)
   const localDay = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + 1))
   return localToUtc(localDay.getUTCFullYear(), localDay.getUTCMonth() + 1, localDay.getUTCDate(), 6).toISOString()
-}
-
-function todayStart(now = new Date()): Date {
-  const parts = timeZoneParts(now)
-  return localToUtc(parts.year, parts.month, parts.day, 0)
 }
 
 function parseNextLink(value: string | null): string | null {
@@ -575,13 +579,17 @@ async function syncCourse(
       endpointResults[name] = await canvasList(path, token)
     } catch (error) {
       if (isOptionalCanvasResourceError(error)) {
-        counts.warnings += 1
+        const courseName = asText(course.name, 160) ?? `curso ${courseId}`
+        addWarning(counts, `Canvas no permitió leer ${name} de ${courseName}.`)
         endpointResults[name] = []
       } else throw error
     }
   }
 
-  const today = todayStart().getTime()
+  const lookbackDays = Number.isInteger(connection.content_lookback_days)
+    ? Math.min(365, Math.max(7, Number(connection.content_lookback_days)))
+    : 30
+  const historyStart = Date.now() - lookbackDays * 86_400_000
   const seenAssignmentIds = new Set<string>()
   for (const raw of endpointResults.assignments) {
     const item = normalizeCommon(raw, raw.quiz_id ? 'quiz' : 'assignment', courseId)
@@ -589,7 +597,7 @@ async function syncCourse(
     seenAssignmentIds.add(String(raw.quiz_id ?? ''))
     const lastDate = item.endAt ?? item.startAt
     const { data: existing } = await admin.database.from('canvas_item_links').select('id').eq('connection_id', connection.id).eq('canvas_item_type', item.type).eq('canvas_item_id', item.id).maybeSingle()
-    if (lastDate && Date.parse(lastDate) < today && !existing) continue
+    if (lastDate && Date.parse(lastDate) < historyStart && !existing) continue
     await processItem(admin, connection, courseLink, item, runStartedAt, counts)
   }
   for (const raw of endpointResults.quizzes) {
@@ -598,7 +606,7 @@ async function syncCourse(
     if (!item.id) continue
     const lastDate = item.endAt ?? item.startAt
     const { data: existing } = await admin.database.from('canvas_item_links').select('id').eq('connection_id', connection.id).eq('canvas_item_type', item.type).eq('canvas_item_id', item.id).maybeSingle()
-    if (lastDate && Date.parse(lastDate) < today && !existing) continue
+    if (lastDate && Date.parse(lastDate) < historyStart && !existing) continue
     await processItem(admin, connection, courseLink, item, runStartedAt, counts)
   }
   for (const raw of endpointResults.discussions) {
@@ -607,13 +615,13 @@ async function syncCourse(
     const item = normalizeCommon({ ...raw, ...assignment, id: raw.id, title: raw.title, html_url: raw.html_url }, 'discussion_topic', courseId)
     const lastDate = item.endAt ?? item.startAt
     const { data: existing } = await admin.database.from('canvas_item_links').select('id').eq('connection_id', connection.id).eq('canvas_item_type', item.type).eq('canvas_item_id', item.id).maybeSingle()
-    if (lastDate && Date.parse(lastDate) < today && !existing) continue
+    if (lastDate && Date.parse(lastDate) < historyStart && !existing) continue
     await processItem(admin, connection, courseLink, item, runStartedAt, counts)
   }
   for (const raw of endpointResults.calendar) {
     const item = normalizeCommon(raw, 'calendar_event', courseId)
     const lastDate = item.endAt ?? item.startAt
-    if (!item.id || (lastDate && Date.parse(lastDate) < today)) continue
+    if (!item.id || (lastDate && Date.parse(lastDate) < historyStart)) continue
     await processItem(admin, connection, courseLink, item, runStartedAt, counts)
   }
   for (const raw of endpointResults.announcements) await processContent(admin, token, connection, courseLink, raw, 'announcement', counts)
@@ -656,7 +664,7 @@ async function synchronize(connection: JsonObject, trigger: 'manual' | 'schedule
   }]).select('id').single()
   if (runResult.error || !runResult.data) throw new RequestError(409, 'SYNC_ALREADY_RUNNING', 'Ya hay una sincronización de Canvas en curso.')
   const runId = String((runResult.data as { id: string }).id)
-  const counts: SyncCounts = { courses: 0, courseMappings: 0, itemsSeen: 0, reviewsCreated: 0, automaticUpdates: 0, conflicts: 0, undated: 0, removed: 0, plannerItems: 0, contentAnalyzed: 0, warnings: 0 }
+  const counts: SyncCounts = { courses: 0, courseMappings: 0, itemsSeen: 0, reviewsCreated: 0, automaticUpdates: 0, conflicts: 0, undated: 0, removed: 0, plannerItems: 0, contentAnalyzed: 0, warnings: 0, warningMessages: [] }
 
   try {
     const { data: credential, error: credentialError } = await admin.database.from('canvas_credentials')
@@ -668,16 +676,21 @@ async function synchronize(connection: JsonObject, trigger: 'manual' | 'schedule
     counts.courses = courses.length
     try {
       const plannerEnd = new Date(Date.now() + 370 * 86_400_000).toISOString()
-      counts.plannerItems = (await canvasList(`/api/v1/planner/items?start_date=${encodeURIComponent(todayStart().toISOString())}&end_date=${encodeURIComponent(plannerEnd)}&per_page=100`, token)).length
+      const plannerStart = new Date(Date.now() - (Number.isInteger(connection.content_lookback_days)
+        ? Math.min(365, Math.max(7, Number(connection.content_lookback_days)))
+        : 30) * 86_400_000).toISOString()
+      counts.plannerItems = (await canvasList(`/api/v1/planner/items?start_date=${encodeURIComponent(plannerStart)}&end_date=${encodeURIComponent(plannerEnd)}&per_page=100`, token)).length
     } catch (error) {
-      if (isOptionalCanvasResourceError(error)) counts.warnings += 1
+      if (isOptionalCanvasResourceError(error)) addWarning(counts, 'El planificador de Canvas no estuvo disponible en esta ejecución.')
       else throw error
     }
 
     const cursor = asIso(connection.content_cursor_at)
     const contentSince = cursor
       ? new Date(Date.parse(cursor) - 48 * 60 * 60 * 1000).toISOString()
-      : new Date(Date.now() - 30 * 86_400_000).toISOString()
+      : new Date(Date.now() - (Number.isInteger(connection.content_lookback_days)
+        ? Math.min(365, Math.max(7, Number(connection.content_lookback_days)))
+        : 30) * 86_400_000).toISOString()
 
     for (const course of courses) {
       const courseId = String(course.id ?? '')

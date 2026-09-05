@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   listCanvasSyncRuns: vi.fn(),
   listSubjects: vi.fn(),
   synchronizeCanvas: vi.fn(),
+  updateCanvasLookbackDays: vi.fn(),
 }))
 
 vi.mock('../../../services/canvasService.ts', () => mocks)
@@ -25,6 +26,7 @@ const connection = {
   authMode: 'personal_access_token' as const,
   status: 'connected' as const,
   timeZone: 'America/Santiago',
+  lookbackDays: 30,
   tokenExpiresAt: '2026-11-30T12:00:00.000Z',
   lastSyncAt: '2026-09-04T10:00:00.000Z',
   nextSyncAt: '2026-09-05T09:00:00.000Z',
@@ -94,6 +96,7 @@ describe('CanvasPage', () => {
     mocks.listCandidateEvents.mockResolvedValue([candidate])
     mocks.applyCanvasReview.mockResolvedValue(undefined)
     mocks.synchronizeCanvas.mockResolvedValue({ runId: 'run', status: 'completed', counts: {} })
+    mocks.updateCanvasLookbackDays.mockResolvedValue(connection)
   })
 
   it('shows Canvas and Karenda side by side before any creation', async () => {
@@ -109,6 +112,29 @@ describe('CanvasPage', () => {
     expect(screen.getByRole('button', { name: 'Vincular con existente' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Crear evento' })).toBeEnabled()
     expect(screen.queryByRole('button', { name: /crear todos/i })).not.toBeInTheDocument()
+  })
+
+  it('shows partial warnings even when the review inbox has no items', async () => {
+    mocks.listCanvasReviews.mockResolvedValue([])
+    mocks.listCanvasSyncRuns.mockResolvedValue([{
+      ...({ id: 'run-warning', triggerType: 'manual', status: 'partial', counts: { warnings: 1 }, errorMessage: null, startedAt: '2026-09-04T12:00:00.000Z', finishedAt: '2026-09-04T12:01:00.000Z' }),
+      warningMessages: ['Canvas no permitió leer anuncios de Cálculo.'],
+    }])
+    render(<CanvasPage />)
+
+    expect(await screen.findByText('Canvas no permitió leer anuncios de Cálculo.')).toBeVisible()
+    expect(screen.getByText('Bandeja vacía')).toBeVisible()
+  })
+
+  it('updates the historical lookback window and explains the next run', async () => {
+    const user = userEvent.setup()
+    render(<CanvasPage />)
+
+    await waitFor(() => expect(document.getElementById('canvas-lookback')).not.toBeNull())
+    await user.selectOptions(document.getElementById('canvas-lookback')!, '90')
+
+    expect(mocks.updateCanvasLookbackDays).toHaveBeenCalledWith(90)
+    expect(await screen.findByText('Canvas volverá a leer los últimos 90 días en la próxima sincronización.')).toBeVisible()
   })
 
   it('applies an explicit link decision with the confirmed category', async () => {
