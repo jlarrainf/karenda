@@ -243,4 +243,6 @@ credenciales de prueba.
 | RF-C-23 | Acción de sincronización Canvas en el encabezado del calendario | `CalendarPage.test.tsx`, build y E2E público | Desplegado + automatizado |
 | RF-C-24 | Recursos secundarios bloqueados producen ejecución parcial | `karenda-canvas-sync`, despliegue de función y tests de regresión del frontend | Desplegado + función compilada; smoke real pendiente |
 | RF-C-25 | Texto HTML remoto se normaliza a Unicode bien formado antes de JSON/IA | `canvasText.test.ts`, función Canvas | Desplegado + automatizado; smoke real pendiente |
-| CA-C-01 a CA-C-15 | Flujo del piloto integrado mediante PR #2 y desplegado en InsForge | 169 tests, lint, typecheck, build, E2E público local/producción y políticas RLS; E2E autenticado y piloto real pendientes | Parcial |
+| RF-C-26 | Anuncios resuelven ramo por curso y extraen ramo, fecha, hora, duración y abreviación | `canvasAssessment.test.ts`, `karenda-canvas-sync`, migración `20260905100000` | Desplegado en producción; piloto real pendiente |
+| RF-C-27 | Bandeja muestra categoría, código, rango temporal y color del ramo | `CanvasPage.test.tsx`, `CanvasPage` | Desplegado en producción; piloto real pendiente |
+| CA-C-01 a CA-C-17 | Flujo del piloto integrado mediante PR #2 y desplegado en InsForge | 172 tests, lint, typecheck, build, E2E público de producción, migración/RLS y smoke anónimo de función; E2E autenticado y piloto real pendientes | Parcial |

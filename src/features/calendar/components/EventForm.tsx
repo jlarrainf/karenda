@@ -329,13 +329,14 @@ export function EventForm({
             {...registerField('academicActivityType')}
           >
             <option value="">Sin categoría</option>
+            <option value="control">Control</option>
             <option value="assignment">Tarea</option>
-            <option value="graded_discussion">Discusión evaluada</option>
-            <option value="quiz">Quiz</option>
-            <option value="oral_assessment">Interrogación oral</option>
-            <option value="test">Control o prueba</option>
+            <option value="activity">Actividad</option>
+            <option value="project">Proyecto</option>
+            <option value="submission">Entrega</option>
+            <option value="test">Prueba</option>
             <option value="exam">Examen</option>
-            <option value="other">Otra actividad</option>
+            <option value="seminar">Seminario</option>
           </SelectField>
         </>
       ) : (

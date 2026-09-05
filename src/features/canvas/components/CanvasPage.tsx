@@ -21,22 +21,26 @@ import type {
   CanvasReviewItem,
   CanvasSyncRun,
 } from '../../../types/canvas.ts'
-import { appendUniqueCanvasText } from '../../../lib/canvas/reconciliation.ts'
+import {
+  appendUniqueCanvasText,
+  canonicalizeAcademicActivityType,
+} from '../../../lib/canvas/reconciliation.ts'
 
 const dateFormatter = new Intl.DateTimeFormat('es-CL', {
   dateStyle: 'medium',
   timeStyle: 'short',
 })
 
-const activityLabels: Record<AcademicActivityType, string> = {
-  assignment: 'Tarea',
-  graded_discussion: 'Discusión evaluada',
-  quiz: 'Quiz',
-  oral_assessment: 'Interrogación oral',
-  test: 'Control o prueba',
-  exam: 'Examen',
-  other: 'Otra actividad',
-}
+const activityOptions: Array<[AcademicActivityType, string]> = [
+  ['control', 'Control'],
+  ['assignment', 'Tarea'],
+  ['activity', 'Actividad'],
+  ['project', 'Proyecto'],
+  ['submission', 'Entrega'],
+  ['test', 'Prueba'],
+  ['exam', 'Examen'],
+  ['seminar', 'Seminario'],
+]
 
 const reviewLabels: Record<CanvasReviewItem['reviewKind'], string> = {
   course_mapping: 'Vincular asignatura',
@@ -157,19 +161,25 @@ function ReviewCard({
   review,
   candidates,
   isBusy,
+  subjectName,
+  subjectColor,
   onApply,
 }: {
   review: CanvasReviewItem
   candidates: CalendarEvent[]
   isBusy: boolean
+  subjectName?: string
+  subjectColor?: string
   onApply: (review: CanvasReviewItem, decision: 'link_existing' | 'create_event' | 'apply_update' | 'ignore', eventId?: string, overrides?: Record<string, unknown>) => Promise<void>
 }) {
   const proposed = proposedEvent(review)
   const [eventId, setEventId] = useState(candidates[0]?.id ?? '')
-  const [activityType, setActivityType] = useState<AcademicActivityType>(review.academicActivityType ?? 'other')
+  const [activityType, setActivityType] = useState<AcademicActivityType>(canonicalizeAcademicActivityType(review.academicActivityType))
   const [manualStart, setManualStart] = useState('')
   const selected = candidates.find((candidate) => candidate.id === eventId)
   const proposedStart = text(proposed.start_at)
+  const proposedEnd = text(proposed.end_at)
+  const assessmentCode = text(proposed.assessment_code)
   const canCreate = Boolean(proposedStart || manualStart)
   const proposedDescription = text(proposed.description)
   const mergedDescription = selected && proposedDescription
@@ -184,11 +194,23 @@ function ReviewCard({
   }
 
   return (
-    <article className="rounded-panel border border-border bg-surface p-5 sm:p-6">
+    <article
+      className="rounded-panel border border-border bg-surface p-5 sm:p-6"
+      style={subjectColor ? { borderLeftColor: subjectColor, borderLeftWidth: '4px' } : undefined}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand">{reviewLabels[review.reviewKind]}</p>
-          <h3 className="mt-2 text-lg font-bold text-ink">{review.title}</h3>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-bold text-ink">{review.title}</h3>
+            {assessmentCode ? <span className="rounded-full bg-surface-strong px-2 py-1 text-xs font-semibold text-ink-muted">{assessmentCode}</span> : null}
+          </div>
+          {subjectName ? (
+            <p className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-ink-muted">
+              <span aria-hidden="true" className="size-3 rounded-full" style={{ backgroundColor: subjectColor }} />
+              <span>Asignatura: {subjectName}</span>
+            </p>
+          ) : null}
         </div>
         {review.sourceUrl ? <a className="text-sm font-semibold text-brand underline-offset-4 hover:underline" href={review.sourceUrl} rel="noreferrer" target="_blank">Abrir en Canvas</a> : null}
       </div>
@@ -197,7 +219,8 @@ function ReviewCard({
         <section aria-label="Información de Canvas" className="rounded-control border border-brand/25 bg-brand-soft p-4">
           <h4 className="font-semibold text-ink">Información de Canvas</h4>
           <dl className="mt-3 space-y-2 text-sm">
-            <div><dt className="font-medium text-ink-muted">Fecha propuesta</dt><dd className="text-ink">{formatDate(proposedStart || null)}</dd></div>
+            <div><dt className="font-medium text-ink-muted">Inicio propuesto</dt><dd className="text-ink">{formatDate(proposedStart || null)}</dd></div>
+            {proposedEnd ? <div><dt className="font-medium text-ink-muted">Término propuesto</dt><dd className="text-ink">{formatDate(proposedEnd)}</dd></div> : null}
             <div><dt className="font-medium text-ink-muted">Lugar</dt><dd className="text-ink">{text(proposed.location) || 'No informado'}</dd></div>
             {review.sourceExcerpt ? <div><dt className="font-medium text-ink-muted">Extracto sanitizado</dt><dd className="mt-1 whitespace-pre-wrap break-words text-ink">{review.sourceExcerpt}</dd></div> : null}
           </dl>
@@ -217,7 +240,7 @@ function ReviewCard({
         <label className="block text-sm font-medium text-ink-muted" htmlFor={`category-${review.id}`}>
           Categoría confirmada
           <select className={`${fieldClassName()} mt-1`} id={`category-${review.id}`} onChange={(event) => setActivityType(event.target.value as AcademicActivityType)} value={activityType}>
-            {Object.entries(activityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            {activityOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
         </label>
         {!proposedStart ? (
@@ -302,6 +325,8 @@ export function CanvasPage() {
   const connectionMeta = connection ? statusMeta(connection) : null
   const canSync = connection?.status === 'connected' || connection?.status === 'error'
   const eventsById = useMemo(() => new Map(candidateEvents.map((event) => [event.id, event])), [candidateEvents])
+  const subjectsById = useMemo(() => new Map(subjects.map((subject) => [subject.id, subject])), [subjects])
+  const courseLinksById = useMemo(() => new Map(courseLinks.map((link) => [link.id, link])), [courseLinks])
 
   const handleConnect = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -435,7 +460,15 @@ export function CanvasPage() {
       <section aria-labelledby="canvas-review-title" className="space-y-4">
         <div><h2 className="text-2xl font-bold text-ink" id="canvas-review-title">Bandeja de revisión</h2><p className="mt-1 text-sm text-ink-muted">Compara Canvas con Karenda y confirma cada decisión por separado.</p></div>
         {activityReviews.map((review) => (
-          <ReviewCard candidates={review.candidateEventIds.map((id) => eventsById.get(id)).filter((event): event is CalendarEvent => Boolean(event))} isBusy={busyAction !== null} key={review.id} onApply={handleReview} review={review} />
+          <ReviewCard
+            candidates={review.candidateEventIds.map((id) => eventsById.get(id)).filter((event): event is CalendarEvent => Boolean(event))}
+            isBusy={busyAction !== null}
+            key={review.id}
+            onApply={handleReview}
+            review={review}
+            subjectColor={review.courseLinkId ? subjectsById.get(courseLinksById.get(review.courseLinkId)?.subjectId ?? '')?.color : undefined}
+            subjectName={review.courseLinkId ? subjectsById.get(courseLinksById.get(review.courseLinkId)?.subjectId ?? '')?.name : undefined}
+          />
         ))}
         {activityReviews.length === 0 ? <div className="rounded-panel border border-border bg-surface"><EmptyState description="No hay actividades, conflictos ni avisos pendientes de confirmación." title="Bandeja vacía" /></div> : null}
       </section>

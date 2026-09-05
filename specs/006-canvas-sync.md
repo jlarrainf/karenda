@@ -22,6 +22,9 @@ apertura multiusuario exigirá OAuth y una Developer Key institucional.
   esos cursos.
 - Anuncios y páginas recientes que mencionen explícitamente una actividad,
   fecha, sala o temario.
+- Extracción determinista de fechas relativas (`hoy`, `mañana`), fechas
+  escritas, horas, duraciones y abreviaciones de evaluaciones; el timestamp del
+  anuncio sirve como referencia para resolver una fecha relativa.
 - Importación inicial de elementos cuyo vencimiento o término sea hoy o
   posterior. Una tarea futura ya disponible conserva su inicio real aunque sea
   anterior a hoy.
@@ -35,20 +38,28 @@ apertura multiusuario exigirá OAuth y una Developer Key institucional.
 ### Actividad Académica
 
 `events.academic_activity_type` es opcional para mantener compatibilidad con
-eventos existentes. Sus valores son:
+eventos existentes. Los valores canónicos confirmables son:
 
+- `control`
 - `assignment`
-- `graded_discussion`
-- `quiz`
-- `oral_assessment`
+- `activity`
+- `project`
+- `submission`
 - `test`
 - `exam`
-- `other`
+- `seminar`
 
-La interfaz los presenta como `Tarea`, `Discusión evaluada`, `Quiz`,
-`Interrogación`, `Control`, `Examen` y `Otra actividad`. Canvas y reglas
+La interfaz los presenta como `Control`, `Tarea`, `Actividad`, `Proyecto`,
+`Entrega`, `Prueba`, `Examen` y `Seminario`. Las categorías históricas
+`graded_discussion`, `quiz`, `oral_assessment` y `other` se aceptan al leer
+datos antiguos y se muestran con su equivalente canónico. Canvas y reglas
 deterministas sugieren el valor, pero la persona lo confirma antes de crear o
 vincular un elemento nuevo.
+
+Las abreviaciones detectadas son estables y se guardan dentro de la propuesta:
+`I1` para interrogación, `P1` para prueba, `C1` para control, `T1` para tarea,
+`E1` para entrega, `AC01`/`AC1` para actividad, `PROY1` para proyecto y `S1`
+para seminario. Se aceptan espacios, ceros a la izquierda y el nombre largo.
 
 ### Conexión
 
@@ -88,7 +99,7 @@ tamaño numérico usado por una instalación de Canvas.
 | Fuente | Evento propuesto |
 | --- | --- |
 | Tarea o discusión evaluada | `start_at = unlock_at/available_at` y `end_at = due_at`; sin apertura, `start_at = due_at` y `end_at = null` |
-| Quiz, interrogación, control o examen | Usa el inicio y término explícitos; si solo existe `due_at`, crea un hito sin inventar duración |
+| Quiz, interrogación, control o examen | Usa el inicio y término explícitos; si el texto indica duración se calcula el término; si solo existe `due_at`, crea un hito sin inventar duración |
 | Evento de calendario | Conserva inicio, término, día completo, lugar y descripción |
 | Elemento sin fecha | Permanece en revisión como `undated` y no crea un evento |
 
@@ -174,6 +185,14 @@ personales de Canvas quedan fuera del alcance.
 - **RF-C-25 [EARS: condición no deseada]:** Si Canvas entrega texto HTML con
   unidades Unicode malformadas, Karenda deberá reemplazar las unidades aisladas
   antes de persistirlas o enviarlas a la IA, sin abortar la sincronización.
+- **RF-C-26 [EARS: evento]:** Cuando un anuncio o página mencione una actividad,
+  Karenda deberá resolver la asignatura desde el curso Canvas vinculado y
+  combinar extracción determinista de abreviación, fecha, hora y duración con
+  la propuesta de IA; la información confirmada deberá quedar disponible para
+  crear o actualizar el evento.
+- **RF-C-27 [EARS: estado]:** La bandeja deberá mostrar la categoría canónica,
+  la abreviación detectada, inicio/término y el color de la asignatura asociada
+  antes de permitir crear o vincular.
 
 ## 6. Contratos HTTP
 
@@ -229,10 +248,11 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
 ## 8.1 Relación De Ramas Del Piloto
 
 - Rama Git: `feature/006-canvas-sync`, basada en `origin/main`.
-- Rama InsForge de esquema: `karenda-canvas-sync`.
-- La rama InsForge contiene las migraciones, funciones, secretos versionados y
-  programador de prueba. La promoción al proyecto padre debe ocurrir únicamente
-  junto con la integración revisada de la rama Git.
+- Rama InsForge de esquema inicial: `karenda-canvas-sync`.
+- Rama InsForge de validación de categorías y extracción: `karenda-canvas-activities`.
+- Ambas ramas contienen únicamente cambios de esquema/función revisados y se
+  promovieron al proyecto padre mediante dry-run sin conflictos; el frontend se
+  despliega después sobre el proyecto padre.
 - Promoción ejecutada el 4 de septiembre de 2026 después de integrar el PR #2
   con CI exitoso; el proyecto padre cuenta con respaldo previo a la migración.
 
@@ -269,3 +289,10 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
   quedan verificados y trazados antes del despliegue piloto.
 - **CA-C-15:** Un anuncio o página con un sustituto Unicode aislado no provoca
   `503`, queda sanitizado y permite completar la ejecución o dejarla en `partial`.
+- **CA-C-16:** El anuncio `Interrogación 1` con texto `hoy ... 17:30 ... dura
+  2 horas` produce una propuesta de `Prueba`, código `I1`, fecha basada en el
+  timestamp del anuncio y término dos horas después, asociada al ramo de su
+  curso Canvas.
+- **CA-C-17:** La bandeja presenta el color y nombre del ramo, y las categorías
+  confirmables son exactamente Control, Tarea, Actividad, Proyecto, Entrega,
+  Prueba, Examen y Seminario, conservando compatibilidad de lectura histórica.

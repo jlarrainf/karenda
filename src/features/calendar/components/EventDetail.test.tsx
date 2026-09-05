@@ -53,7 +53,7 @@ describe('EventDetail', () => {
     expect(screen.getByText('Álgebra')).toBeVisible()
     expect(screen.getByText('Pendiente')).toBeVisible()
     expect(screen.getByText('Sala 12')).toBeVisible()
-    expect(screen.getByText('Control o prueba')).toBeVisible()
+    expect(screen.getByText('Prueba')).toBeVisible()
     expect(await screen.findByRole('link', { name: 'Abrir elemento original' })).toHaveAttribute(
       'href',
       'https://cursos.canvas.uc.cl/courses/42/assignments/99',

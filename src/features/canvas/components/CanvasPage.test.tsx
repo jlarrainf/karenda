@@ -46,10 +46,23 @@ const review = {
   proposedData: {
     title: 'Control 2',
     start_at: '2026-09-10T15:00:00.000Z',
+    end_at: '2026-09-10T17:00:00.000Z',
     location: 'Sala 12',
+    assessment_code: 'C2',
   },
   candidateEventIds: ['44444444-4444-4444-8444-444444444444'],
   createdAt: '2026-09-04T12:00:00.000Z',
+}
+
+const subject = {
+  id: '66666666-6666-4666-8666-666666666666',
+  ownerId: '55555555-5555-4555-8555-555555555555',
+  name: 'Cálculo',
+  code: 'MAT-101',
+  abbreviation: 'MAT',
+  color: '#315B7D',
+  createdAt: '2026-09-01T12:00:00.000Z',
+  updatedAt: '2026-09-01T12:00:00.000Z',
 }
 
 const candidate = {
@@ -74,10 +87,10 @@ describe('CanvasPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.getCanvasConnection.mockResolvedValue(connection)
-    mocks.listCanvasCourseLinks.mockResolvedValue([{ id: review.courseLinkId }])
+    mocks.listCanvasCourseLinks.mockResolvedValue([{ id: review.courseLinkId, subjectId: subject.id }])
     mocks.listCanvasReviews.mockResolvedValue([review])
     mocks.listCanvasSyncRuns.mockResolvedValue([])
-    mocks.listSubjects.mockResolvedValue([])
+    mocks.listSubjects.mockResolvedValue([subject])
     mocks.listCandidateEvents.mockResolvedValue([candidate])
     mocks.applyCanvasReview.mockResolvedValue(undefined)
     mocks.synchronizeCanvas.mockResolvedValue({ runId: 'run', status: 'completed', counts: {} })
@@ -90,6 +103,9 @@ describe('CanvasPage', () => {
     expect(screen.getByRole('region', { name: 'Información de Canvas' })).toBeVisible()
     expect(screen.getByRole('region', { name: 'Evento de Karenda' })).toBeVisible()
     expect(screen.getByText('Control 2 de Cálculo')).toBeInTheDocument()
+    expect(screen.getByText('Asignatura: Cálculo')).toBeInTheDocument()
+    expect(screen.getByText('C2')).toBeInTheDocument()
+    expect(screen.getByText('Término propuesto')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Vincular con existente' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Crear evento' })).toBeEnabled()
     expect(screen.queryByRole('button', { name: /crear todos/i })).not.toBeInTheDocument()

@@ -104,12 +104,17 @@ export const personalGroupPatchSchema = personalGroupInputSchema
 const eventKindSchema = z.enum(['academic', 'personal'])
 export const eventStatusSchema = z.enum(['pending', 'completed'])
 export const academicActivityTypeSchema = z.enum([
+  'control',
   'assignment',
+  'activity',
+  'project',
+  'submission',
+  'test',
+  'exam',
+  'seminar',
   'graded_discussion',
   'quiz',
   'oral_assessment',
-  'test',
-  'exam',
   'other',
 ])
 export const noteTargetTypeSchema = z.enum(['subject', 'personal_group'])

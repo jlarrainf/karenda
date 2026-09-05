@@ -16,9 +16,9 @@ import {
 describe('Canvas reconciliation rules', () => {
   it('classifies Spanish evaluation titles without inventing a category', () => {
     expect(classifyAcademicActivity('Examen final')).toBe('exam')
-    expect(classifyAcademicActivity('Control 2')).toBe('test')
-    expect(classifyAcademicActivity('Interrogación oral')).toBe('oral_assessment')
-    expect(classifyAcademicActivity('Actividad libre')).toBe('other')
+    expect(classifyAcademicActivity('Control 2')).toBe('control')
+    expect(classifyAcademicActivity('Interrogación oral')).toBe('test')
+    expect(classifyAcademicActivity('Actividad libre')).toBe('activity')
   })
 
   it('uses availability for assignments and never invents a quiz duration', () => {
