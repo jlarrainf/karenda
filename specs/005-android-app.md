@@ -71,6 +71,11 @@ proyecto InsForge configurado para Karenda.
   las categorías canónicas mediante los mismos contratos de InsForge que la
   web. El calendario deberá mostrar `Sincronizar Canvas` cuando corresponda y
   actualizar los eventos visibles después de la ejecución.
+- **RF-A-13:** Mientras una ruta protegida no pueda comprobar la sesión, Android
+  deberá ofrecer `Iniciar sesión nuevamente` además de reintentar la comprobación.
+  Esa acción limpiará el token en memoria y en el almacenamiento seguro, abrirá
+  `/login` y conservará la ruta protegida solicitada para volver a ella después
+  de autenticar.
 
 ## 4. Requisitos No Funcionales
 
@@ -146,6 +151,10 @@ la lógica de dominio.
   autenticada puede revisar un curso, ver el color y nombre de su asignatura,
   confirmar una propuesta con categoría y abreviación, y consultar el evento
   actualizado sin abrir la web publicada.
+- **CA-A-12:** Si Android no puede comprobar una sesión, la pantalla ofrece
+  `Iniciar sesión nuevamente`; al usarla, elimina la sesión inválida, muestra
+  el formulario de acceso y vuelve a la ruta protegida después de un login
+  exitoso.
 
 ## 8. Verificación Requerida
 

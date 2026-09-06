@@ -15,6 +15,7 @@ import { useNoteStore } from './noteStore.ts'
 import { useRecurringTaskStore } from './recurringTaskStore.ts'
 import { useSessionStore } from './sessionStore.ts'
 import { SESSION_EXPIRED_EVENT } from '../services/errors.ts'
+import { clearPersistedAuthSession } from '../lib/insforge/client.ts'
 
 vi.mock('../services/authService.ts', () => ({
   getCurrentUser: vi.fn(),
@@ -23,6 +24,10 @@ vi.mock('../services/authService.ts', () => ({
   signIn: vi.fn(),
   signOut: vi.fn(),
   verifyEmail: vi.fn(),
+}))
+
+vi.mock('../lib/insforge/client.ts', () => ({
+  clearPersistedAuthSession: vi.fn(),
 }))
 
 const user = {
@@ -36,6 +41,7 @@ const mockedRegister = vi.mocked(register)
 const mockedSignIn = vi.mocked(signIn)
 const mockedSignOut = vi.mocked(signOut)
 const mockedVerifyEmail = vi.mocked(verifyEmail)
+const mockedClearPersistedAuthSession = vi.mocked(clearPersistedAuthSession)
 
 describe('sessionStore', () => {
   afterEach(() => {
@@ -172,6 +178,30 @@ describe('sessionStore', () => {
     await useSessionStore.getState().signOut()
 
     expect(useSessionStore.getState().user).toBeNull()
+    expect(useCatalogStore.getState().isLoaded).toBe(false)
+    expect(useCalendarStore.getState().isLoaded).toBe(false)
+    expect(useHabitStore.getState().isLoaded).toBe(false)
+    expect(useNoteStore.getState().isLoaded).toBe(false)
+    expect(useRecurringTaskStore.getState().isLoaded).toBe(false)
+  })
+
+  it('clears the local session before starting a new login', () => {
+    useSessionStore.setState({ isInitialized: true, user })
+    useCatalogStore.setState({ isLoaded: true })
+    useCalendarStore.setState({ isLoaded: true })
+    useHabitStore.setState({ isLoaded: true })
+    useNoteStore.setState({ isLoaded: true })
+    useRecurringTaskStore.setState({ isLoaded: true })
+
+    useSessionStore.getState().startLogin()
+
+    expect(mockedClearPersistedAuthSession).toHaveBeenCalledOnce()
+    expect(useSessionStore.getState()).toMatchObject({
+      error: null,
+      isInitialized: true,
+      isLoading: false,
+      user: null,
+    })
     expect(useCatalogStore.getState().isLoaded).toBe(false)
     expect(useCalendarStore.getState().isLoaded).toBe(false)
     expect(useHabitStore.getState().isLoaded).toBe(false)

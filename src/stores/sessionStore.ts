@@ -11,6 +11,7 @@ import {
   type SignUpResult,
 } from '../services/authService.ts'
 import { AppError, SESSION_EXPIRED_EVENT, toAppError } from '../services/errors.ts'
+import { clearPersistedAuthSession } from '../lib/insforge/client.ts'
 import type {
   EmailVerificationInput,
   RegisterInput,
@@ -34,6 +35,7 @@ interface SessionState {
   verifyEmail: (input: EmailVerificationInput) => Promise<SignInResult | null>
   signIn: (input: SignInInput) => Promise<SignInResult | null>
   signOut: () => Promise<void>
+  startLogin: () => void
   clearError: () => void
 }
 
@@ -264,6 +266,12 @@ export const useSessionStore = create<SessionState>((set, get) => {
       } finally {
         set({ isLoading: false })
       }
+    },
+
+    startLogin: () => {
+      clearPersistedAuthSession()
+      resetDomainStores()
+      set({ user: null, isInitialized: true, isLoading: false, error: null })
     },
 
     clearError: () => set({ error: null }),

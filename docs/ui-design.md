@@ -785,4 +785,8 @@ presentarse como evidencia de que una sincronización no tuvo avisos.
 En Android, la pantalla conserva el mismo diseño responsive. Si la sesión
 necesita renovarse, el mensaje debe indicar que se inicie sesión nuevamente,
 no atribuir el problema a la conexión de red cuando el dispositivo sí tiene
-acceso.
+acceso. Si no se puede comprobar la sesión, el estado de error ofrece dos
+acciones separadas: `Intentar nuevamente` para repetir la comprobación y
+`Iniciar sesión nuevamente` para limpiar la sesión local y abrir el formulario
+de acceso. La segunda acción conserva la ruta protegida para continuar después
+de autenticar y debe mantener objetivos táctiles de al menos 44 px.

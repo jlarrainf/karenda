@@ -342,3 +342,6 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
 - [x] **Tarea 131: Intentar API de New Quizzes** (20-30 min). Usar `/api/quiz/v1`
   como fallback de `/api/v1` y normalizar título, instrucciones, fechas y
   enlace del quiz al formato académico existente.
+- [x] **Tarea 132: Permitir iniciar sesión nuevamente desde Android** (20-30 min).
+  Limpiar tokens inválidos en memoria y almacenamiento seguro, ofrecer una
+  acción accesible desde el error de sesión y conservar la ruta de retorno.

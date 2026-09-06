@@ -219,6 +219,8 @@ export function persistCurrentAccessToken(): void {
 
 export function clearPersistedAuthSession(): void {
   mobileSession = null
+  insforge.setAccessToken(null)
+  httpClient.setRefreshToken(null)
 
   if (IS_NATIVE_PLATFORM) {
     void SecureStoragePlugin.remove({ key: MOBILE_AUTH_SESSION_KEY }).catch(() => {
