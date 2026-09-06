@@ -121,7 +121,10 @@ personales de Canvas quedan fuera del alcance.
   llamar a Canvas ni almacenar credenciales.
 - **RF-C-03 [EARS: evento]:** Cuando se ejecute una sincronización, el sistema
   deberá cargar cursos activos, colores, planificador, eventos, anuncios y
-  páginas mediante solicitudes GET paginadas a Canvas UC.
+  páginas mediante solicitudes GET paginadas a Canvas UC. Para quizzes deberá
+  intentar primero la API clásica (`/api/v1`) y, si no está disponible, la API
+  de New Quizzes (`/api/quiz/v1`), normalizando ambas respuestas al mismo
+  evento académico.
 - **RF-C-04 [EARS: estado]:** Mientras un curso no esté vinculado, sus
   elementos deberán permanecer en revisión y no podrán crear eventos.
 - **RF-C-05 [EARS: evento]:** Cuando aparezca un curso nuevo, Karenda deberá
@@ -249,7 +252,8 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
 ## 7. Seguridad Y Calidad
 
 - Las funciones solo realizan `GET` hacia el host fijo de Canvas UC y siguen
-  URLs de paginación que mantengan el mismo origen y la ruta `/api/v1/`.
+  URLs de paginación que mantengan el mismo origen y las rutas `/api/v1/` o
+  `/api/quiz/v1/`.
 - El token, la clave de cifrado, el secreto del programador, la clave
   administrativa y OpenRouter permanecen server-side.
 - Cada tabla pública legible aplica RLS por `owner_id = auth.uid()` y cada

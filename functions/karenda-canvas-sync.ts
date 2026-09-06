@@ -34,6 +34,7 @@ const EVENT_CHANGE_FIELDS = new Set<string>(SNAPSHOT_FIELDS)
 const AI_MODELS = [
   'minimax/minimax-m3:free', 'poolside/laguna-s-2.1:free', 'nvidia/nemotron-3.5-lightning:free',
 ] as const
+const CANVAS_API_PREFIXES = ['/api/v1/', '/api/quiz/v1/']
 
 type JsonObject = Record<string, unknown>
 type Admin = ReturnType<typeof createAdminClient>
@@ -189,7 +190,7 @@ function parseNextLink(value: string | null): string | null {
 }
 
 async function canvasRequest(url: URL, token: string): Promise<Response> {
-  if (url.origin !== CANVAS_BASE_URL || !url.pathname.startsWith('/api/v1/')) {
+  if (url.origin !== CANVAS_BASE_URL || !CANVAS_API_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
     throw new RequestError(502, 'CANVAS_INVALID_PAGINATION', 'Canvas devolvió una dirección de paginación no válida.')
   }
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -232,6 +233,37 @@ async function canvasList(path: string, token: string, maxPages = 30): Promise<J
 async function canvasObject(path: string, token: string): Promise<JsonObject> {
   const result = await canvasRequest(new URL(path, CANVAS_BASE_URL), token)
   return asObject(await result.json())
+}
+
+function normalizeNewQuiz(raw: JsonObject, courseId: string): JsonObject {
+  const id = String(raw.id ?? raw.assignment_id ?? '')
+  if (!id) return raw
+  return {
+    ...raw,
+    id,
+    description: raw.description ?? raw.instructions,
+    html_url: raw.html_url ?? `${CANVAS_BASE_URL}/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(id)}`,
+  }
+}
+
+async function canvasQuizList(courseId: string, token: string): Promise<JsonObject[]> {
+  const encoded = encodeURIComponent(courseId)
+  const paths = [
+    `/api/v1/courses/${encoded}/quizzes?per_page=100`,
+    `/api/quiz/v1/courses/${encoded}/quizzes`,
+  ]
+  let lastError: unknown = null
+  for (const path of paths) {
+    try {
+      return (await canvasList(path, token)).map((raw) => normalizeNewQuiz(raw, courseId))
+    } catch (error) {
+      lastError = error
+      if (!(error instanceof RequestError) || error.code === 'CANVAS_TOKEN_EXPIRED') throw error
+      if (error.remoteStatus !== 403 && error.remoteStatus !== 404) throw error
+    }
+  }
+  if (lastError) throw lastError
+  return []
 }
 
 function isOptionalCanvasResourceError(error: unknown): boolean {
@@ -579,7 +611,9 @@ async function syncCourse(
   ]
   for (const [name, path] of endpoints) {
     try {
-      endpointResults[name] = await canvasList(path, token)
+      endpointResults[name] = name === 'quizzes'
+        ? await canvasQuizList(courseId, token)
+        : await canvasList(path, token)
     } catch (error) {
       if (isCanvasResourceMissing(error instanceof RequestError ? error : {})) {
         // Canvas uses 404 when an optional collection is not enabled for a course.

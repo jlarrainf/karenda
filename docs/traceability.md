@@ -236,7 +236,7 @@ credenciales de prueba.
 | Requisito | Implementación | Verificación | Estado |
 | --- | --- | --- | --- |
 | RF-C-01 a RF-C-02 | `karenda-canvas-connection`, AES-GCM, secretos server-side y allowlist por UUID | Funciones activas en producción, llamadas anónimas `401`, cero credenciales iniciales y tabla privada | Desplegado |
-| RF-C-03 a RF-C-08 | `karenda-canvas-sync`, tablas de vínculos, candidatos ±7 días y `CanvasPage` | `reconciliation.test.ts`, `CanvasPage.test.tsx`, migraciones aplicadas en producción | Desplegado + automatizado |
+| RF-C-03 a RF-C-08 | `karenda-canvas-sync`, APIs clásica y New Quizzes, tablas de vínculos, candidatos ±7 días y `CanvasPage` | `reconciliation.test.ts`, `CanvasPage.test.tsx`, migraciones aplicadas en producción | Desplegado + automatizado; smoke New Quizzes pendiente |
 | RF-C-09 a RF-C-11 | Comparación base/local/remoto, conflictos y completitud monotónica | Tests unitarios de reconciliación y estado; piloto real pendiente | Automatizado + parcial |
 | RF-C-12 a RF-C-15 | Sanitización, esquema IA estricto, hashes, propuestas y avisos de retiro | Tests de HTML malicioso, salida IA inválida y deduplicación | Automatizado + estático |
 | RF-C-16 a RF-C-20 | Ejecuciones idempotentes, `429`, vencimiento, desconexión y programador horario | Índice exclusivo, funciones activas y schedule `0 * * * *` en producción | Desplegado |

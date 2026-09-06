@@ -339,3 +339,6 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
 - [x] **Tarea 130: Tratar colecciones Canvas ausentes como opcionales** (15-20 min).
   No marcar como parcial una ejecución cuando Canvas responde `404` para un
   endpoint secundario no habilitado en el curso.
+- [x] **Tarea 131: Intentar API de New Quizzes** (20-30 min). Usar `/api/quiz/v1`
+  como fallback de `/api/v1` y normalizar título, instrucciones, fechas y
+  enlace del quiz al formato académico existente.
