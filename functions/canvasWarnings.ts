@@ -7,6 +7,10 @@ const RESOURCE_LABELS: Record<string, string> = {
   pages: 'páginas',
 }
 
+export function isCanvasResourceMissing(failure: CanvasResourceFailure): boolean {
+  return failure.remoteStatus === 404
+}
+
 export function cleanCanvasCourseName(value: unknown, max = 160): string | null {
   if (typeof value !== 'string') return null
   const normalized = value.replace(/\s+/g, ' ').trim().slice(0, max)

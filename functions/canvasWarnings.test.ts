@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanCanvasCourseName, formatCanvasResourceWarning } from './canvasWarnings.ts'
+import { cleanCanvasCourseName, formatCanvasResourceWarning, isCanvasResourceMissing } from './canvasWarnings.ts'
 
 describe('Canvas resource warnings', () => {
   it('removes an unmatched opening delimiter from a course name', () => {
@@ -13,6 +13,8 @@ describe('Canvas resource warnings', () => {
   })
 
   it('distinguishes a missing collection from a transient failure', () => {
+    expect(isCanvasResourceMissing({ remoteStatus: 404 })).toBe(true)
+    expect(isCanvasResourceMissing({ code: 'CANVAS_UNAVAILABLE' })).toBe(false)
     expect(formatCanvasResourceWarning('pages', 'Sistemas Distribuidos', { remoteStatus: 404 }))
       .toBe('Canvas no ofrece páginas de Sistemas Distribuidos en este curso.')
     expect(formatCanvasResourceWarning('pages', 'Sistemas Distribuidos', { code: 'CANVAS_UNAVAILABLE' }))

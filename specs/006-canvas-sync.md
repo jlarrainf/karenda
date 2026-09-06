@@ -184,10 +184,12 @@ personales de Canvas quedan fuera del alcance.
   visibles al terminar.
 - **RF-C-24 [EARS: condición no deseada]:** Si Canvas rechaza o no entrega una
   colección secundaria de un curso, la ejecución deberá continuar con los
-  recursos disponibles, registrar un aviso sanitizado que distinga bloqueo de
-  permisos, recurso inexistente o respuesta temporal cuando sea posible y
-  finalizar como `partial`; los fallos de autenticación, credenciales, base de
-  datos o cursos deberán seguir siendo recuperables y explícitos.
+  recursos disponibles. Un `403`, límite `429` o error temporal deberá registrar
+  un aviso sanitizado que distinga el motivo cuando sea posible y finalizar como
+  `partial`; un `404` que indique que la colección no existe o no está
+  habilitada se tratará como colección vacía, sin aviso. Los fallos de
+  autenticación, credenciales, base de datos o cursos deberán seguir siendo
+  recuperables y explícitos.
 - **RF-C-25 [EARS: condición no deseada]:** Si Canvas entrega texto HTML con
   unidades Unicode malformadas, Karenda deberá reemplazar las unidades aisladas
   antes de persistirlas o enviarlas a la IA, sin abortar la sincronización.

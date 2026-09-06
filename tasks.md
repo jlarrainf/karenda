@@ -336,3 +336,6 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
 - [x] **Tarea 129: Detallar avisos de colecciones Canvas bloqueadas** (20-30 min).
   Identificar permisos, recursos inexistentes y respuestas temporales sin
   exponer detalles remotos, y normalizar nombres de cursos mal formados.
+- [x] **Tarea 130: Tratar colecciones Canvas ausentes como opcionales** (15-20 min).
+  No marcar como parcial una ejecución cuando Canvas responde `404` para un
+  endpoint secundario no habilitado en el curso.

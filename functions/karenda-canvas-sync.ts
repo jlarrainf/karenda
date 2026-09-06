@@ -8,7 +8,7 @@ import {
   extractCanvasAssessment,
   type CanvasAcademicActivityType,
 } from './canvasAssessment.ts'
-import { cleanCanvasCourseName, formatCanvasResourceWarning } from './canvasWarnings.ts'
+import { cleanCanvasCourseName, formatCanvasResourceWarning, isCanvasResourceMissing } from './canvasWarnings.ts'
 
 const BASE_URL = Deno.env.get('INSFORGE_BASE_URL') ?? ''
 const ADMIN_API_KEY = Deno.env.get('API_KEY') ?? ''
@@ -581,6 +581,11 @@ async function syncCourse(
     try {
       endpointResults[name] = await canvasList(path, token)
     } catch (error) {
+      if (isCanvasResourceMissing(error instanceof RequestError ? error : {})) {
+        // Canvas uses 404 when an optional collection is not enabled for a course.
+        endpointResults[name] = []
+        continue
+      }
       if (isOptionalCanvasResourceError(error)) {
         const courseName = cleanCanvasCourseName(course.name) ?? `curso ${courseId}`
         addWarning(counts, formatCanvasResourceWarning(name, courseName, error instanceof RequestError ? error : {}))
@@ -684,7 +689,9 @@ async function synchronize(connection: JsonObject, trigger: 'manual' | 'schedule
         : 30) * 86_400_000).toISOString()
       counts.plannerItems = (await canvasList(`/api/v1/planner/items?start_date=${encodeURIComponent(plannerStart)}&end_date=${encodeURIComponent(plannerEnd)}&per_page=100`, token)).length
     } catch (error) {
-      if (isOptionalCanvasResourceError(error)) addWarning(counts, 'El planificador de Canvas no estuvo disponible en esta ejecución.')
+      if (isCanvasResourceMissing(error instanceof RequestError ? error : {})) {
+        // An account without the planner endpoint can still sync course resources.
+      } else if (isOptionalCanvasResourceError(error)) addWarning(counts, 'El planificador de Canvas no estuvo disponible en esta ejecución.')
       else throw error
     }
 
