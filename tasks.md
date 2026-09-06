@@ -350,3 +350,7 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   min). Extraer tipo, título y fecha de tareas o quizzes visibles en
   `/api/v1/planner/items`, deduplicando los elementos ya recibidos por sus
   colecciones autorizadas y sin consultar APIs de quizzes.
+- [x] **Tarea 134: Enriquecer eventos desde anuncios con IA** (20-30 min).
+  Pasar contenido HTML sanitizado a un esquema estricto, resolver fechas
+  relativas con la fecha de publicación, conservar un resumen de indicaciones
+  y usar el título/categoría propuestos al revisar el evento.

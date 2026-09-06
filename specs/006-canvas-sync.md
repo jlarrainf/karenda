@@ -153,7 +153,8 @@ personales de Canvas quedan fuera del alcance.
   deberá devolverlo a `pending`.
 - **RF-C-12 [EARS: evento]:** Cuando un anuncio o página mencione explícitamente
   una actividad, fecha, sala o temario, la IA deberá devolver una propuesta
-  estructurada que la persona confirme antes de modificar un evento.
+  estructurada de título, categoría, fecha, hora, duración, lugar y resumen de
+  indicaciones que la persona confirme antes de modificar un evento.
 - **RF-C-13 [EARS: evento]:** Al confirmar información de un anuncio, Karenda
   deberá agregar texto no duplicado a la descripción y reemplazar el lugar si
   existe una sala nueva confirmada.
