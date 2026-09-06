@@ -531,7 +531,10 @@ confirmación. La extracción de fechas e indicaciones se limita a tareas,
 discusiones, eventos, el planificador resumido y contenido de Canvas; no
 consulta endpoints de quizzes restringidos. Si una tarea incluye un quiz, se
 clasifica desde esa respuesta y, como respaldo, el planificador aporta solo
-tipo, título y fecha.
+tipo, título y fecha. Los anuncios y páginas pasan además por un filtro de
+indicaciones académicas: solo sala, materia/temario, instrucciones de entrega
+y datos temporales explícitos llegan a la propuesta; el día de publicación no
+puede reemplazar la fecha de un evento existente.
 
 El trabajo se divide en: spec y UI; migración y RLS; cliente Canvas y funciones;
 servicio y store; superficie `/canvas`; procedencia en detalle de evento;

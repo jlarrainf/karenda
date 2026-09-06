@@ -135,7 +135,10 @@ personales de Canvas quedan fuera del alcance.
   código, abreviación y color editables.
 - **RF-C-06 [EARS: evento]:** Cuando aparezca un elemento nuevo, Karenda deberá
   mostrar antes los eventos propios candidatos de la misma asignatura dentro
-  de siete días a cada lado y permitir vincular, crear o ignorar.
+  de siete días a cada lado cuando exista una fecha explícita; si no existe,
+  podrá priorizar por título, código y categoría sin asumir una fecha. En ambos
+  casos deberá permitir vincular, crear o ignorar sin aplicar coincidencias
+  ambiguas automáticamente.
 - **RF-C-07 [EARS: condición no deseada]:** Si una decisión intenta vincular un
   curso, asignatura, elemento o evento ajeno, el servidor deberá rechazarla y
   no modificar ningún registro.
@@ -156,8 +159,13 @@ personales de Canvas quedan fuera del alcance.
   estructurada de título, categoría, fecha, hora, duración, lugar y resumen de
   indicaciones que la persona confirme antes de modificar un evento.
 - **RF-C-13 [EARS: evento]:** Al confirmar información de un anuncio, Karenda
-  deberá agregar texto no duplicado a la descripción y reemplazar el lugar si
-  existe una sala nueva confirmada.
+  deberá agregar texto académico no duplicado a la descripción y reemplazar el
+  lugar si existe una sala nueva confirmada. Una fecha u hora solo podrá
+  reemplazar las del evento cuando el anuncio las indique explícitamente;
+  información temporal inferida desde el día de publicación no modificará el
+  evento existente. Si la descripción actual coincide únicamente con el
+  extracto Canvas anterior, podrá sustituirse por el resumen académico
+  filtrado sin arrastrar contenido irrelevante.
 - **RF-C-14 [EARS: privacidad]:** De anuncios y páginas solo deberá persistirse
   título, fecha, enlace, hash y un extracto sanitizado de hasta 2000 caracteres;
   el cuerpo completo enviado a la IA será transitorio.
@@ -203,8 +211,9 @@ personales de Canvas quedan fuera del alcance.
 - **RF-C-26 [EARS: evento]:** Cuando un anuncio o página mencione una actividad,
   Karenda deberá resolver la asignatura desde el curso Canvas vinculado y
   combinar extracción determinista de abreviación, fecha, hora y duración con
-  la propuesta de IA; la información confirmada deberá quedar disponible para
-  crear o actualizar el evento.
+  la propuesta de IA. La propuesta deberá filtrar saludos, anécdotas, PS,
+  enlaces y contenido no académico del resumen; la información confirmada
+  deberá quedar disponible para crear o actualizar el evento.
 - **RF-C-27 [EARS: estado]:** La bandeja deberá mostrar la categoría canónica,
   la abreviación detectada, inicio/término y el color de la asignatura asociada
   antes de permitir crear o vincular.
@@ -337,3 +346,7 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
 - **CA-C-17:** La bandeja presenta el color y nombre del ramo, y las categorías
   confirmables son exactamente Control, Tarea, Actividad, Proyecto, Entrega,
   Prueba, Examen y Seminario, conservando compatibilidad de lectura histórica.
+- **CA-C-22:** Un anuncio que solo aporte sala o indicaciones, sin fecha
+  explícita, puede proponerse para el evento de la misma asignatura sin alterar
+  su fecha; la descripción confirmada conserva únicamente instrucciones
+  académicas relevantes y descarta saludos, anécdotas y PS.

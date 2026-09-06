@@ -38,6 +38,12 @@ function normalized(value: string): string {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es')
 }
 
+const DATE_REFERENCE_PATTERN = /\b(?:hoy|manana|lunes|martes|miercoles|jueves|viernes|sabado|domingo|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\b|\b\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?\b|\b\d{1,2}\s+de\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\b/i
+
+export function hasExplicitDateReference(value: string): boolean {
+  return DATE_REFERENCE_PATTERN.test(normalized(value))
+}
+
 export function classifyAssessment(
   value: string,
   fallback: CanvasAcademicActivityType = 'activity',
@@ -194,6 +200,7 @@ function localDateTimeParts(value: Date): LocalDateParts & { hour: number; minut
 export interface CanvasAssessmentExtraction {
   activityType: CanvasAcademicActivityType | null
   assessmentCode: string | null
+  hasExplicitDate: boolean
   startAt: string | null
   endAt: string | null
   durationMinutes: number | null
@@ -218,6 +225,7 @@ export function extractCanvasAssessment(title: string, content: string, referenc
   return {
     activityType: codeMatch || activityType !== 'activity' ? activityType : null,
     assessmentCode: codeMatch?.code ?? null,
+    hasExplicitDate: Boolean(date),
     startAt,
     endAt,
     durationMinutes,

@@ -354,3 +354,10 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   Pasar contenido HTML sanitizado a un esquema estricto, resolver fechas
   relativas con la fecha de publicación, conservar un resumen de indicaciones
   y usar el título/categoría propuestos al revisar el evento.
+- [x] **Tarea 135: Evitar fechas inferidas y filtrar ruido de anuncios** (20-30
+  min). No aplicar al evento una fecha derivada solo del día de publicación,
+  permitir candidatos sin fecha por título/código y conservar únicamente
+  indicaciones académicas relevantes en la descripción.
+- [x] **Tarea 136: Limpiar descripciones Canvas previas** (15-20 min). Detectar
+  cuando el evento contiene únicamente el extracto anterior de Canvas y
+  reemplazarlo, al confirmar la revisión, por el resumen académico filtrado.

@@ -25,6 +25,7 @@ import type {
 import {
   appendUniqueCanvasText,
   canonicalizeAcademicActivityType,
+  isCanvasOnlyDescription,
 } from '../../../lib/canvas/reconciliation.ts'
 
 const dateFormatter = new Intl.DateTimeFormat('es-CL', {
@@ -185,8 +186,9 @@ function ReviewCard({
   const assessmentCode = text(proposed.assessment_code)
   const canCreate = Boolean(proposedStart || manualStart)
   const proposedDescription = text(proposed.description)
+  const previousCanvasDescription = selected && isCanvasOnlyDescription(selected.description, review.sourceExcerpt)
   const mergedDescription = selected && proposedDescription
-    ? appendUniqueCanvasText(selected.description, proposedDescription)
+    ? appendUniqueCanvasText(previousCanvasDescription ? null : selected.description, proposedDescription)
     : proposedDescription
   const overrides: Record<string, unknown> = {
     academic_activity_type: activityType,

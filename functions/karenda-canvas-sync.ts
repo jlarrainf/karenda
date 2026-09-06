@@ -1,11 +1,13 @@
 import { createAdminClient, createClient } from 'npm:@insforge/sdk'
 import { sanitizeCanvasHtml, toWellFormed } from './canvasText.ts'
+import { filterAcademicDetails, normalizeAcademicLocation } from './canvasContent.ts'
 import {
   CANVAS_ACTIVITY_TYPES,
   canonicalizeActivityType,
   classifyAssessment,
   extractAssessmentCode,
   extractCanvasAssessment,
+  hasExplicitDateReference,
   type CanvasAcademicActivityType,
 } from './canvasAssessment.ts'
 import { cleanCanvasCourseName, formatCanvasResourceWarning, isCanvasResourceMissing } from './canvasWarnings.ts'
@@ -13,6 +15,7 @@ import { cleanCanvasCourseName, formatCanvasResourceWarning, isCanvasResourceMis
 const BASE_URL = Deno.env.get('INSFORGE_BASE_URL') ?? ''
 const ADMIN_API_KEY = Deno.env.get('API_KEY') ?? ''
 const CANVAS_BASE_URL = 'https://cursos.canvas.uc.cl'
+const CONTENT_PROCESSING_VERSION = 'academic-details-v3'
 const ENCRYPTION_KEY = Deno.env.get('CANVAS_CREDENTIAL_ENCRYPTION_KEY') ?? ''
 const SCHEDULE_SECRET = Deno.env.get('CANVAS_SCHEDULE_SECRET') ?? ''
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') ?? ''
@@ -396,18 +399,24 @@ async function pendingReview(admin: Admin, payload: JsonObject): Promise<boolean
 }
 
 async function candidates(admin: Admin, ownerId: string, subjectId: string, item: NormalizedItem): Promise<string[]> {
-  if (!item.startAt) return []
-  const center = Date.parse(item.startAt)
-  const from = new Date(center - 7 * 86_400_000).toISOString()
-  const to = new Date(center + 7 * 86_400_000).toISOString()
-  const { data } = await admin.database.from('events')
+  const center = item.startAt ? Date.parse(item.startAt) : null
+  const query = admin.database.from('events')
     .select('id, title, start_at, academic_activity_type')
-    .eq('owner_id', ownerId).eq('subject_id', subjectId).gte('start_at', from).lte('start_at', to).limit(100)
+    .eq('owner_id', ownerId).eq('subject_id', subjectId)
+  if (center !== null && Number.isFinite(center)) {
+    const from = new Date(center - 7 * 86_400_000).toISOString()
+    const to = new Date(center + 7 * 86_400_000).toISOString()
+    query.gte('start_at', from).lte('start_at', to)
+  }
+  const { data } = await query.limit(100)
   const wantedWords = new Set(normalizeNumberWords(item.title))
   return ((data ?? []) as JsonObject[]).map((event) => {
     const words = normalizeNumberWords(String(event.title ?? ''))
     const shared = words.filter((word) => wantedWords.has(word)).length
-    const dayDistance = Math.abs(Date.parse(String(event.start_at)) - center) / 86_400_000
+    const eventDate = Date.parse(String(event.start_at ?? ''))
+    const dayDistance = center !== null && Number.isFinite(eventDate)
+      ? Math.abs(eventDate - center) / 86_400_000
+      : 0
     const category = event.academic_activity_type === item.activityType ? 3 : 0
     const numbers = words.filter((word) => /^\d+$/.test(word) && wantedWords.has(word)).length * 4
     return { id: String(event.id), score: shared + category + numbers - dayDistance }
@@ -540,7 +549,7 @@ async function processContent(
     content = sanitizeCanvasHtml(detail.body)
     sourceUrl = canvasSourceUrl(detail.html_url) ?? sourceUrl
   }
-  const hash = await sha256(`${title}\n${content}`)
+  const hash = await sha256(`${CONTENT_PROCESSING_VERSION}\n${title}\n${content}`)
   const { data: existing } = await admin.database.from('canvas_item_links').select('*')
     .eq('connection_id', connection.id).eq('canvas_item_type', type).eq('canvas_item_id', id).maybeSingle()
   if (existing && asObject(existing).last_source_hash === hash) {
@@ -553,14 +562,11 @@ async function processContent(
   const aiProposal = await analyzeContent(title, content, String(connection.time_zone), referenceDate)
   const aiActivityType = canonicalizeActivityType(aiProposal?.activityType)
   const activityType = extracted.activityType ?? aiActivityType
-  const startAt = extracted.startAt ?? asIso(aiProposal?.startAt)
-  const endAt = extracted.endAt ?? asIso(aiProposal?.endAt)
-  const location = extracted.location ?? (typeof aiProposal?.location === 'string' ? aiProposal.location : null)
-  const topic = typeof aiProposal?.topic === 'string' && aiProposal.topic.trim()
-    ? aiProposal.topic
-    : extracted.hasActivity && content
-      ? content.slice(0, 1000)
-      : null
+  const explicitDate = extracted.hasExplicitDate || hasExplicitDateReference(content)
+  const startAt = explicitDate ? extracted.startAt ?? asIso(aiProposal?.startAt) : null
+  const endAt = explicitDate ? extracted.endAt ?? asIso(aiProposal?.endAt) : null
+  const location = normalizeAcademicLocation(extracted.location ?? aiProposal?.location)
+  const topic = filterAcademicDetails(aiProposal?.topic) ?? filterAcademicDetails(content)
   if (!activityType && !startAt && !endAt && !location && !topic) {
     await upsertItemLink(admin, {
       connection_id: connection.id, owner_id: connection.owner_id, course_link_id: courseLink.id,
