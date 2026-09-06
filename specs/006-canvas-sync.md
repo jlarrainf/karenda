@@ -18,8 +18,9 @@ apertura multiusuario exigirá OAuth y una Developer Key institucional.
 ## 2. Alcance
 
 - Cursos activos del periodo vigente.
-- Tareas, quizzes, discusiones evaluadas y eventos de calendario asociados a
-  esos cursos.
+- Tareas y evaluaciones publicadas (incluidos quizzes cuando Canvas los expone
+  dentro de una tarea), discusiones evaluadas y eventos de calendario
+  asociados a esos cursos.
 - Anuncios y páginas recientes que mencionen explícitamente una actividad,
   fecha, sala o temario.
 - Extracción determinista de fechas relativas (`hoy`, `mañana`), fechas
@@ -121,10 +122,12 @@ personales de Canvas quedan fuera del alcance.
   llamar a Canvas ni almacenar credenciales.
 - **RF-C-03 [EARS: evento]:** Cuando se ejecute una sincronización, el sistema
   deberá cargar cursos activos, colores, planificador, eventos, anuncios y
-  páginas mediante solicitudes GET paginadas a Canvas UC. Para quizzes deberá
-  intentar primero la API clásica (`/api/v1`) y, si no está disponible, la API
-  de New Quizzes (`/api/quiz/v1`), normalizando ambas respuestas al mismo
-  evento académico.
+  páginas mediante solicitudes GET paginadas a Canvas UC. Las evaluaciones se
+  obtendrán desde tareas, discusiones y eventos publicados; si Canvas incluye
+  un quiz dentro de una tarea, se normalizará desde esa respuesta sin consultar
+  endpoints adicionales de quizzes. Cuando una evaluación no esté disponible en
+  esas colecciones, el planificador podrá aportar únicamente su tipo, título y
+  fecha, sin leer preguntas ni configuración del quiz.
 - **RF-C-04 [EARS: estado]:** Mientras un curso no esté vinculado, sus
   elementos deberán permanecer en revisión y no podrán crear eventos.
 - **RF-C-05 [EARS: evento]:** Cuando aparezca un curso nuevo, Karenda deberá
@@ -252,8 +255,7 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
 ## 7. Seguridad Y Calidad
 
 - Las funciones solo realizan `GET` hacia el host fijo de Canvas UC y siguen
-  URLs de paginación que mantengan el mismo origen y las rutas `/api/v1/` o
-  `/api/quiz/v1/`.
+  URLs de paginación que mantengan el mismo origen y la ruta `/api/v1/`.
 - El token, la clave de cifrado, el secreto del programador, la clave
   administrativa y OpenRouter permanecen server-side.
 - Cada tabla pública legible aplica RLS por `owner_id = auth.uid()` y cada

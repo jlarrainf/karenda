@@ -339,9 +339,14 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
 - [x] **Tarea 130: Tratar colecciones Canvas ausentes como opcionales** (15-20 min).
   No marcar como parcial una ejecución cuando Canvas responde `404` para un
   endpoint secundario no habilitado en el curso.
-- [x] **Tarea 131: Intentar API de New Quizzes** (20-30 min). Usar `/api/quiz/v1`
-  como fallback de `/api/v1` y normalizar título, instrucciones, fechas y
-  enlace del quiz al formato académico existente.
+- [x] **Tarea 131: Limitar Canvas a fuentes autorizadas** (20-30 min). No
+  consultar endpoints de quizzes que la cuenta piloto no puede leer; extraer
+  fechas e indicaciones desde tareas, discusiones, eventos, anuncios y páginas,
+  y reconocer un quiz cuando Canvas lo incluye dentro de una tarea.
 - [x] **Tarea 132: Permitir iniciar sesión nuevamente desde Android** (20-30 min).
   Limpiar tokens inválidos en memoria y almacenamiento seguro, ofrecer una
   acción accesible desde el error de sesión y conservar la ruta de retorno.
+- [x] **Tarea 133: Usar el planificador como respaldo de evaluaciones** (20-30
+  min). Extraer tipo, título y fecha de tareas o quizzes visibles en
+  `/api/v1/planner/items`, deduplicando los elementos ya recibidos por sus
+  colecciones autorizadas y sin consultar APIs de quizzes.

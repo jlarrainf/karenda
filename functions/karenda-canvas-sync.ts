@@ -34,7 +34,6 @@ const EVENT_CHANGE_FIELDS = new Set<string>(SNAPSHOT_FIELDS)
 const AI_MODELS = [
   'minimax/minimax-m3:free', 'poolside/laguna-s-2.1:free', 'nvidia/nemotron-3.5-lightning:free',
 ] as const
-const CANVAS_API_PREFIXES = ['/api/v1/', '/api/quiz/v1/']
 
 type JsonObject = Record<string, unknown>
 type Admin = ReturnType<typeof createAdminClient>
@@ -190,7 +189,7 @@ function parseNextLink(value: string | null): string | null {
 }
 
 async function canvasRequest(url: URL, token: string): Promise<Response> {
-  if (url.origin !== CANVAS_BASE_URL || !CANVAS_API_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
+  if (url.origin !== CANVAS_BASE_URL || !url.pathname.startsWith('/api/v1/')) {
     throw new RequestError(502, 'CANVAS_INVALID_PAGINATION', 'Canvas devolvió una dirección de paginación no válida.')
   }
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -233,37 +232,6 @@ async function canvasList(path: string, token: string, maxPages = 30): Promise<J
 async function canvasObject(path: string, token: string): Promise<JsonObject> {
   const result = await canvasRequest(new URL(path, CANVAS_BASE_URL), token)
   return asObject(await result.json())
-}
-
-function normalizeNewQuiz(raw: JsonObject, courseId: string): JsonObject {
-  const id = String(raw.id ?? raw.assignment_id ?? '')
-  if (!id) return raw
-  return {
-    ...raw,
-    id,
-    description: raw.description ?? raw.instructions,
-    html_url: raw.html_url ?? `${CANVAS_BASE_URL}/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(id)}`,
-  }
-}
-
-async function canvasQuizList(courseId: string, token: string): Promise<JsonObject[]> {
-  const encoded = encodeURIComponent(courseId)
-  const paths = [
-    `/api/v1/courses/${encoded}/quizzes?per_page=100`,
-    `/api/quiz/v1/courses/${encoded}/quizzes`,
-  ]
-  let lastError: unknown = null
-  for (const path of paths) {
-    try {
-      return (await canvasList(path, token)).map((raw) => normalizeNewQuiz(raw, courseId))
-    } catch (error) {
-      lastError = error
-      if (!(error instanceof RequestError) || error.code === 'CANVAS_TOKEN_EXPIRED') throw error
-      if (error.remoteStatus !== 403 && error.remoteStatus !== 404) throw error
-    }
-  }
-  if (lastError) throw lastError
-  return []
 }
 
 function isOptionalCanvasResourceError(error: unknown): boolean {
@@ -312,7 +280,7 @@ function normalizeCommon(raw: JsonObject, type: CanvasItemType, courseId: string
     ? `${title} · ${codeMatch.code}`
     : title
   const activityType = codeMatch?.activityType ?? classifyAssessment(title, fallback as CanvasAcademicActivityType)
-  const description = asText(sanitizeCanvasHtml(raw.description ?? raw.message), 2000)
+  const description = asText(sanitizeCanvasHtml(raw.description ?? raw.instructions ?? raw.message), 2000)
   const location = asText(raw.location_name ?? raw.location_address, 240)
 
   return {
@@ -327,6 +295,42 @@ function normalizeCommon(raw: JsonObject, type: CanvasItemType, courseId: string
       academic_activity_type: activityType,
     },
   }
+}
+
+function isQuizAssignment(raw: JsonObject): boolean {
+  if (raw.quiz_id !== null && raw.quiz_id !== undefined && String(raw.quiz_id).trim()) return true
+  if (raw.submission_type === 'online_quiz') return true
+  return Array.isArray(raw.submission_types)
+    && raw.submission_types.some((value) => value === 'online_quiz')
+}
+
+function plannerCourseId(raw: JsonObject): string {
+  const contextCode = asText(raw.context_code, 120)
+  const contextCourseId = contextCode?.match(/^course_(.+)$/i)?.[1]
+  const plannable = asObject(raw.plannable)
+  return String(raw.course_id ?? raw.context_id ?? plannable.course_id ?? contextCourseId ?? '')
+}
+
+function normalizePlannerItem(raw: JsonObject, courseId: string): NormalizedItem | null {
+  const plannable = asObject(raw.plannable)
+  const kind = String(raw.plannable_type ?? plannable.type ?? '').toLowerCase()
+  const type: CanvasItemType | null = kind.includes('quiz')
+    ? 'quiz'
+    : kind.includes('discussion')
+      ? 'discussion_topic'
+      : kind.includes('assignment')
+        ? 'assignment'
+        : null
+  const id = String(raw.plannable_id ?? plannable.id ?? '')
+  if (!type || !id) return null
+  return normalizeCommon({
+    ...plannable,
+    ...raw,
+    id,
+    name: plannable.title ?? plannable.name ?? raw.title ?? raw.name,
+    due_at: plannable.due_at ?? raw.plannable_date ?? raw.due_at,
+    html_url: plannable.html_url ?? raw.html_url,
+  }, type, courseId)
 }
 
 function normalizedSnapshot(item: NormalizedItem): JsonObject {
@@ -596,14 +600,14 @@ async function processContent(
 
 async function syncCourse(
   admin: Admin, token: string, connection: JsonObject, course: JsonObject,
-  courseLink: JsonObject, runStartedAt: string, firstContentDate: string, counts: SyncCounts,
+  courseLink: JsonObject, plannerItems: JsonObject[], runStartedAt: string,
+  firstContentDate: string, counts: SyncCounts,
 ): Promise<void> {
   const courseId = String(course.id)
   const encoded = encodeURIComponent(courseId)
   const endpointResults: Record<string, JsonObject[]> = {}
   const endpoints: Array<[string, string]> = [
     ['assignments', `/api/v1/courses/${encoded}/assignments?include[]=submission&order_by=due_at&per_page=100`],
-    ['quizzes', `/api/v1/courses/${encoded}/quizzes?per_page=100`],
     ['discussions', `/api/v1/courses/${encoded}/discussion_topics?only_announcements=false&filter_by=all&per_page=100`],
     ['calendar', `/api/v1/calendar_events?context_codes[]=course_${encoded}&all_events=true&per_page=100`],
     ['announcements', `/api/v1/announcements?context_codes[]=course_${encoded}&start_date=${encodeURIComponent(firstContentDate)}&end_date=${encodeURIComponent(new Date().toISOString())}&per_page=100`],
@@ -611,9 +615,7 @@ async function syncCourse(
   ]
   for (const [name, path] of endpoints) {
     try {
-      endpointResults[name] = name === 'quizzes'
-        ? await canvasQuizList(courseId, token)
-        : await canvasList(path, token)
+      endpointResults[name] = await canvasList(path, token)
     } catch (error) {
       if (isCanvasResourceMissing(error instanceof RequestError ? error : {})) {
         // Canvas uses 404 when an optional collection is not enabled for a course.
@@ -632,20 +634,11 @@ async function syncCourse(
     ? Math.min(365, Math.max(7, Number(connection.content_lookback_days)))
     : 30
   const historyStart = Date.now() - lookbackDays * 86_400_000
-  const seenAssignmentIds = new Set<string>()
+  const seenItems = new Set<string>()
   for (const raw of endpointResults.assignments) {
-    const item = normalizeCommon(raw, raw.quiz_id ? 'quiz' : 'assignment', courseId)
+    const item = normalizeCommon(raw, isQuizAssignment(raw) ? 'quiz' : 'assignment', courseId)
     if (!item.id) continue
-    seenAssignmentIds.add(String(raw.quiz_id ?? ''))
-    const lastDate = item.endAt ?? item.startAt
-    const { data: existing } = await admin.database.from('canvas_item_links').select('id').eq('connection_id', connection.id).eq('canvas_item_type', item.type).eq('canvas_item_id', item.id).maybeSingle()
-    if (lastDate && Date.parse(lastDate) < historyStart && !existing) continue
-    await processItem(admin, connection, courseLink, item, runStartedAt, counts)
-  }
-  for (const raw of endpointResults.quizzes) {
-    if (seenAssignmentIds.has(String(raw.id ?? ''))) continue
-    const item = normalizeCommon(raw, 'quiz', courseId)
-    if (!item.id) continue
+    seenItems.add(`${item.type}:${item.id}`)
     const lastDate = item.endAt ?? item.startAt
     const { data: existing } = await admin.database.from('canvas_item_links').select('id').eq('connection_id', connection.id).eq('canvas_item_type', item.type).eq('canvas_item_id', item.id).maybeSingle()
     if (lastDate && Date.parse(lastDate) < historyStart && !existing) continue
@@ -655,6 +648,8 @@ async function syncCourse(
     if (!raw.assignment_id) continue
     const assignment = asObject(raw.assignment)
     const item = normalizeCommon({ ...raw, ...assignment, id: raw.id, title: raw.title, html_url: raw.html_url }, 'discussion_topic', courseId)
+    if (!item.id) continue
+    seenItems.add(`${item.type}:${item.id}`)
     const lastDate = item.endAt ?? item.startAt
     const { data: existing } = await admin.database.from('canvas_item_links').select('id').eq('connection_id', connection.id).eq('canvas_item_type', item.type).eq('canvas_item_id', item.id).maybeSingle()
     if (lastDate && Date.parse(lastDate) < historyStart && !existing) continue
@@ -662,8 +657,20 @@ async function syncCourse(
   }
   for (const raw of endpointResults.calendar) {
     const item = normalizeCommon(raw, 'calendar_event', courseId)
+    if (!item.id) continue
+    seenItems.add(`${item.type}:${item.id}`)
     const lastDate = item.endAt ?? item.startAt
-    if (!item.id || (lastDate && Date.parse(lastDate) < historyStart)) continue
+    if (lastDate && Date.parse(lastDate) < historyStart) continue
+    await processItem(admin, connection, courseLink, item, runStartedAt, counts)
+  }
+  for (const raw of plannerItems) {
+    const item = normalizePlannerItem(raw, courseId)
+    if (!item || seenItems.has(`${item.type}:${item.id}`)) continue
+    seenItems.add(`${item.type}:${item.id}`)
+    const lastDate = item.endAt ?? item.startAt
+    const { data: existing } = await admin.database.from('canvas_item_links').select('id')
+      .eq('connection_id', connection.id).eq('canvas_item_type', item.type).eq('canvas_item_id', item.id).maybeSingle()
+    if (lastDate && Date.parse(lastDate) < historyStart && !existing) continue
     await processItem(admin, connection, courseLink, item, runStartedAt, counts)
   }
   for (const raw of endpointResults.announcements) await processContent(admin, token, connection, courseLink, raw, 'announcement', counts)
@@ -716,12 +723,14 @@ async function synchronize(connection: JsonObject, trigger: 'manual' | 'schedule
     const token = await decryptToken(String(asObject(credential).token_ciphertext), String(asObject(credential).token_iv))
     const courses = await canvasList('/api/v1/courses?enrollment_state=active&state[]=available&include[]=term&per_page=100', token)
     counts.courses = courses.length
+    let plannerItems: JsonObject[] = []
     try {
       const plannerEnd = new Date(Date.now() + 370 * 86_400_000).toISOString()
       const plannerStart = new Date(Date.now() - (Number.isInteger(connection.content_lookback_days)
         ? Math.min(365, Math.max(7, Number(connection.content_lookback_days)))
         : 30) * 86_400_000).toISOString()
-      counts.plannerItems = (await canvasList(`/api/v1/planner/items?start_date=${encodeURIComponent(plannerStart)}&end_date=${encodeURIComponent(plannerEnd)}&per_page=100`, token)).length
+      plannerItems = await canvasList(`/api/v1/planner/items?start_date=${encodeURIComponent(plannerStart)}&end_date=${encodeURIComponent(plannerEnd)}&per_page=100`, token)
+      counts.plannerItems = plannerItems.length
     } catch (error) {
       if (isCanvasResourceMissing(error instanceof RequestError ? error : {})) {
         // An account without the planner endpoint can still sync course resources.
@@ -758,7 +767,8 @@ async function synchronize(connection: JsonObject, trigger: 'manual' | 'schedule
         canvas_term_name: asText(asObject(course.term).name, 160),
         source_snapshot: { name: courseName, code: asText(course.course_code, 40) }, last_seen_at: runStartedAt,
       }).eq('id', courseLink.id)
-      await syncCourse(admin, token, connection, course, courseLink, runStartedAt, contentSince, counts)
+      const coursePlannerItems = plannerItems.filter((item) => plannerCourseId(item) === courseId)
+      await syncCourse(admin, token, connection, course, courseLink, coursePlannerItems, runStartedAt, contentSince, counts)
     }
 
     await markRemoved(admin, connection, runStartedAt, counts)

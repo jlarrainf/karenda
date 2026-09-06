@@ -527,7 +527,11 @@ clasifica actividades y genera propuestas. Cursos y elementos nuevos siempre
 requieren revisión; las actualizaciones posteriores aplican una reconciliación
 de tres versiones y solo actualizan automáticamente campos locales intactos.
 Anuncios y páginas pasan por extracción IA estructurada y nunca escriben sin
-confirmación.
+confirmación. La extracción de fechas e indicaciones se limita a tareas,
+discusiones, eventos, el planificador resumido y contenido de Canvas; no
+consulta endpoints de quizzes restringidos. Si una tarea incluye un quiz, se
+clasifica desde esa respuesta y, como respaldo, el planificador aporta solo
+tipo, título y fecha.
 
 El trabajo se divide en: spec y UI; migración y RLS; cliente Canvas y funciones;
 servicio y store; superficie `/canvas`; procedencia en detalle de evento;
