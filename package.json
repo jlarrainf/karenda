@@ -28,7 +28,7 @@
     "@fullcalendar/react": "^6.1.21",
     "@fullcalendar/timegrid": "^6.1.21",
     "@insforge/sdk": "^1.5.2",
-    "katex": "^0.16.47",
+    "katex": "^0.18.7",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.87.0",
