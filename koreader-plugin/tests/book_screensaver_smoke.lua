@@ -1,4 +1,4 @@
-local pluginPath = assert(arg[1], "Se requiere la ruta de karenda.koplugin.")
+local pluginPath = assert(arg[1], "Se requiere la ruta de karenda-screensaver.koplugin.")
 package.path = pluginPath .. "/?.lua;" .. package.path
 
 require("setupkoenv")
@@ -44,6 +44,9 @@ local ui = {
         getStatsBookStatus = function()
             return { days = 4, time = 7320, pages = 81 }
         end,
+        getTodayBookStats = function()
+            return 4560, 83
+        end,
     },
     toc = {
         getTocTitleByPage = function()
@@ -66,6 +69,8 @@ assert(data.pages_left_book == 144)
 assert(data.pages_left_chapter == 24)
 assert(data.time_left_book == "4 h 48 min")
 assert(data.time_left_chapter == "48 min")
+assert(data.pages_read_today == 83)
+assert(data.time_read_today == "1 h 16 min")
 assert(data.average_speed == "2 min/pág")
 
 local widget = assert(BookScreensaver.build(ui))
@@ -80,6 +85,41 @@ widget:paintTo(Device.screen.bb, 0, 0)
 widget:free()
 
 local saved_settings = G_reader_settings
+local grouped_settings = {
+    karenda_screensaver_show_title = true,
+    karenda_screensaver_show_author = true,
+    karenda_screensaver_show_chapter = true,
+    karenda_screensaver_show_progress = true,
+    karenda_screensaver_show_chapter_progress = false,
+    karenda_screensaver_show_page = true,
+    karenda_screensaver_show_pages_left_chapter = true,
+    karenda_screensaver_show_pages_left_book = true,
+    karenda_screensaver_show_time = true,
+    karenda_screensaver_show_time_left_chapter = true,
+    karenda_screensaver_show_time_left_book = true,
+    karenda_screensaver_show_today = true,
+    karenda_screensaver_show_days = true,
+    karenda_screensaver_show_pages_read = false,
+    karenda_screensaver_show_average_speed = false,
+    karenda_screensaver_combine_remaining = true,
+    karenda_screensaver_panel_style = "minimal",
+    karenda_screensaver_cover_fit = "fit",
+}
+function grouped_settings:readSetting(name)
+    return self[name]
+end
+G_reader_settings = grouped_settings
+local grouped_widget = assert(BookScreensaver.build(ui))
+local grouped_panel_height = grouped_widget[2]:getSize().h
+grouped_widget:free()
+
+grouped_settings.karenda_screensaver_combine_remaining = false
+local separate_widget = assert(BookScreensaver.build(ui))
+local separate_panel_height = separate_widget[2]:getSize().h
+assert(separate_panel_height > grouped_panel_height)
+separate_widget:free()
+G_reader_settings = saved_settings
+
 local hidden_settings = {
     karenda_screensaver_show_title = false,
     karenda_screensaver_show_author = false,
@@ -92,9 +132,11 @@ local hidden_settings = {
     karenda_screensaver_show_time = false,
     karenda_screensaver_show_time_left_chapter = false,
     karenda_screensaver_show_time_left_book = false,
+    karenda_screensaver_show_today = false,
     karenda_screensaver_show_days = false,
     karenda_screensaver_show_pages_read = false,
     karenda_screensaver_show_average_speed = false,
+    karenda_screensaver_combine_remaining = true,
     karenda_screensaver_vertical_position = "top",
     karenda_screensaver_horizontal_alignment = "left",
     karenda_screensaver_stats_layout = "grid",
@@ -102,6 +144,9 @@ local hidden_settings = {
 }
 function hidden_settings:readSetting(name)
     return self[name]
+end
+function hidden_settings:nilOrTrue(name)
+    return self[name] ~= false
 end
 G_reader_settings = hidden_settings
 
@@ -119,7 +164,8 @@ local no_content_ui = {
     toc = ui.toc,
 }
 local no_content_widget = assert(BookScreensaver.build(no_content_ui))
-assert(no_content_widget[2] == nil)
+assert(no_content_widget[2] ~= nil)
+assert(no_content_widget[2]:getSize().h > 0)
 no_content_widget:paintTo(Device.screen.bb, 0, 0)
 no_content_widget:free()
 G_reader_settings = saved_settings

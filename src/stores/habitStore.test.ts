@@ -88,6 +88,7 @@ const log: HabitLog = {
   externalId: null,
   habitId,
   id: '44444444-4444-4444-8444-444444444444',
+  koreaderLinkId: null,
   localDate: '2026-09-01',
   ownerId,
   source: 'manual',

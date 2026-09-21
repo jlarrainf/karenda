@@ -3,16 +3,19 @@ package.path = "../karenda.koplugin/?.lua;" .. package.path
 local Integration = require("simpleui_integration")
 
 describe("simpleui_integration", function()
-    it("expone las acciones estables de calendario y notas", function()
+    it("expone las acciones estables de calendario, notas y Karenda", function()
         local definitions = Integration.getActionDefinitions()
 
-        assert.are.equal(2, #definitions)
+        assert.are.equal(3, #definitions)
         assert.are.equal("karenda_calendar", definitions[1].id)
         assert.are.equal("Calendario", definitions[1].label)
         assert.are.equal("openCalendar", definitions[1].method)
         assert.are.equal("karenda_notes", definitions[2].id)
         assert.are.equal("Notas", definitions[2].label)
         assert.are.equal("openNotes", definitions[2].method)
+        assert.are.equal("karenda", definitions[3].id)
+        assert.are.equal("Karenda", definitions[3].label)
+        assert.are.equal("openKarenda", definitions[3].method)
     end)
 
     it("registra acciones y las dirige a la instancia del plugin", function()
@@ -39,6 +42,7 @@ describe("simpleui_integration", function()
 
         local calendar_opened = false
         local notes_opened = false
+        local karenda_opened = false
         local plugin = {
             openCalendar = function()
                 calendar_opened = true
@@ -46,18 +50,25 @@ describe("simpleui_integration", function()
             openNotes = function()
                 notes_opened = true
             end,
+            openKarenda = function()
+                karenda_opened = true
+            end,
         }
 
         assert.is_true(Integration.register(plugin))
         descriptors.karenda_calendar.execute({})
         descriptors.karenda_notes.execute({})
+        descriptors.karenda.execute({})
         assert.is_true(calendar_opened)
         assert.is_true(notes_opened)
+        assert.is_true(karenda_opened)
         assert.is_true(invalidated)
         assert.is_true(descriptors.karenda_calendar.is_in_place)
         assert.is_true(descriptors.karenda_calendar.is_async_in_place)
         assert.is_true(descriptors.karenda_notes.is_in_place)
         assert.is_true(descriptors.karenda_notes.is_async_in_place)
+        assert.is_true(descriptors.karenda.is_in_place)
+        assert.is_true(descriptors.karenda.is_async_in_place)
 
         package.loaded["features/sui_quickactions"] = previous_qa
         package.loaded["infra/sui_config"] = previous_config

@@ -15,6 +15,7 @@ local VerticalGroup = require("ui/widget/verticalgroup")
 local _ = require("gettext")
 
 local Markdown = require("markdown")
+local KarendaToggle = require("karenda_toggle")
 local SurfaceNavigation = require("surface_navigation")
 
 local Screen = Device.screen
@@ -330,6 +331,10 @@ end
 local NotesScreen = InputContainer:extend{
     plugin = nil,
     snapshot = nil,
+    combined = false,
+    navbarActionId = nil,
+    simpleuiPlugin = nil,
+    fm = nil,
     subjects = nil,
     personalGroups = nil,
     subjectList = nil,
@@ -340,6 +345,7 @@ local NotesScreen = InputContainer:extend{
     titleBar = nil,
     refreshButton = nil,
     filterControl = nil,
+    toggleControl = nil,
     navbarHeight = 0,
     contentGroup = nil,
     covers_fullscreen = false,
@@ -376,6 +382,22 @@ function NotesScreen:_filterControl(width)
         onSelect = function(selectedFilter)
             self:_selectFilter(selectedFilter)
         end,
+    }
+end
+
+function NotesScreen:_surfaceToggle(width)
+    return KarendaToggle.new(width, "notes", self, function(kind)
+        self.plugin:switchKarendaView(self, kind == "calendar" and "calendar" or "note", self.simpleuiPlugin, self.fm)
+    end)
+end
+
+function NotesScreen:getViewOptions()
+    if not self.combined then
+        return nil
+    end
+    return {
+        combined = true,
+        navbar_action_id = self.navbarActionId,
     }
 end
 
@@ -450,10 +472,16 @@ function NotesScreen:_build()
         end,
     })
     self:_updateTitle()
+    local toggleControl
+    if self.combined then
+        toggleControl = self:_surfaceToggle(screen_width)
+    end
+    self.toggleControl = toggleControl
     local filterControl = self:_filterControl(screen_width)
     self.filterControl = filterControl
     local menu_height = available_height
         - titleBar:getSize().h
+        - (toggleControl and toggleControl:getSize().h or 0)
         - filterControl:getSize().h
     if menu_height < Size.item.height_large then
         menu_height = Size.item.height_large
@@ -469,11 +497,15 @@ function NotesScreen:_build()
         show_parent = self,
     }
     self.menu = menu
-    self.contentGroup = VerticalGroup:new{
+    local content_widgets = {
         titleBar,
-        filterControl,
-        menu,
     }
+    if toggleControl then
+        content_widgets[#content_widgets + 1] = toggleControl
+    end
+    content_widgets[#content_widgets + 1] = filterControl
+    content_widgets[#content_widgets + 1] = menu
+    self.contentGroup = VerticalGroup:new(content_widgets)
     self[1] = FrameContainer:new{
         background = Blitbuffer.COLOR_WHITE,
         bordersize = 0,
@@ -516,12 +548,27 @@ function NotesScreen:onScreenResize()
     return false
 end
 
-function NotesView.show(plugin, snapshot, simpleui_plugin, fm)
+function NotesView.show(plugin, snapshot, simpleui_plugin, fm, options)
+    options = options or {}
+    local navbar_action_id = options.navbar_action_id
+    if options.combined and not navbar_action_id then
+        navbar_action_id = "karenda"
+    end
     local screen = NotesScreen:new{
         plugin = plugin,
         snapshot = snapshot,
+        combined = options.combined == true,
+        navbarActionId = navbar_action_id,
+        simpleuiPlugin = simpleui_plugin,
+        fm = fm,
     }
-    plugin:showKarendaView(screen, "note", simpleui_plugin, fm)
+    plugin:showKarendaView(
+        screen,
+        "note",
+        simpleui_plugin,
+        fm,
+        navbar_action_id
+    )
     UIManager:show(screen)
     return screen
 end

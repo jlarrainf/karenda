@@ -24,6 +24,8 @@ package.loaded["ui/widget/notification"] = {
 }
 package.loaded["main"] = nil
 local Karenda = require("main")
+local CalendarView = require("calendar_view")
+local NotesView = require("notes_view")
 
 local shown = {}
 local closed = {}
@@ -36,7 +38,16 @@ UIManager.close = function(_, widget)
     closed[#closed + 1] = widget
 end
 
-local view = {}
+local view = {
+    simpleuiPlugin = { active_action = "karenda" },
+    fm = {},
+    getViewOptions = function()
+        return {
+            combined = true,
+            navbar_action_id = "karenda",
+        }
+    end,
+}
 local freshSnapshot = { snapshotId = "fresh" }
 local rebuilt = {}
 local plugin = {
@@ -47,8 +58,14 @@ local plugin = {
     end,
 }
 local viewModule = {
-    show = function(owner, snapshot)
-        rebuilt[#rebuilt + 1] = { owner = owner, snapshot = snapshot }
+    show = function(owner, snapshot, simpleui_plugin, fm, options)
+        rebuilt[#rebuilt + 1] = {
+            owner = owner,
+            snapshot = snapshot,
+            simpleui_plugin = simpleui_plugin,
+            fm = fm,
+            options = options,
+        }
     end,
 }
 
@@ -62,6 +79,10 @@ assert(shown[1].text == "Actualizando calendario y notas…")
 assert(#rebuilt == 1)
 assert(rebuilt[1].owner == plugin)
 assert(rebuilt[1].snapshot == freshSnapshot)
+assert(rebuilt[1].simpleui_plugin == view.simpleuiPlugin)
+assert(rebuilt[1].fm == view.fm)
+assert(rebuilt[1].options.combined)
+assert(rebuilt[1].options.navbar_action_id == "karenda")
 assert(#closed == 1)
 assert(notification_events[1].text == "Se actualizaron el calendario y las notas.")
 assert(notification_events[1].source == 0x8000)
@@ -104,6 +125,57 @@ local cachedViewModule = {
 }
 assert(Karenda.openSnapshot(cachedPlugin, cachedViewModule) == "opened-from-cache")
 assert(cacheSyncs == 0)
+
+local original_calendar_show = CalendarView.show
+local original_notes_show = NotesView.show
+local combined_opened = {}
+CalendarView.show = function(owner, snapshot, simpleui_plugin, fm, options)
+    combined_opened[#combined_opened + 1] = {
+        owner = owner,
+        snapshot = snapshot,
+        simpleui_plugin = simpleui_plugin,
+        fm = fm,
+        options = options,
+    }
+    return "combined-opened"
+end
+NotesView.show = function(_, _, _, _, options)
+    combined_opened[#combined_opened + 1] = { options = options }
+    return "notes-switched"
+end
+local combinedPlugin = {
+    getCachedSnapshot = function()
+        return { snapshot = freshSnapshot }
+    end,
+}
+setmetatable(combinedPlugin, { __index = Karenda })
+local combined_simpleui_plugin = { active_action = "home" }
+local combined_fm = {}
+assert(
+    Karenda.openKarenda(
+        combinedPlugin,
+        combined_simpleui_plugin,
+        combined_fm
+    ) == "combined-opened"
+)
+assert(combined_opened[1].options.combined)
+assert(combined_opened[1].options.navbar_action_id == "karenda")
+local combined_view = {}
+combinedPlugin.activeKarendaView = combined_view
+assert(
+    Karenda.switchKarendaView(
+        combinedPlugin,
+        combined_view,
+        "note",
+        combined_simpleui_plugin,
+        combined_fm
+    ) == true
+)
+assert(combined_view.navbarNavigationInProgress)
+assert(combined_opened[2].options.combined)
+assert(combined_opened[2].options.navbar_action_id == "karenda")
+CalendarView.show = original_calendar_show
+NotesView.show = original_notes_show
 
 plugin.activeKarendaView = {}
 assert(not refresh({ kind = "updated", snapshot = freshSnapshot }))

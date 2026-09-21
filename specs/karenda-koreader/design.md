@@ -8,10 +8,11 @@ funcional del plugin.
 
 ## 1. Límites De Arquitectura
 
-El plugin vivirá como un paquete independiente, previsto inicialmente en:
+La distribución tendrá dos paquetes independientes, previstos inicialmente en:
 
 ```text
 koreader-plugin/karenda.koplugin/
+koreader-plugin/karenda-screensaver.koplugin/
 ```
 
 La aplicación web seguirá en React/TypeScript y no compartirá componentes con
@@ -32,7 +33,9 @@ Capas previstas:
 4. `snapshot_store`: validación, escritura atómica y lectura offline.
 5. `context_store`: vista visible de Karenda y nota activa.
 6. `ui`: pantallas y widgets nativos para calendario, notas y configuración.
-7. `integrations`: Quick Actions, fallback público y wrapper del salvapantallas.
+7. `integrations`: Quick Actions y fallback público del núcleo.
+8. `karenda-screensaver.koplugin`: contexto opcional, configuración, preview,
+   composición local y wrapper del salvapantallas.
 
 La composición de la acción `Actualizar` y la detección de la navbar inferior se
 concentrarán en el módulo reutilizable `surface_navigation`, que solo coordinará
@@ -211,8 +214,16 @@ singleton, no mediante una segunda instalación del wrapper por instancia.
 
 ## 8. Wrapper Del Salvapantallas
 
-La integración se instalará sobre el método actual con
-`util.wrapMethod`. El estado del wrapper se mantendrá en un módulo singleton:
+La funcionalidad se distribuye en dos paquetes independientes. El paquete
+`karenda.koplugin` solo mantiene y publica el contexto visible mediante un
+puente opcional; el paquete `karenda-screensaver.koplugin` contiene la
+configuración, la vista previa, la composición y el wrapper de
+`Screensaver.show`. Así el wallpaper puede instalarse sin calendario, notas ni
+InsForge, y Karenda puede instalarse sin modificar el salvapantallas nativo.
+
+La integración del paquete de pantalla de bloqueo se instalará sobre el método
+actual con `util.wrapMethod`. El estado del wrapper se mantendrá en un módulo
+singleton:
 
 - un marcador de instalación evita duplicados;
 - la referencia al wrapper permite inspección y reversión durante pruebas;
@@ -222,20 +233,35 @@ La integración se instalará sobre el método actual con
 - no se escribe `G_reader_settings["screensaver_type"]`;
 - no se reemplaza globalmente `_G.dofile`.
 
+El plugin central publicará `calendar`, `note` o `none` con un módulo de puente
+que se carga de forma perezosa y tolera que el paquete de pantalla de bloqueo no
+esté instalado. El plugin de pantalla de bloqueo leerá una copia del contexto
+desde su propio módulo singleton; nunca hará `require` de `runtime.lua` ni de
+otro módulo de Karenda.
+
 Orden de decisión dentro de `Screensaver.show`:
 
 1. leer la activación propia y `context_store`;
 2. si la función está desactivada, invocar `raw_call` sin cambios;
-3. si es `calendar` o `note`, delegar al método anterior con los campos de la
-   instancia forzados temporalmente a `disable` y sin mensaje; esta es la ruta
-   nativa de `Leave screen as-is` y no crea un widget visual;
+3. si es `calendar` o `note` y la política contextual es conservar, delegar al
+   método anterior con los campos de la instancia forzados temporalmente a
+   `disable` y sin mensaje; esta es la ruta nativa de `Leave screen as-is` y no
+   crea un widget visual;
 4. si el UI activo contiene un libro y no está excluido del salvapantallas,
-   construir el widget integrado con portada completa y tarjetas de estadísticas;
-5. si no es Karenda, invocar el método anterior sin cambios.
+   construir el widget integrado con portada completa y panel minimalista de
+   información, salvo que la política contextual haya elegido conservar la
+   vista;
+5. si no hay libro y la política fuera de libro es conservar, usar
+   `Leave screen as-is`;
+6. en cualquier otro caso, invocar el método anterior sin cambios.
 
 El libro se representa mediante widgets nativos de KOReader: `ImageWidget` para
-la portada escalada a pantalla completa, `FrameContainer` para la tarjeta de
-identificación y las tarjetas tipo post-it, y `ProgressWidget` para el avance.
+la portada, un único `FrameContainer` de alto contraste para el panel de
+información y `ProgressWidget` para el avance. La identidad del libro y la
+barra con su porcentaje son elementos fijos; las métricas opcionales se
+renderizan como filas tipográficas compactas en el orden persistido por la
+persona. El estilo anterior de tarjetas se conserva como opción explícita de
+compatibilidad, pero no es el predeterminado.
 Antes de mostrar el widget de libro, `screensaver_integration` sigue la
 secuencia nativa de KOReader para imágenes en e-ink: limpia el framebuffer y
 ejecuta `Screen:refreshFull` sobre toda la pantalla. Así se elimina el frame de
@@ -249,13 +275,26 @@ conserva toque, tecla, retraso, gesto, rotación y limpieza nativos. Si el widge
 no puede crearse, se llama a `raw_call` como fallback.
 
 Las claves visuales propias permiten mostrar u ocultar título, autor, capítulo,
-progreso del libro y capítulo, página, páginas restantes, tiempo total y tiempo
-restante de capítulo/libro, días de lectura, páginas leídas y ritmo medio por
-página. También controlan la posición vertical, la alineación horizontal, la
-distribución fila/cuadrícula y si la portada conserva su proporción o llena la
-pantalla. El constructor recalcula el grupo después de filtrar los datos, de
-modo que no quedan tarjetas vacías ni espacios reservados cuando falta una
-estimación.
+página, páginas restantes, tiempo total y tiempo restante de capítulo/libro,
+días de lectura, páginas leídas, ritmo medio por página y progreso del capítulo.
+El progreso del libro se representa únicamente junto a su barra. El orden se
+guarda con identificadores estables y se valida contra un catálogo local; los
+elementos no válidos se descartan y los nuevos se añaden al final. También se
+controlan posición vertical, alineación horizontal, estilo minimalista o de
+tarjetas, distribución de la compatibilidad clásica y ajuste proporcional o
+completo de portada. El constructor recalcula el grupo después de filtrar los
+datos, de modo que no quedan filas vacías ni espacios reservados cuando falta
+una estimación.
+
+En el estilo minimalista, una opción de composición puede agrupar los pares
+`pages_left_chapter` + `time_left_chapter` y `pages_left_book` +
+`time_left_book`. Cada par se pinta como una sola fila con las etiquetas
+`Capítulo` o `Libro completo` y un valor compacto `páginas / tiempo`. La
+agrupación se calcula después de aplicar visibilidad y disponibilidad; si falta
+uno de los datos, se conserva la fila individual disponible. La posición del
+grupo sigue el primer elemento del par en el orden persistido y la opción se
+puede desactivar para volver a las filas separadas. Los valores de páginas se
+abreviarán como `pág.` o `págs.` según corresponda.
 
 La vista previa se monta en un `InputContainer` temporal separado del flujo de
 bloqueo. Usa el libro y las opciones actuales, muestra una ayuda de salida y
@@ -265,8 +304,9 @@ registra toque y cualquier tecla para cerrarse. No cambia
 
 El plugin no copia ni modifica el widget o el patch de Pedro. Si el patch
 externo sigue instalado, el wrapper de Karenda queda por encima para el libro y
-la rama `disable` permite que el patch externo delegue al método nativo en
-calendario/notas. No es una dependencia de Karenda.
+las ramas de delegación permiten que el método anterior conserve su
+comportamiento en los demás contextos. No es una dependencia de ninguno de los
+dos paquetes.
 
 La coexistencia exacta con el reemplazo directo de Pedro, incluido el orden de
 carga de `2-kobo-style-screensaver.lua`, debe probarse en KOReader real. Si el
@@ -277,16 +317,16 @@ compatibilidad sin una prueba que confirme la cadena efectiva.
 
 La integración preferida será la API pública de Quick Actions:
 
-- registrar temprano los descriptores externos `karenda_calendar` y
-  `karenda_notes`, con etiquetas `Calendario` y `Notas`;
+- registrar temprano los descriptores externos `karenda_calendar`,
+  `karenda_notes` y `karenda`, con etiquetas `Calendario`, `Notas` y `Karenda`;
 - usar `QA.isRegistered` antes de registrar o reemplazar;
 - invalidar la caché mediante APIs públicas cuando sea necesario;
 - no tocar `sui_config.lua`, `main.lua` ni archivos de SimpleUI.
 
 Como fallback, el plugin expondrá métodos públicos de instancia para abrir
-calendario y notas. Se preferirán funciones asignadas al objeto cuando el
-custom navbar necesite descubrirlas con `pairs`, sin confiar en métodos heredados
-por metatable.
+calendario, notas y la superficie unificada. Se preferirán funciones asignadas
+al objeto cuando el custom navbar necesite descubrirlas con `pairs`, sin confiar
+en métodos heredados por metatable.
 
 La presencia instalada de `2-custom-navbar.lua` no puede inferirse desde este
 repositorio web. El diagnóstico del plugin deberá identificarla cuando el
@@ -302,7 +342,10 @@ recibirán un snapshot ya validado y no consultarán InsForge directamente.
 - `calendar_view` construirá una superficie nativa de pantalla completa sobre
   `InputContainer`. La primera fila será una `TitleBar` que mostrará el contexto,
   el periodo, un botón compacto local de refresh inmediatamente a la izquierda
-  de la X y ningún botón interno `Calendario`/`Notas`. Debajo habrá un
+  de la X y ningún botón interno `Calendario`/`Notas` cuando se abrió desde una
+  acción separada. La acción unificada añadirá debajo de la cabecera un
+  `ButtonTable` compacto con `Calendario`/`Notas`, con una sola opción activa y
+  cambio local sin red. Debajo habrá un
   `ButtonTable` segmentado persistente en el orden `Agenda`, `Mes`, `Semana`,
   `Día`, con exactamente un modo activo. La superficie activa quedará marcada
   por texto y fondo, pero no deshabilitada.
@@ -334,10 +377,12 @@ recibirán un snapshot ya validado y no consultarán InsForge directamente.
 - `notes_view` construirá una pantalla raíz propia con una `TitleBar` primero,
   incluyendo `Actualizar` junto a la X, un selector de asignaturas con `Todos
   los ramos` en primera posición y un `Menu` desplazable con destinos y notas
-  ordenados de forma estable. El selector filtrará localmente el snapshot y los
-  grupos personales continuarán siendo destinos independientes. El detalle usará
-  `TextViewer` en modo HTML con un fragmento generado por el parser Markdown de
-  KOReader. El adapter retirará etiquetas HTML, imágenes y enlaces inseguros
+  ordenados de forma estable. Cuando se abra desde `Karenda`, añadirá el mismo
+  selector superior compacto que `calendar_view` y cambiará de superficie sin
+  red. El selector filtrará localmente el snapshot y los grupos personales
+  continuarán siendo destinos independientes. El detalle usará `TextViewer` en
+  modo HTML con un fragmento generado por el parser Markdown de KOReader. El
+  adapter retirará etiquetas HTML, imágenes y enlaces inseguros
   antes de convertir; los enlaces seguros se conservarán como texto visible, no
   como acciones. Se conservarán encabezados, énfasis, listas, citas y código del
   subconjunto soportado, incluyendo tablas GFM básicas. Las fórmulas se

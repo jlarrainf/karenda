@@ -142,6 +142,12 @@ GET  <functions_base_url>/karenda-koreader-device-tokens
 POST <functions_base_url>/karenda-koreader-device-tokens
 ```
 
+La función responde el preflight `OPTIONS` con `204` y permite los orígenes de
+las superficies publicadas mediante `Access-Control-Allow-Origin`: la web
+`https://karenda.insforge.site` y la aplicación Android de Capacitor
+`https://localhost`. También conserva los orígenes locales de desarrollo; no
+usa `*` porque las operaciones requieren el Bearer de la sesión.
+
 El POST recibe un body con `action` igual a `create`, `revoke` o `regenerate`.
 `create` recibe `label` y `scopes`; `create_pairing` recibe `label`; `pair` recibe
 el código de seis dígitos sin sesión web; las otras operaciones reciben
@@ -361,3 +367,24 @@ La inspección de InsForge y la implementación desplegada confirman:
 
 Este contrato no declara sincronización funcional hasta probar la ruta real con
 un token válido, 200/304/401/403/413 y aislamiento entre propietarios.
+
+## 8. Coordinación De Estadísticas Con Hábitos
+
+La función `karenda-koreader-habit-sync` usa el mismo token de dispositivo, pero
+requiere además `write:habit_logs`. Su `GET` devuelve vínculos activos con
+`id`, `metric_key`, `source_unit`, `target_unit`, `conversion_factor`,
+`timezone`, `habit_id`, `start_date` y `end_date`. Su `POST` recibe un lote con
+`schema_version`, `timezone` y observaciones diarias (`link_id`, `local_date`,
+`value`, `external_id`).
+
+Las métricas soportadas son `reading_pages`, `reading_minutes`,
+`books_completed` y `anki_cards_reviewed`. La escritura resuelve el hábito y el
+propietario desde el vínculo, guarda `source = koreader` y aplica la conversión
+de unidades. La unicidad operativa es vínculo más fecha civil; el identificador
+externo esperado es `<link_id>:<local_date>`. Reintentos del mismo contenido son
+idempotentes y un valor cero elimina la fila importada de ese día.
+
+La configuración web usa `karenda-koreader-habit-links` y el RPC
+`setup_koreader_habit_links`. Permite vincular un hábito cuantitativo compatible
+o crear uno diario nuevo con meta explícita. El snapshot v1 y las superficies de
+SimpleUI no cambian.

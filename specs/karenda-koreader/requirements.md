@@ -39,15 +39,17 @@ disponibles.
 ### KR-REQ-002: Apertura desde SimpleUI
 
 Cuando exista la API pública de Quick Actions de SimpleUI, el plugin deberá
-registrar dos acciones externas con IDs estables: `karenda_calendar`, con
-etiqueta visible `Calendario`, y `karenda_notes`, con etiqueta visible `Notas`.
-Cada acción abrirá su superficie de lectura correspondiente y el texto de
-errores o estados será español. La entrada de menú `Karenda` seguirá disponible
-para vinculación y sincronización.
+registrar tres acciones externas con IDs estables: `karenda_calendar`, con
+etiqueta visible `Calendario`; `karenda_notes`, con etiqueta visible `Notas`; y
+`karenda`, con etiqueta visible `Karenda`. Las dos primeras abrirán su
+superficie de lectura correspondiente y la tercera abrirá una superficie
+unificada con un selector superior para alternar entre calendario y notas. El
+texto de errores o estados será español. La entrada de menú `Karenda` seguirá
+disponible para vinculación y sincronización.
 
 Si la API no está disponible, el plugin deberá conservar puntos de entrada
-públicos propios para abrir el calendario y las notas. Esos puntos de entrada no
-deberán depender de editar archivos de SimpleUI.
+públicos propios para abrir el calendario, las notas y la superficie unificada.
+Esos puntos de entrada no deberán depender de editar archivos de SimpleUI.
 
 ### KR-REQ-003: Token independiente por dispositivo
 
@@ -219,7 +221,8 @@ de la fecha local actual y del día siguiente usarán las etiquetas `HOY` y
 `MAÑANA`, acompañadas de la fecha completa; los demás grupos mostrarán su fecha
 completa. Los eventos académicos `pending` deberán tener un énfasis textual
 adicional que indique que requieren estudio o preparación, sin depender del
-color.
+color. La vista `Agenda` mostrará exclusivamente eventos con estado `pending`;
+los eventos `completed` seguirán disponibles en `Mes`, `Semana` y `Día`.
 
 La fecha de `Hoy` se calculará con el reloj local del dispositivo. La vista
 deberá comprobar el cambio de fecha al reanudarse KOReader y programar una
@@ -254,50 +257,72 @@ degradarse como texto legible, no como ejecución.
 
 ### KR-REQ-018: Contexto visible para el salvapantallas
 
-El plugin deberá mantener un contexto explícito de la vista visible:
+El plugin central deberá mantener un contexto explícito de la vista visible y
+publicarlo mediante un puente opcional. El puente no será una dependencia
+inversa: si el plugin de pantalla de bloqueo no está instalado, Karenda seguirá
+funcionando con su estado interno; si el plugin central no está instalado, el
+plugin de pantalla de bloqueo asumirá `none` y no cargará módulos de Karenda ni
+consultará InsForge.
 
 - `calendar` cuando la agenda de Karenda esté visible;
 - `note` cuando una nota de Karenda esté visible;
-- vacío en cualquier otro caso.
+- `none` en cualquier otro caso.
 
 La función integrada deberá poder activarse y desactivarse desde el submenú
 nativo `Settings > Sleep screen > Wallpaper`, mediante la opción
-`Pantalla de bloqueo de Karenda`. Estará desactivada por defecto. Cuando esté
+`Pantalla de bloqueo de lectura`. Estará desactivada por defecto. Cuando esté
 desactivada, `Screensaver.show` delegará al comportamiento que KOReader y los
 parches instalados ya tengan configurado.
 
-Cuando esté activada, la prioridad del salvapantallas será:
+Cuando esté activada, la política del salvapantallas se resolverá en este orden:
 
-1. calendario visible de Karenda: conservar la agenda que está visible;
-2. nota visible de Karenda: conservar la nota o lista que está visible;
-3. libro abierto fuera de Karenda: mostrar una composición de Karenda con la
-   portada ajustada según la preferencia guardada (proporcional por defecto) y
-   tarjetas tipo post-it con los datos que la persona haya seleccionado;
+1. contexto `calendar` o `note` y política `Conservar la pantalla actual`:
+   reutilizar `Leave screen as-is` sin reconstruir la superficie;
+2. libro activo y datos locales disponibles: mostrar el wallpaper de lectura;
+3. ningún libro y política `Dejar la pantalla intacta`: usar `Leave screen as-is`;
 4. cualquier otro contexto: delegar sin cambios al método anterior.
+
+La política contextual deberá poder cambiarse sin tocar las opciones nativas:
+para Calendario y Notas ofrecerá conservar la vista o mostrar el wallpaper del
+libro si existe un documento activo; fuera de un libro ofrecerá delegar al
+salvapantallas de KOReader o dejar la pantalla intacta. La existencia de
+`ReaderUI.document` no ganará por sí sola frente a un contexto visible cuando la
+política elegida sea conservarlo.
 
 La existencia de `ReaderUI.document` nunca deberá ganar por sí sola frente al
 contexto visible de Karenda. Cuando el contexto sea calendario o nota, la vista
 actual deberá quedar intacta en el framebuffer: no se reconstruirá una copia
 de la agenda o de la nota.
 
-La personalización deberá incluir interruptores independientes para título,
-autor, capítulo, progreso del libro, progreso del capítulo, página, páginas
-restantes del capítulo y del libro, tiempo total, tiempo restante del capítulo y
-del libro, días de lectura, páginas leídas y ritmo medio por página. También
+La personalización deberá mantener fija la identidad del libro y una única fila
+de progreso con el porcentaje junto a la barra. Los datos opcionales incluirán
+página, páginas y tiempo restantes de capítulo y libro, tiempo leído, días de
+lectura, páginas leídas, ritmo medio y progreso del capítulo. Cada dato podrá
+mostrarse u ocultarse y su orden se podrá modificar desde la configuración; los
+identificadores persistidos serán estables y no dependerán del idioma. También
 deberá incluir posición vertical (`top`, `center`, `bottom`), alineación
-horizontal (`left`, `center`, `right`) y distribución de tarjetas (`row`,
-`grid`), además del ajuste de portada proporcional o a pantalla completa.
-Ocultar un dato o no disponer de una estimación no deberá dejar tarjetas vacías
-ni espacios reservados.
+horizontal (`left`, `center`, `right`), estilo `minimalista` o `tarjetas
+clásicas`, y ajuste de portada proporcional o a pantalla completa. El estilo
+minimalista será el predeterminado: un único panel compacto, de alto contraste
+y sin tarjetas repetidas. Ocultar un dato o no disponer de una estimación no
+deberá dejar filas vacías ni espacios reservados.
 
-El submenú deberá ofrecer `Vista previa`. La vista previa deberá usar el libro
+La configuración deberá ofrecer además una opción para agrupar, cuando ambos
+estén visibles y disponibles, las páginas y el tiempo restantes en las líneas
+`Capítulo: páginas / tiempo` y `Libro completo: páginas / tiempo`. Al
+desactivar esa opción, las cuatro métricas conservarán su representación
+independiente y seguirán respetando la visibilidad y el orden configurados. La
+cantidad de páginas usará `pág.` en singular y `págs.` en plural.
+
+El submenú deberá ofrecer `Vista previa de pantalla de lectura`. La vista previa deberá usar el libro
 activo y la configuración guardada, indicar cómo salir y poder cerrarse mediante
 toque o tecla sin alterar el estado del bloqueo real ni dejar una superficie
 modal abierta.
 
 ### KR-REQ-019: Salvapantallas sin red y con limpieza
 
-`Screensaver.show` no deberá hacer peticiones de red. En calendario o nota
+El plugin de pantalla de bloqueo no deberá hacer peticiones de red y deberá
+funcionar como paquete independiente. En calendario o nota
 deberá reutilizar el comportamiento nativo de KOReader equivalente a `Leave
 screen as-is`, sin crear un widget visual ni modificar permanentemente la
 configuración del usuario. En lectura solo podrá consultar la vista activa y
@@ -305,7 +330,7 @@ los datos locales del libro; si la pantalla integrada no puede construirse,
 deberá delegar al método anterior.
 
 Al salir de Karenda, cerrar la nota, cerrar el calendario o cambiar a otra
-superficie, el contexto deberá limpiarse. La composición integrada de libro
+superficie, el plugin central deberá limpiar el contexto que publicó. La composición integrada de libro
 deberá conservar portada, progreso, estadísticas, cierre, rotación y gesto de
 KOReader. En una pantalla e-ink física, antes de mostrar esa composición se
 limpiará el framebuffer y se ejecutará un refresco completo síncrono de toda la
@@ -314,16 +339,18 @@ esa operación específica de hardware. El método anterior se conservará cuand
 la función esté desactivada, para FileManager y para cualquier contexto que no
 corresponda a Karenda.
 
-La configuración visual se guardará en claves propias de `G_reader_settings`.
+La configuración visual y de política se guardará en claves propias de
+`G_reader_settings`.
 La vista previa podrá consultar portada y estadísticas locales, pero no deberá
 activar `Device.screen_saver_mode`, crear `ScreenSaverLockWidget` ni llamar a
 `Screensaver:cleanup()`.
 
 ### KR-REQ-020: Wrapper coexistente
 
-Karenda deberá envolver el método actual `Screensaver.show` con
+El plugin de pantalla de bloqueo deberá envolver el método actual `Screensaver.show` con
 `util.wrapMethod`, conservar la capacidad `raw_call` y delegar al método
-anterior cuando la función esté desactivada o no corresponda a una vista propia.
+anterior cuando la función esté desactivada, no corresponda a una vista propia
+o no pueda construir el wallpaper.
 Para activar temporalmente `Leave screen as-is` podrá cambiar los campos de la
 instancia de `Screensaver`, restaurándolos siempre al terminar la llamada; no
 deberá modificar globalmente `G_reader_settings`, `dofile` ni el parche de
@@ -385,10 +412,13 @@ intervalo, no se ejecutará sincronización automática.
 La acción `karenda_calendar` deberá mostrar primero el snapshot local validado y
 ordenar los eventos por fecha y hora. La acción `karenda_notes` deberá mostrar
 los destinos y notas del snapshot local y permitir abrir el contenido de una
-nota en una vista desplazable. Si no existe snapshot local, ambas acciones
-podrán iniciar una única sincronización explícita antes de mostrar la vista.
+nota en una vista desplazable. La acción `karenda` deberá abrir la misma
+superficie de calendario con un selector superior que permita cambiar a notas
+sin navegar a Home, Library ni Reader. Si no existe snapshot local, cualquiera
+de las tres acciones podrá iniciar una única sincronización explícita antes de
+mostrar la vista.
 
-Ninguna de las dos acciones deberá crear, editar ni eliminar datos, y cerrar la
+Ninguna de las tres acciones deberá crear, editar ni eliminar datos, y cerrar la
 superficie deberá limpiar el contexto visible de Karenda.
 
 ### KR-REQ-027: Cuenta regresiva de eventos
@@ -415,24 +445,27 @@ color para comunicar la información.
 
 ### KR-REQ-028: Iconografía nativa para e-reader
 
-Las acciones `Calendario` y `Notas` de SimpleUI deberán usar iconos locales
-propios del plugin, monocromos, de alto contraste y con trazos ligeros. Los SVG
-deberán mantener una caja `48x48`, usar contornos sin rellenos masivos y seguir
-siendo legibles en tinta electrónica. El plugin no copiará ni modificará los
-archivos de iconos de SimpleUI.
+Las acciones `Calendario`, `Notas` y `Karenda` de SimpleUI deberán usar iconos
+locales propios del plugin, monocromos, de alto contraste y con trazos ligeros.
+Los SVG deberán mantener una caja `48x48`, usar contornos sin rellenos masivos y
+seguir siendo legibles en tinta electrónica. El plugin no copiará ni modificará
+los archivos de iconos de SimpleUI.
 
 ### KR-REQ-029: Navegación y actualización de superficies
 
 La web deberá mostrar un control común con las acciones `Calendario` y `Notas`.
-Las superficies nativas del plugin no repetirán esa navegación en una fila
-interna: cada una se abrirá desde su Quick Action correspondiente y ofrecerá
-`Actualizar` en su propia cabecera.
+Las acciones nativas separadas no repetirán esa navegación en una fila interna:
+cada una se abrirá desde su Quick Action correspondiente y ofrecerá `Actualizar`
+en su propia cabecera. La acción `karenda` abrirá una superficie unificada con
+un selector superior de `Calendario` y `Notas`, una sola opción activa y la
+misma acción de `Actualizar`.
 
-Pulsar `Calendario` o `Notas` en la web o desde la navbar de SimpleUI deberá abrir
+Pulsar `Calendario`, `Notas` o `Karenda` desde la navbar de SimpleUI deberá abrir
 la superficie correspondiente usando el snapshot local validado sin red cuando
-exista caché. Si no existe caché, se podrá ejecutar la sincronización inicial
-explícita ya definida. El cambio de superficie no deberá crear, editar ni
-eliminar datos.
+exista caché. En `Karenda`, cambiar entre las dos opciones usará ese mismo
+snapshot local y no hará una petición adicional. Si no existe caché, se podrá
+ejecutar la sincronización inicial explícita ya definida. El cambio de superficie
+no deberá crear, editar ni eliminar datos.
 
 Pulsar `Actualizar` será siempre una acción explícita de red, incluso cuando
 exista caché. Deberá reutilizar `SyncService`, ETag y la validación atómica
@@ -448,11 +481,13 @@ ni expondrá secretos.
 
 ### KR-REQ-030: Quick Actions como overlay contextual
 
-Las Quick Actions `karenda_calendar` y `karenda_notes` deberán abrir sus
-superficies como overlays in-place sobre la pantalla actualmente visible. La
-apertura no deberá navegar a Library, Home ni Reader por sí misma. Al cerrar la
-superficie de Karenda, KOReader deberá recuperar la pantalla, documento,
-posición y contexto que estaban debajo del overlay.
+Las Quick Actions `karenda_calendar`, `karenda_notes` y `karenda` deberán abrir
+sus superficies como overlays in-place sobre la pantalla actualmente visible.
+La apertura no deberá navegar a Library, Home ni Reader por sí misma. Al cerrar
+la superficie de Karenda, KOReader deberá recuperar la pantalla, documento,
+posición y contexto que estaban debajo del overlay. Dentro de la superficie
+unificada, alternar entre calendario y notas reemplazará solo el contenido del
+overlay, conservará la navbar en `Karenda` y actualizará el contexto visible.
 
 La integración deberá declarar explícitamente la semántica in-place síncrona o
 asíncrona que SimpleUI necesite para conservar una vista que sobrevive al
@@ -539,13 +574,39 @@ seleccionado otra pestaña.
 Si no existe una navbar inferior activa, la superficie podrá usar toda la altura
 disponible sin dibujar una barra alternativa.
 
+### KR-REQ-036: Wallpaper independiente y política contextual
+
+`karenda-screensaver.koplugin` deberá poder instalarse y ejecutarse sin
+`karenda.koplugin`. En ese modo solo consultará APIs locales de KOReader y el
+libro activo: con un libro mostrará el wallpaper de lectura y sin libro
+delegará al método anterior, sin intentar cargar el núcleo, InsForge, el
+snapshot, la red ni Quick Actions. `karenda.koplugin` también deberá poder
+funcionar sin el wallpaper, manteniendo calendario, notas y sincronización.
+
+Cuando ambos estén instalados, el núcleo publicará el contexto visible mediante
+un puente opcional y el wallpaper aplicará sus preferencias propias. La
+preferencia de Calendario/Notas podrá ser `preserve` o `book`, y la preferencia
+fuera de un libro podrá ser `delegate` o `as_is`; los valores predeterminados
+serán `preserve` y `delegate`. El wallpaper deberá tolerar que el puente no
+exista, tratar el contexto como `none` y continuar sin error.
+
+La pantalla de libro usará por defecto un único panel minimalista de alto
+contraste. La identidad y la barra de progreso con porcentaje adyacente serán
+estructurales; las métricas opcionales se seleccionarán y ordenarán con
+identificadores estables, omitiendo sin huecos las que no estén disponibles.
+La alternativa de tarjetas clásicas será explícita y no cambiará la política
+de contexto.
+
 ## 3. Requisitos No Funcionales
 
 ### KR-NFR-001: Separación
 
-El plugin deberá ser un `.koplugin` independiente y no compartirá componentes
-React con la web. La integración se realizará mediante contratos públicos y
-widgets de KOReader.
+La distribución deberá contener dos paquetes `.koplugin` independientes:
+`karenda.koplugin` para calendario, notas y contexto, y
+`karenda-screensaver.koplugin` para el wallpaper de lectura. El segundo no
+deberá importar módulos del primero ni compartir componentes React con la web.
+La integración entre ambos se realizará mediante un puente Lua opcional y
+widgets nativos de KOReader.
 
 ### KR-NFR-002: Fuente de verdad
 
@@ -596,3 +657,30 @@ una prueba autenticada contra InsForge.
   `SNAPSHOT_TOO_LARGE`, sin datos parciales (implementado; falta prueba).
 - Kindle/KOReader real para comprobar instalación, ciclo de vida, gesto,
   SimpleUI, `2-custom-navbar.lua` y coexistencia con el parche de Pedro.
+
+## 6. Estadísticas De Hábitos
+
+### KR-REQ-037: Ingesta diaria desde KOReader
+
+El plugin deberá leer `statistics.sqlite3` sin modificarla y enviar páginas
+distintas, minutos de lectura y libros confirmados como terminados. La métrica
+de Anki será opcional: si su proveedor no existe, no se enviarán ceros.
+
+### KR-REQ-038: Coordinación con hábitos
+
+La web deberá permitir elegir un hábito cuantitativo compatible o crear uno con
+nombre, meta, unidad y fecha de inicio antes de activar cada vínculo. Karenda
+calculará periodos diarios, mensuales y anuales a partir de `habit_logs`.
+
+### KR-REQ-039: Sincronización resistente
+
+La primera ejecución cubrirá el año civil actual; las siguientes, hoy y los
+siete días anteriores. KOReader reintentará lotes pendientes tras una pérdida
+de red y ejecutará la comprobación al reanudar con el dispositivo despierto.
+Un error de estadísticas no impedirá abrir ni actualizar calendario y notas.
+
+### KR-REQ-040: Precedencia y privacidad
+
+Un registro importado sustituirá como fuente canónica al manual del mismo día
+sin borrar el historial manual. El token no aparecerá en URLs, logs, snapshot ni
+cola local, y `write:habit_logs` no concederá permisos sobre eventos.

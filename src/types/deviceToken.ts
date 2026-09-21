@@ -1,4 +1,7 @@
-export type DeviceTokenScope = 'read:snapshot' | 'write:events'
+export type DeviceTokenScope =
+  | 'read:snapshot'
+  | 'write:events'
+  | 'write:habit_logs'
 
 export interface DeviceTokenMetadata {
   id: string

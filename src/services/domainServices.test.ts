@@ -266,6 +266,44 @@ describe('domain services', () => {
     )
   })
 
+  it('RF-16 updates an all-day event status without requiring a start time', async () => {
+    const allDayEventRow: EventRow = {
+      ...eventRow,
+      end_at: '2026-09-11T00:00:00.000Z',
+      is_all_day: true,
+      start_at: '2026-08-31T00:00:00.000Z',
+    }
+
+    mocks.secondaryQuery.maybeSingle.mockResolvedValue({
+      data: allDayEventRow,
+      error: null,
+    })
+    mocks.databaseFrom
+      .mockReturnValueOnce(mocks.secondaryQuery)
+      .mockReturnValueOnce(mocks.primaryQuery)
+    mocks.primaryQuery.single.mockResolvedValue({
+      data: { ...allDayEventRow, status: 'completed' },
+      error: null,
+    })
+
+    const updated = await updateEvent(eventId, { status: 'completed' })
+
+    expect(updated).toMatchObject({
+      endAt: '2026-09-11',
+      isAllDay: true,
+      startAt: '2026-08-31',
+      status: 'completed',
+    })
+    expect(mocks.primaryQuery.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        end_at: '2026-09-11T00:00:00.000Z',
+        is_all_day: true,
+        start_at: '2026-08-31T00:00:00.000Z',
+        status: 'completed',
+      }),
+    )
+  })
+
   it('RF-17 queries timed events by local boundaries and all-day events by date boundaries', async () => {
     mocks.primaryQuery.limit.mockResolvedValue({ data: [eventRow], error: null })
 

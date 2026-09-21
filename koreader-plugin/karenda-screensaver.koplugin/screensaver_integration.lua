@@ -1,6 +1,6 @@
 local Blitbuffer = require("ffi/blitbuffer")
 local Device = require("device")
-local Runtime = require("runtime")
+local Context = require("karenda_screensaver_context")
 local Screensaver = require("ui/screensaver")
 local UIManager = require("ui/uimanager")
 local ScreensaverConfig = require("screensaver_config")
@@ -110,13 +110,14 @@ local function showBook(instance, wrapper)
 end
 
 local function dispatch(instance, wrapper)
-    local context = Runtime.getContext()
+    local context = Context.getContext()
     local book_available = BookScreensaver.canShow(instance.ui)
     local action = ScreensaverPolicy.resolve(
         context,
         ScreensaverConfig.isEnabled(),
-        instance.ui and instance.ui.document ~= nil,
-        book_available
+        book_available,
+        ScreensaverConfig.getValue("context_policy"),
+        ScreensaverConfig.getValue("no_book_policy")
     )
 
     if action == "as_is" then

@@ -87,6 +87,12 @@ export type HabitLifecycleStatus = 'active' | 'paused' | 'archived'
 export type HabitNotePolicy = 'none' | 'general' | 'daily' | 'both'
 export type HabitLogStatus = 'completed' | 'partial' | 'skipped'
 export type HabitLogSource = 'manual' | 'koreader'
+export type KoreaderMetricKey =
+  | 'reading_pages'
+  | 'reading_minutes'
+  | 'books_completed'
+  | 'anki_cards_reviewed'
+export type KoreaderLinkStatus = 'active' | 'paused' | 'revoked'
 export type HabitQuotaPeriod = 'day' | 'week' | 'month'
 export type HabitOccurrenceStatus =
   'pending' | 'completed' | 'partial' | 'skipped' | 'missed'
@@ -159,6 +165,25 @@ export interface HabitLog {
   status: HabitLogStatus
   source: HabitLogSource
   externalId: string | null
+  koreaderLinkId: EntityId | null
+  createdAt: IsoDateTime
+  updatedAt: IsoDateTime
+}
+
+export interface KoreaderHabitLink {
+  id: EntityId
+  ownerId: EntityId
+  habitId: EntityId
+  deviceTokenId: EntityId
+  metricKey: KoreaderMetricKey
+  sourceUnit: 'pages' | 'minutes' | 'books' | 'cards'
+  targetUnit: string
+  conversionFactor: number
+  timezone: string
+  status: KoreaderLinkStatus
+  autoCreated: boolean
+  lastSyncedAt: IsoDateTime | null
+  revokedAt: IsoDateTime | null
   createdAt: IsoDateTime
   updatedAt: IsoDateTime
 }

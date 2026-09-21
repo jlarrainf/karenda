@@ -88,7 +88,8 @@ pruebas autenticadas de backend.
   previa y verificar geometrías vertical y horizontal.
 - [x] **KR-T25b: Rediseñar la Agenda nativa.** Abrir en `Agenda`, añadir el
   selector segmentado persistente para los cuatro modos, agrupar por fechas con
-  `HOY`/`MAÑANA` y enfatizar textualmente lo académico pendiente.
+  `HOY`/`MAÑANA`, mostrar solo eventos pendientes y enfatizar textualmente lo
+  académico pendiente.
 - [x] **KR-T25c: Mantener `Hoy` actualizado.** Comprobar el reloj local al
   reanudar y programar el siguiente cambio de día, conservando el cursor manual
   y siguiendo la fecha solo mientras no exista navegación manual.
@@ -141,6 +142,10 @@ pruebas autenticadas de backend.
 - [x] **KR-T25l: Señalizar actualización completa.** Mostrar el estado de carga
   `Actualizando calendario y notas…`, confirmar `200`/`304` con una notificación
   breve y cubrir que ambas superficies comparten el snapshot sincronizado.
+- [x] **KR-T28b: Añadir superficie unificada.** Registrar la Quick Action
+  `Karenda` sin retirar `Calendario` ni `Notas`, reutilizar sus superficies con
+  un selector superior de dos opciones, conservar el indicador `Karenda` al
+  alternar y cubrir la apertura cache-first y el cambio sin red.
 - [ ] **KR-T29: Diagnosticar custom navbar.** Detectar instalación de
   `2-custom-navbar.lua`, documentar conflicto y no modificar administradores.
 
@@ -153,14 +158,15 @@ pruebas autenticadas de backend.
   screen as-is`, el libro abierto usa la pantalla integrada y el resto delega,
   sin consultar solo `ReaderUI.document`.
 - [x] **KR-T32: Integrar pantalla de libro.** Construir una portada a pantalla
-  completa con tarjeta de identificación, barra de progreso y tarjetas tipo
-  post-it de estadísticas usando widgets nativos; respetar cierre, rotación y
-  gesto nativos; calendario y notas no crean una copia visual.
+  completa con tarjeta de identificación, barra de progreso y composición de
+  estadísticas usando widgets nativos; respetar cierre, rotación y gesto
+  nativos; calendario y notas no crean una copia visual.
 - [x] **KR-T33: Limpiar contexto.** Verificar la restauración del estado de la
   instancia y la limpieza existente al salir de calendario/notas.
 - [x] **KR-T33a: Exponer la activación.** Añadir el interruptor persistente al
-  submenú nativo `Settings > Sleep screen > Wallpaper`, protegerlo contra
-  duplicados y probar el estado activado/desactivado.
+  submenú nativo `Settings > Sleep screen > Wallpaper` desde el paquete de
+  pantalla de bloqueo, protegerlo contra duplicados y probar el estado
+  activado/desactivado.
 - [x] **KR-T33b: Personalizar la composición.** Añadir visibilidad por dato
   (incluidas páginas y tiempos restantes de capítulo/libro), posición vertical,
   alineación horizontal, distribución fila/cuadrícula y ajuste de portada;
@@ -171,6 +177,31 @@ pruebas autenticadas de backend.
   secuencia nativa de KOReader en e-ink físico (`clear` + `refreshFull` de toda
   la pantalla) antes de mostrar la composición de portada y estadísticas, sin
   tocar la ruta `Leave screen as-is` de calendario/notas.
+- [x] **KR-T33e: Separar los paquetes de KOReader.** Mover configuración,
+  preview, composición y wrapper a `karenda-screensaver.koplugin`; dejar
+  `karenda.koplugin` como núcleo de calendario, notas, sincronización y
+  publicación de contexto.
+- [x] **KR-T33f: Añadir puente de contexto opcional.** Publicar `calendar`,
+  `note` y `none` desde el núcleo sin dependencia dura del wallpaper, y hacer
+  que el wallpaper opere como `none` cuando Karenda no esté instalado.
+- [x] **KR-T33g: Implementar política contextual configurable.** Añadir en
+  `Settings > Sleep screen > Wallpaper` las opciones para conservar o mostrar
+  el wallpaper en Calendario/Notas y para delegar o conservar la pantalla fuera
+  de un libro, con valores predeterminados seguros.
+- [x] **KR-T33h: Rediseñar el panel del libro.** Usar un panel minimalista
+  único como opción predeterminada, mantener identidad y progreso estructurales,
+  poner el porcentaje junto a la barra y conservar tarjetas clásicas como
+  alternativa explícita.
+- [x] **KR-T33i: Hacer ordenables las métricas.** Persistir un catálogo de
+  identificadores estables, permitir activar/desactivar y reordenar las métricas
+  desde Wallpaper, y recalcular filas sin huecos cuando falten datos.
+- [x] **KR-T33j: Cubrir instalación independiente.** Probar arranque con solo
+  cada paquete, coexistencia de ambos, ausencia del núcleo, políticas, orden,
+  preview cerrable y delegación al método anterior.
+- [x] **KR-T33k: Compactar el resumen de lectura.** Quitar la etiqueta redundante
+  de progreso, ajustar el ancho y espaciado del panel minimalista, acortar las
+  etiquetas tipográficas y añadir la opción configurable para agrupar páginas y
+  tiempo restantes de capítulo/libro.
 
 ## Fase 6: Verificación
 
@@ -186,6 +217,21 @@ pruebas autenticadas de backend.
   atribuciones antes de distribuir.
 - [ ] **KR-T39: Cerrar trazabilidad.** Actualizar estados de requisitos,
   aceptación, tests y backend sin declarar funcional lo que no esté probado.
+
+## Coordinación De Estadísticas
+
+- [x] **KR-T40:** Definir métricas, unidades, precedencia diaria y vínculo con
+  hábitos en la spec 005.
+- [x] **KR-T41:** Añadir migración, RLS, scope `write:habit_logs`, RPC de
+  configuración y funciones Edge de vínculo e ingesta.
+- [x] **KR-T42:** Implementar panel web para elegir dispositivo, reutilizar o
+  crear hábitos y consultar periodos día/mes/año.
+- [x] **KR-T43:** Implementar lector SQLite, adaptador opcional de Anki, cola
+  offline y sincronización al reanudar en KOReader.
+- [ ] **KR-T44:** Aplicar migración en rama InsForge y ejecutar pruebas
+  autenticadas de scope, RLS, idempotencia y dos propietarios.
+- [ ] **KR-T45:** Ejecutar specs Lua desde un runtime de KOReader y validar el
+  envío en un Kindle real con conexión y sin conexión.
 
 ## Regla De Bloqueo
 

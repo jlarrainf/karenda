@@ -207,6 +207,7 @@ describe('habitService', () => {
       external_id: null,
       habit_id: habitId,
       id: '33333333-3333-4333-8333-333333333333',
+      koreader_link_id: null,
       local_date: '2026-09-01',
       owner_id: ownerId,
       source: 'manual',

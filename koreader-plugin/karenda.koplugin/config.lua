@@ -9,6 +9,7 @@ local SETTINGS_FILE = DATA_DIR .. "/settings.lua"
 
 local DEFAULTS = {
     apiUrl = "https://5zz5dxgt.function2.insforge.app/karenda-koreader-snapshot",
+    statsUrl = "https://5zz5dxgt.function2.insforge.app/karenda-koreader-habit-sync",
     pairingUrl = "https://5zz5dxgt.function2.insforge.app/karenda-koreader-device-tokens",
     deviceToken = "",
     timezone = "America/Santiago",
@@ -66,6 +67,7 @@ function Config.load()
 
     local values = copyDefaults()
     values.apiUrl = readString(store, "apiUrl", DEFAULTS.apiUrl)
+    values.statsUrl = readString(store, "statsUrl", DEFAULTS.statsUrl)
     values.pairingUrl = readString(store, "pairingUrl", DEFAULTS.pairingUrl)
     values.deviceToken = readString(store, "deviceToken", DEFAULTS.deviceToken)
     values.timezone = readString(store, "timezone", DEFAULTS.timezone)
@@ -93,6 +95,7 @@ function Config.save(values)
 
     local keys = {
         "apiUrl",
+        "statsUrl",
         "pairingUrl",
         "deviceToken",
         "timezone",

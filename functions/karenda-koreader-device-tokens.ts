@@ -3,13 +3,15 @@ import { createAdminClient, createClient } from 'npm:@insforge/sdk'
 const BASE_URL = Deno.env.get('INSFORGE_BASE_URL') ?? ''
 const ADMIN_API_KEY = Deno.env.get('API_KEY') ?? ''
 const DEFAULT_SCOPES = ['read:snapshot']
-const ALLOWED_SCOPES = new Set(['read:snapshot', 'write:events'])
+const ALLOWED_SCOPES = new Set(['read:snapshot', 'write:events', 'write:habit_logs'])
 const PAIRING_CODE_TTL_MS = 10 * 60 * 1000
 const PAIRING_RATE_LIMIT = 12
 const PAIRING_RATE_WINDOW_SECONDS = 60
 
 const ALLOWED_ORIGINS = new Set([
   'https://5zz5dxgt.insforge.site',
+  'https://karenda.insforge.site',
+  'https://localhost',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
 ])
@@ -359,6 +361,7 @@ async function createPairing(
 ): Promise<Response> {
   const admin = getAdminClient()
   const label = normalizeLabel(body.label)
+  const scopes = normalizeScopes(body.scopes)
   const expiresAt = new Date(Date.now() + PAIRING_CODE_TTL_MS).toISOString()
   const cleanupResult = await admin.database
     .from('device_pairing_codes')
@@ -383,6 +386,7 @@ async function createPairing(
         owner_id: ownerId,
         code_hash: codeHash,
         label,
+        scopes,
         expires_at: expiresAt,
       },
     ])

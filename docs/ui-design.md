@@ -23,36 +23,67 @@ tarea y sus estados antes de elegir la forma, construir con un vocabulario
 reutilizable, y revisar cada superficie con `critique`, `audit` y `polish` antes
 de considerarla terminada.
 
-### Superficie De Bloqueo En KOReader
+### Pantalla De Bloqueo De Lectura En KOReader
 
-La pantalla de bloqueo del plugin no añade una composición visual paralela para
-calendario o notas. Cuando una de esas superficies está visible, conserva el
-frame actual mediante la semántica nativa `Leave screen as-is`; así la persona
-ve exactamente la agenda o nota que dejó abierta, sin una segunda versión que
-pueda quedar desactualizada.
+La función se distribuye en dos plugins independientes. `karenda.koplugin`
+gestiona calendario, notas, sincronización y navbar; si está instalado, publica
+el contexto visible (`calendar`, `note` o `none`) mediante un puente opcional.
+`karenda-screensaver.koplugin` gestiona el salvapantallas, la configuración, la
+vista previa y las estadísticas locales del libro. El segundo no cargará ningún
+módulo del primero: instalado por sí solo mostrará la portada y los datos de un
+libro abierto, y fuera de un libro delegará en KOReader o en un patch externo.
 
-Cuando hay un libro abierto y la opción está activa, Karenda usa una composición
-propia de widgets nativos: portada de fondo con ajuste proporcional, una tarjeta
-principal de identificación y tarjetas tipo post-it con las estadísticas que la
-persona haya elegido. El diseño usa únicamente blanco, negro y gris claro, con
-bordes finos, una jerarquía tipográfica clara y márgenes seguros para reducir
-ghosting y recortes en pantallas pequeñas. No habrá sombras ni transparencias
-que dependan de una pantalla a color.
-En una pantalla e-ink física, antes de mostrar esta composición se limpia el
-framebuffer y se hace un refresco completo de toda la pantalla, para que la
-página del libro no quede visible debajo de la portada. Esta limpieza no se
-aplica a calendario ni notas, que conservan el frame mediante `Leave screen as-is`.
+La composición de lectura seguirá una dirección *cover-first*: la portada será
+el foco visual y la información formará una única ficha editorial compacta, no
+una colección de post-it. La ficha tendrá identidad del libro, capítulo y una
+sola fila de progreso con barra y porcentaje adyacente. Las estadísticas
+seleccionadas aparecerán debajo como filas tipográficas alineadas, separadas
+por espacio o divisores sutiles, sin tarjetas repetidas ni cajas independientes.
+El orden de esas estadísticas será configurable y se conservará entre sesiones.
 
-La configuración permitirá activar o desactivar cada dato de forma independiente:
-título, autor, capítulo, progreso del libro y del capítulo, página, páginas
+#### Ajuste De Composición Compacta
+
+La fila del progreso no mostrará una etiqueta adicional: la barra y el
+porcentaje adyacente serán una única señal visual, evitando saltos de línea y
+reservando más espacio para la portada. La ficha minimalista usará un ancho
+ligeramente menor y más margen interno para que conserve aire sin competir con
+la portada.
+
+Las métricas se presentarán como una lista tipográfica de dos columnas: nombre
+breve a la izquierda y valor destacado alineado a la derecha. Las páginas y el
+tiempo restantes podrán agruparse opcionalmente en dos líneas semánticas,
+`Capítulo: páginas / tiempo` y `Libro completo: páginas / tiempo`; al
+desactivarlo, seguirán disponibles como datos independientes. La agrupación no
+eliminará la selección ni el orden configurables: solo compactará los pares
+cuando ambos datos estén visibles y disponibles.
+Los valores de páginas usarán la abreviatura sensible al número `pág.` o
+`págs.`, para mantener el resumen en una sola línea sin perder claridad.
+
+El diseño usará únicamente blanco, negro y gris claro, con widgets nativos,
+contraste alto, márgenes seguros y sin sombras ni transparencias que dependan
+de una pantalla a color. En una pantalla e-ink física, antes de mostrar la
+composición se limpiará el framebuffer y se hará un refresco completo de toda
+la pantalla, para que la página del libro no quede visible debajo de la portada.
+Esta limpieza no se aplicará a la ruta `Leave screen as-is`.
+
+La configuración permitirá activar o desactivar cada dato opcional de forma
+independiente: título, autor, capítulo, progreso del capítulo, página, páginas
 restantes del capítulo y del libro, tiempo total de lectura, tiempo restante del
-capítulo y del libro, días de lectura, páginas leídas y ritmo medio por página.
-También permitirá elegir la posición vertical del bloque (`arriba`, `centro`,
-`abajo`), su alineación horizontal (`izquierda`, `centro`, `derecha`) y la
-distribución de tarjetas (`fila` o `cuadrícula`), además del ajuste de la
-portada (`proporcional` o `llenar pantalla`). La pantalla se recalculará sin
-dejar espacios vacíos cuando se oculten datos o no exista una estimación
-disponible.
+capítulo y del libro, lectura del día, días de lectura, páginas leídas y ritmo
+medio por página. La lectura del día se mostrará agrupada como páginas leídas /
+tiempo leído y usará el día local de KOReader.
+La barra y el porcentaje del progreso del libro son estructurales y conservarán
+su jerarquía fija; las estadísticas
+podrán mostrarse, ocultarse y reordenarse con acciones explícitas `Subir`,
+`Bajar`, `Mover al inicio` y `Mover al final`. La pantalla se recalculará sin
+dejar espacios vacíos cuando se oculte un dato o no exista una estimación.
+
+La política de bloqueo será configurable. Por defecto, calendario y notas
+conservarán su frame mediante `Leave screen as-is`; una opción alternativa hará
+que la portada del libro gane prioridad siempre que exista un documento activo.
+Fuera de un libro, la persona podrá delegar en KOReader o dejar la pantalla
+intacta. Si no hay un documento activo, el plugin no inventará estadísticas ni
+una portada reciente.
 
 La vista previa será una superficie temporal separada del salvapantallas real.
 Mostrará una indicación visible para cerrarla y responderá a toque y tecla; al
@@ -60,7 +91,7 @@ cerrarse restaurará la pantalla y el estado de KOReader sin ejecutar la limpiez
 del salvapantallas de bloqueo.
 
 La activación se expone en `Settings > Sleep screen > Wallpaper` como
-`Pantalla de bloqueo de Karenda`. Al estar desactivada, el salvapantallas nativo
+`Pantalla de bloqueo de lectura`. Al estar desactivada, el salvapantallas nativo
 y cualquier patch externo conservan su comportamiento original.
 
 ## Tokens De Tailwind
@@ -319,6 +350,9 @@ de datos.
 
 ### Creación Asistida Con IA
 
+- El panel `Agregar eventos con IA` aparece inmediatamente debajo de las
+  acciones de creación y antes de la agenda cuando está activo; conserva su
+  panel accesible y no obliga a buscarlo junto al calendario.
 - El panel ofrece un control persistente `Creación rápida`/`Creación guiada`.
   Rápida queda activa por defecto; Guiada muestra una sola pregunta de relación
   por pantalla con progreso `Pregunta N de M`, opciones de catálogo, propuesta
@@ -333,9 +367,6 @@ de datos.
 - El contrato de preguntas no dependerá de componentes web: cada opción tendrá
   identificador estable y etiqueta en español, y las respuestas conservarán
   `question_id`, `option_id`, `other_text` y `no_preference` para Android.
-- El panel `Agregar eventos con IA` aparece inmediatamente debajo de las
-  acciones de creación y antes de la agenda cuando está activo; conserva su
-  panel accesible y no obliga a buscarlo junto al calendario.
 - El encabezado del calendario añade una acción secundaria `Agregar con IA`,
   ubicada junto a las acciones de creación manual. La acción abre el mismo
   espacio lateral de trabajo y no desplaza ni oculta el calendario en
@@ -546,10 +577,11 @@ de datos.
 
 ### Superficies Nativas De KOReader
 
-- La navbar de SimpleUI añadirá dos Quick Actions externas estables:
-  `Calendario` para la agenda y `Notas` para la lectura de notas. El plugin no
-  editará la configuración ni los archivos de SimpleUI; la persona decidirá
-  cuáles tabs conservar mediante la configuración normal de SimpleUI.
+- La navbar de SimpleUI añadirá tres Quick Actions externas estables:
+  `Calendario` para la agenda, `Notas` para la lectura de notas y `Karenda` como
+  superficie unificada opcional. El plugin no editará la configuración ni los
+  archivos de SimpleUI; la persona decidirá cuáles tabs conservar mediante la
+  configuración normal de SimpleUI.
 - El calendario y las notas usarán widgets nativos a pantalla completa, con alto
   contraste, tipografía del dispositivo y separación por líneas. No se copiarán
   tokens visuales de Tailwind ni se introducirán colores que no pueda representar
@@ -560,18 +592,21 @@ de datos.
   explícitos `Anterior`, `Hoy` y `Siguiente`; cambiar de modo o periodo no hará
   red mientras exista snapshot local.
 - La web conservará una navegación común con `Calendario` y `Notas`. En el
-  plugin, cada superficie se abrirá desde su Quick Action y no repetirá esos
-  botones dentro de la pantalla; `Actualizar` será siempre una acción explícita
-  de fetch y vivirá en la cabecera nativa.
+  plugin, las acciones separadas abrirán cada superficie sin repetir botones de
+  navegación; `Karenda` abrirá una superficie unificada con un selector superior
+  compacto de dos opciones, `Calendario` y `Notas`, con una sola opción activa y
+  sin navbar duplicada. `Actualizar` será siempre una acción explícita de fetch y
+  vivirá en la cabecera nativa.
 - Las vistas `Mes` y `Semana` conservarán una cuadrícula de siete columnas: cada
   celda mostrará el número de día y la cantidad de eventos con una notación
   compacta, destacará `Hoy` mediante texto y fondo, y permitirá abrir ese día.
   Los días exteriores al mes quedarán vacíos. Debajo se mostrarán resúmenes
   tocables sin saturar las celdas estrechas del dispositivo.
-- La vista `Día` concentrará una fecha y `Agenda` listará los próximos eventos
-  desde el cursor, agrupados por fecha completa. Las secciones de la fecha actual
-  y del día siguiente escribirán `HOY` y `MAÑANA`; los eventos académicos
-  pendientes añadirán una indicación textual de preparación o estudio. Cada
+- La vista `Día` concentrará una fecha y `Agenda` listará únicamente los próximos
+  eventos pendientes desde el cursor, agrupados por fecha completa. Las secciones
+  de la fecha actual y del día siguiente escribirán `HOY` y `MAÑANA`; los eventos
+  académicos pendientes añadirán una indicación textual de preparación o estudio.
+  Los eventos completados seguirán visibles en `Mes`, `Semana` y `Día`. Cada
   evento abrirá un detalle desplazable sin acciones de escritura.
 - Los horarios de eventos se presentarán usando el offset civil de la zona del
   snapshot, no la zona configurada por el sistema del lector; así una hora creada
@@ -582,12 +617,12 @@ de datos.
   matemáticas se distinguirán de los operadores y los exponentes/subíndices no
   se mostrarán como caret o guion bajo crudos; símbolos lógicos como `⊢` conservarán
   sus subíndices y `\ddagger` se normalizará al símbolo `‡`. Las etiquetas de flecha
- se elevarán sin convertir sus elementos contiguos en bloques, para que una fórmula
- de bloque permanezca en una línea cuando quepa en la pantalla. Las listas HTML
+  se elevarán sin convertir sus elementos contiguos en bloques, para que una fórmula
+  de bloque permanezca en una línea cuando quepa en la pantalla. Las listas HTML
   `ol` y `ul` reservarán `1em` de margen y `1em` de padding interno para que sus
   marcadores no queden recortados en el borde izquierdo del `TextViewer`; el
- ajuste será local a la lectura Markdown y no cambiará la geometría del
- calendario. La navegación de filtros usará una jerarquía de ancho completo:
+  ajuste será local a la lectura Markdown y no cambiará la geometría del
+  calendario. La navegación de filtros usará una jerarquía de ancho completo:
   `Todos los ramos` será la acción académica principal, las asignaturas se
   distribuirán en filas legibles y los grupos personales conservarán una sección
   independiente.
@@ -604,16 +639,19 @@ de datos.
   transición de navegación: no solicitará un repintado intermedio de la vista
   que queda debajo ni restaurará durante ese instante el indicador temporal de
   Karenda, para que el destino seleccionado se pinte directamente sin mostrar
-  Home entre ambas vistas. Mientras la superficie esté abierta, su Quick Action
-  marcará el indicador activo de Calendario o Notas; una navegación posterior
-  conservará su propia selección.
+  Home entre ambas vistas. Mientras una acción separada esté abierta, su Quick
+  Action marcará el indicador activo correspondiente. Mientras la superficie
+  unificada esté abierta, marcará `Karenda`; cambiar entre sus dos opciones
+  conservará ese indicador y actualizará el contexto visible de calendario o
+  notas. Una navegación posterior conservará su propia selección.
 - Cada fila de evento pendiente mostrará una cuenta regresiva breve. La fecha
   final de un evento multidiario será su fecha de entrega; se usarán `Hoy`,
   `Mañana`, `Faltan N días` y `Vencido hace N días`. Un evento completado
   conservará `Completado` sin una cuenta obsoleta.
 - Los iconos de Quick Actions serán locales, monocromos y lineales en una caja
-  `48x48`. El calendario usará un marco con anillas y las notas una hoja con
-  pliegue y líneas, evitando masas rellenas, color y detalles ilegibles.
+  `48x48`. El calendario usará un marco con anillas, las notas una hoja con
+  pliegue y líneas, y `Karenda` combinará ambas ideas con una silueta simple,
+  evitando masas rellenas, color y detalles ilegibles.
 - Una vista con snapshot local se abrirá inmediatamente y no hará red implícita.
   Si no existe caché, la primera apertura podrá ejecutar una sincronización
   explícita y después mostrar la vista o un estado vacío claro.
@@ -644,7 +682,8 @@ de datos.
   ocupará la primera línea; la segunda escribirá tipo, relación y estado. Mes y
   Semana mostrarán hasta cuatro próximos eventos del periodo y señalarán cuántos
   continúan en `Agenda`. Agenda separará `HOY`, `MAÑANA` y el resto de fechas
-  completas; una señal textual adicional marcará lo académico pendiente.
+  completas, mostrando solo eventos pendientes; una señal textual adicional
+  marcará lo académico pendiente.
 - La semana empezará en lunes. La leyenda `día · eventos` explicará el conteo de
   la cuadrícula, y hoy añadirá corchetes para no depender solo del tono.
 - El selector segmentado usará una sola fila, cuatro etiquetas cortas y fondo
@@ -793,3 +832,26 @@ acciones separadas: `Intentar nuevamente` para repetir la comprobación y
 `Iniciar sesión nuevamente` para limpiar la sesión local y abrir el formulario
 de acceso. La segunda acción conserva la ruta protegida para continuar después
 de autenticar y debe mantener objetivos táctiles de al menos 44 px.
+
+### Coordinación De Estadísticas De KOReader
+
+- La vista `Estadísticas` conservará un panel de configuración de KOReader y
+  Anki encima de los resúmenes de hábitos. El panel explicará que la fuente es
+  diaria, mostrará el dispositivo autorizado y separará las métricas pendientes
+  de las ya vinculadas.
+- Para cada métrica (`Páginas leídas`, `Tiempo de lectura`, `Libros terminados`
+  y `Cartas revisadas de Anki`) se elegirá explícitamente un hábito compatible o
+  `Crear un hábito nuevo`. La creación pedirá nombre y meta diaria; no se
+  vinculará una métrica por coincidencia automática de nombre.
+- Las métricas vinculadas mostrarán el hábito, el último envío y los estados
+  `Activa`/`Pausada`, con una acción reversible. Si no hay un dispositivo con
+  permiso de escritura de hábitos, se mostrará un vacío accionable hacia
+  `Dispositivos`.
+- Los resúmenes ofrecerán un selector segmentado de tres opciones: `Día`,
+  `Mes` y `Año`. El rango se podrá ajustar con fechas y los totales se
+  calcularán desde los registros diarios. Una tarjeta con al menos un registro
+  importado mostrará la etiqueta `Datos de KOReader`.
+- La carga, guardado, error y éxito usarán `aria-live` y mensajes en español.
+  El panel no expondrá tokens ni hará sincronización de red implícita desde la
+  pestaña de estadísticas; la sincronización diaria la inicia KOReader al
+  reanudar con conexión.

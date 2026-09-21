@@ -43,20 +43,25 @@ local plugin = {
     openNotes = function()
         opened[#opened + 1] = "notes"
     end,
+    openKarenda = function()
+        opened[#opened + 1] = "karenda"
+    end,
 }
 local simpleui_plugin = { active_action = "home" }
 local fm = { karenda = plugin }
 
 assert(Integration.register(plugin))
-for _, id in ipairs({ "karenda_calendar", "karenda_notes" }) do
+for _, id in ipairs({ "karenda_calendar", "karenda_notes", "karenda" }) do
     assert(descriptors[id])
     assert(descriptors[id].is_in_place)
     assert(descriptors[id].is_async_in_place)
 end
 descriptors.karenda_calendar.execute({ plugin = simpleui_plugin, fm = fm })
 descriptors.karenda_notes.execute({})
+descriptors.karenda.execute({})
 assert(opened[1] == "calendar")
 assert(opened[2] == "notes")
+assert(opened[3] == "karenda")
 assert(forwarded_simpleui_plugin == simpleui_plugin)
 assert(forwarded_fm == fm)
 
@@ -89,6 +94,18 @@ assert(indicator_events[#indicator_events].active)
 handoff_view:onCloseWidget()
 assert(handoff_view.closed)
 assert(#indicator_events == indicator_count_before_handoff + 1)
+
+local combined_view = {
+    onCloseWidget = function(self)
+        self.closed = true
+    end,
+}
+Integration.trackIndicator(simpleui_plugin, "calendar", combined_view, "karenda")
+assert(indicator_events[#indicator_events].action_id == "karenda")
+assert(indicator_events[#indicator_events].active)
+combined_view:onCloseWidget()
+assert(indicator_events[#indicator_events].action_id == "karenda")
+assert(not indicator_events[#indicator_events].active)
 
 package.loaded["screens/sui_bottombar"] = previous_bottombar
 print("Smoke de Quick Actions overlay: correcto.")

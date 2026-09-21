@@ -62,7 +62,9 @@ describe('DeviceTokensPage', () => {
     await user.type(label, 'Kindle biblioteca')
     await user.click(screen.getByRole('button', { name: 'Generar código' }))
 
-    expect(mocks.createDevicePairingCode).toHaveBeenCalledWith('Kindle biblioteca')
+    expect(mocks.createDevicePairingCode).toHaveBeenCalledWith('Kindle biblioteca', [
+      'read:snapshot',
+    ])
     expect(await screen.findByText('042731')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Copiar código' }))

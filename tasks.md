@@ -201,6 +201,16 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
 - [x] **Tarea 98: Normalizar hábitos cuantitativos** (20-30 min). Corregir
   combinaciones contradictorias de tipo, unidad y meta antes de validar.
 
+- [ ] **Tarea 99: Añadir modo guiado a eventos asistidos** (20-30 min). Definir
+  el contrato de preguntas y respuestas, resolver relaciones ambiguas y permitir
+  propuestas confirmables de asignaturas y grupos personales.
+- [ ] **Tarea 100: Corregir robustez de extracción de eventos IA** (20-30 min).
+  Aceptar respuestas JSON equivalentes, conservar relaciones desconocidas para
+  revisión y verificar los fallbacks del proveedor.
+- [ ] **Tarea 101: Verificar creación guiada de eventos** (20-30 min). Cubrir
+  servicio, panel, creación deduplicada de catálogo, guardado parcial,
+  typecheck, lint y build.
+
 - [ ] **Tarea 89: Probar flujos críticos en navegador** (20-30 min).
   Verificar creación, registro, historial, estadísticas, notas, tareas y
   proyección de calendario.
@@ -361,3 +371,28 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
 - [x] **Tarea 136: Limpiar descripciones Canvas previas** (15-20 min). Detectar
   cuando el evento contiene únicamente el extracto anterior de Canvas y
   reemplazarlo, al confirmar la revisión, por el resumen académico filtrado.
+## Fase 19: Coordinación De Estadísticas KOReader–Hábitos
+
+- [x] **Tarea 137: Definir el contrato de métricas y vínculos** (20-30 min).
+  Documentar páginas, minutos, libros terminados, cartas revisadas, unidades,
+  precedencia diaria y backfill en la spec 005.
+- [x] **Tarea 138: Implementar persistencia y seguridad de estadísticas**
+  (20-30 min). Añadir vínculos, `koreader_link_id`, scope de escritura, RPC,
+  RLS y funciones Edge idempotentes.
+- [x] **Tarea 139: Integrar configuración web** (20-30 min). Permitir
+  seleccionar dispositivo, reutilizar hábitos compatibles o crear hábitos con
+  meta explícita, y pausar vínculos.
+- [x] **Tarea 140: Integrar estadísticas en Hábitos** (20-30 min). Mostrar
+  datos diarios y totales día/mes/año con precedencia de KOReader y estado de
+  última sincronización.
+- [x] **Tarea 141: Implementar sincronización del plugin** (20-30 min). Leer
+  SQLite, adaptar Anki opcionalmente, enviar lotes, guardar cola offline y
+  sincronizar al reanudar sin tocar SimpleUI ni el snapshot.
+- [x] **Tarea 142: Añadir pruebas unitarias y trazabilidad** (20-30 min).
+  Cubrir precedencia, suma, formato, documentación y checks web.
+- [ ] **Tarea 143: Verificar backend en InsForge** (20-30 min). Aplicar la
+  migración en una rama, validar políticas, desplegar funciones y ejecutar
+  pruebas autenticadas de scope, RLS, idempotencia y aislamiento.
+- [ ] **Tarea 144: Verificar KOReader real** (20-30 min). Ejecutar specs Lua
+  con el runtime de KOReader y probar backfill, red ausente, Anki disponible y
+  dispositivo real.

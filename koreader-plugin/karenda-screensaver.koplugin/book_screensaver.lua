@@ -15,6 +15,7 @@ local VerticalGroup = require("ui/widget/verticalgroup")
 local VerticalSpan = require("ui/widget/verticalspan")
 local logger = require("logger")
 local ScreensaverConfig = require("screensaver_config")
+local gettext = require("gettext")
 
 local Screen = Device.screen
 local BookScreensaver = {}
@@ -50,6 +51,18 @@ local function safeMethod(object, method_name, ...)
         return value
     end
     return nil
+end
+
+local function safeMethodValues(object, method_name, ...)
+    if not object or type(object[method_name]) ~= "function" then
+        return nil, nil
+    end
+
+    local ok, first, second = pcall(object[method_name], object, ...)
+    if ok then
+        return first, second
+    end
+    return nil, nil
 end
 
 local function clampPage(page, total_pages)
@@ -133,6 +146,14 @@ local function getBookData(ui)
     current_page = clampPage(current_page, total_pages)
 
     local book_status = safeMethod(ui.statistics, "getStatsBookStatus") or {}
+    local today_duration
+    local today_pages
+    if type(book_status) == "table" and book_status.pages ~= nil then
+        today_duration, today_pages = safeMethodValues(
+            ui.statistics,
+            "getTodayBookStats"
+        )
+    end
     local book_pages_left = normalizePages(
         safeMethod(ui.document, "getTotalPagesLeft", current_page)
     )
@@ -201,18 +222,20 @@ local function getBookData(ui)
         time = formatDuration(book_status.time),
         time_left_chapter = estimateTimeRemaining(ui.statistics, book_status, chapter_pages_left),
         time_left_book = estimateTimeRemaining(ui.statistics, book_status, book_pages_left),
+        pages_read_today = normalizePages(today_pages),
+        time_read_today = formatDuration(today_duration),
         pages_read = pages_read,
         average_speed = formatAveragePageTime(average_page_time),
         cover = cover,
     }
 end
 
-local function makeText(text, face, width, bold, color)
+local function makeText(text, face, width, bold, color, alignment)
     return TextBoxWidget:new{
         text = text,
         face = face,
         width = width,
-        alignment = "center",
+        alignment = alignment or "center",
         bold = bold,
         fgcolor = color,
     }
@@ -270,7 +293,27 @@ local function buildCoverWidget(cover, width, height)
     }
 end
 
-local function buildStats(data, panel_width, visibility, label_face, value_face,
+local function getRemainingSummary(data, scope)
+    local pages = scope == "chapter" and data.pages_left_chapter or data.pages_left_book
+    local time = scope == "chapter" and data.time_left_chapter or data.time_left_book
+    if pages == nil or time == nil or time == "" or time == "—" then
+        return nil
+    end
+    local page_label = pages == 1 and "pág." or "págs."
+    return string.format("%d %s / %s", pages, page_label, time)
+end
+
+local function getTodaySummary(data)
+    local pages = data.pages_read_today
+    local time = data.time_read_today
+    if pages == nil or time == nil or time == "" or time == "—" then
+        return nil
+    end
+    local page_label = pages == 1 and "pág." or "págs."
+    return string.format("%d %s / %s", pages, page_label, time)
+end
+
+local function buildClassicStats(data, panel_width, visibility, label_face, value_face,
         padding, border, background, layout)
     local values = {}
 
@@ -280,9 +323,6 @@ local function buildStats(data, panel_width, visibility, label_face, value_face,
         end
     end
 
-    if visibility.show_progress then
-        addValue("Progreso", string.format("%d %%", math.floor(data.progress * 100 + 0.5)))
-    end
     if visibility.show_chapter_progress and data.chapter_progress then
         addValue("Progreso del capítulo", string.format(
             "%d %%",
@@ -292,17 +332,46 @@ local function buildStats(data, panel_width, visibility, label_face, value_face,
     if visibility.show_page then
         addValue("Página", string.format("%d/%d", data.current_page, data.total_pages))
     end
-    if visibility.show_pages_left_chapter and data.pages_left_chapter ~= nil then
-        addValue("Páginas del capítulo", string.format("%d restantes", data.pages_left_chapter))
+    if visibility.combine_remaining
+            and visibility.show_pages_left_chapter
+            and visibility.show_time_left_chapter then
+        local summary = getRemainingSummary(data, "chapter")
+        if summary then
+            addValue("Capítulo", summary)
+        else
+            addValue("Págs. del capítulo", data.pages_left_chapter
+                and string.format("%d restantes", data.pages_left_chapter) or nil)
+            addValue("Tiempo del capítulo", data.time_left_chapter)
+        end
+    else
+        if visibility.show_pages_left_chapter and data.pages_left_chapter ~= nil then
+            addValue("Págs. del capítulo", string.format("%d restantes", data.pages_left_chapter))
+        end
+        if visibility.show_time_left_chapter then
+            addValue("Tiempo del capítulo", data.time_left_chapter)
+        end
     end
-    if visibility.show_pages_left_book and data.pages_left_book ~= nil then
-        addValue("Páginas del libro", string.format("%d restantes", data.pages_left_book))
+    if visibility.combine_remaining
+            and visibility.show_pages_left_book
+            and visibility.show_time_left_book then
+        local summary = getRemainingSummary(data, "book")
+        if summary then
+            addValue("Libro completo", summary)
+        else
+            addValue("Págs. del libro", data.pages_left_book
+                and string.format("%d restantes", data.pages_left_book) or nil)
+            addValue("Tiempo del libro", data.time_left_book)
+        end
+    else
+        if visibility.show_pages_left_book and data.pages_left_book ~= nil then
+            addValue("Págs. del libro", string.format("%d restantes", data.pages_left_book))
+        end
+        if visibility.show_time_left_book then
+            addValue("Tiempo del libro", data.time_left_book)
+        end
     end
-    if visibility.show_time_left_chapter then
-        addValue("Tiempo del capítulo", data.time_left_chapter)
-    end
-    if visibility.show_time_left_book then
-        addValue("Tiempo del libro", data.time_left_book)
+    if visibility.show_today then
+        addValue(gettext("Leído hoy"), getTodaySummary(data))
     end
     if visibility.show_time then
         addValue("Tiempo leído", data.time)
@@ -361,6 +430,171 @@ local function buildStats(data, panel_width, visibility, label_face, value_face,
     }
 end
 
+local function getMetricValue(data, id)
+    if id == "page" then
+        return string.format("%d/%d", data.current_page, data.total_pages)
+    elseif id == "pages_left_chapter" then
+        return data.pages_left_chapter ~= nil
+            and string.format("%d restantes", data.pages_left_chapter)
+            or nil
+    elseif id == "time_left_chapter" then
+        return data.time_left_chapter
+    elseif id == "pages_left_book" then
+        return data.pages_left_book ~= nil
+            and string.format("%d restantes", data.pages_left_book)
+            or nil
+    elseif id == "time_left_book" then
+        return data.time_left_book
+    elseif id == "today" then
+        return getTodaySummary(data)
+    elseif id == "time" then
+        return data.time
+    elseif id == "days" then
+        return data.days
+    elseif id == "pages_read" then
+        return data.pages_read
+    elseif id == "average_speed" then
+        return data.average_speed
+    elseif id == "chapter_progress" then
+        return data.chapter_progress
+            and string.format("%d %%", math.floor(data.chapter_progress * 100 + 0.5))
+            or nil
+    end
+    return nil
+end
+
+local function buildCompactMetrics(data, panel_inner_width, visibility, label_face, value_face)
+    local rows = {}
+    local gap = Screen:scaleBySize(6)
+    local row_gap = Screen:scaleBySize(4)
+    local label_width = math.floor(panel_inner_width * 0.62)
+    local value_width = panel_inner_width - label_width - gap
+    local summary_label_width = math.floor(panel_inner_width * 0.30)
+    local summary_value_width = panel_inner_width - summary_label_width - gap
+
+    local function appendRow(label, value, current_label_width, current_value_width)
+        if value == nil or value == "" or value == "—" then
+            return false
+        end
+        if #rows > 0 then
+            table.insert(rows, VerticalSpan:new{ width = row_gap })
+        end
+        table.insert(rows, HorizontalGroup:new{
+            align = "center",
+            makeText(label, label_face, current_label_width, false,
+                Blitbuffer.COLOR_BLACK, "left"),
+            HorizontalSpan:new{ width = gap },
+            makeText(tostring(value), value_face, current_value_width, true,
+                Blitbuffer.COLOR_BLACK, "right"),
+        })
+        return true
+    end
+
+    local grouped = {}
+    local remaining_pairs = {
+        pages_left_chapter = {
+            time_id = "time_left_chapter",
+            scope = "chapter",
+            label = "Capítulo",
+        },
+        time_left_chapter = {
+            pages_id = "pages_left_chapter",
+            scope = "chapter",
+            label = "Capítulo",
+        },
+        pages_left_book = {
+            time_id = "time_left_book",
+            scope = "book",
+            label = "Libro completo",
+        },
+        time_left_book = {
+            pages_id = "pages_left_book",
+            scope = "book",
+            label = "Libro completo",
+        },
+    }
+
+    for _, id in ipairs(ScreensaverConfig.getMetricOrder()) do
+        local metric = ScreensaverConfig.getMetric(id)
+        if metric and not grouped[id] and visibility[metric.option] then
+            local pair = remaining_pairs[id]
+            local summary_added = false
+            if ScreensaverConfig.getBoolean("combine_remaining") and pair then
+                local pages_id = pair.pages_id or id
+                local time_id = pair.time_id or id
+                local pages_metric = ScreensaverConfig.getMetric(pages_id)
+                local time_metric = ScreensaverConfig.getMetric(time_id)
+                if pages_metric and time_metric
+                        and visibility[pages_metric.option]
+                        and visibility[time_metric.option] then
+                    local summary = getRemainingSummary(data, pair.scope)
+                    if summary then
+                        summary_added = appendRow(
+                            pair.label,
+                            summary,
+                            summary_label_width,
+                            summary_value_width
+                        )
+                        if summary_added then
+                            grouped[pages_id] = true
+                            grouped[time_id] = true
+                        end
+                    end
+                end
+            end
+
+            if not summary_added then
+                local value = getMetricValue(data, id)
+                local row_label_width = id == "today" and summary_label_width or label_width
+                local row_value_width = id == "today" and summary_value_width or value_width
+                appendRow(metric.compact_label or metric.label, value,
+                    row_label_width, row_value_width)
+            end
+        end
+    end
+
+    if #rows == 0 then
+        return nil
+    end
+    return VerticalGroup:new{ align = "left", unpack(rows) }
+end
+
+local function buildProgressRow(data, panel_inner_width, value_face)
+    local gap = Screen:scaleBySize(6)
+    local percent_measure = TextWidget:new{
+        text = "99 %",
+        face = value_face,
+        bold = true,
+    }
+    local percent_width = percent_measure:getSize().w + Screen:scaleBySize(6)
+    percent_measure:free()
+    local progress_width = math.max(
+        Screen:scaleBySize(96),
+        panel_inner_width - percent_width - gap
+    )
+    local progress_bar = ProgressWidget:new{
+        width = progress_width,
+        height = Screen:scaleBySize(7),
+        percentage = data.progress,
+        ticks = nil,
+        last = nil,
+    }
+
+    return HorizontalGroup:new{
+        align = "center",
+        progress_bar,
+        HorizontalSpan:new{ width = gap },
+        makeText(
+            string.format("%d %%", math.floor(data.progress * 100 + 0.5)),
+            value_face,
+            percent_width,
+            true,
+            Blitbuffer.COLOR_BLACK,
+            "right"
+        ),
+    }
+end
+
 local function calculateOffset(content_size, screen_size, vertical_position, horizontal_alignment)
     local margin = Screen:scaleBySize(16)
     local x
@@ -410,7 +644,7 @@ local function buildPreviewHint(screen_size)
     return hint
 end
 
-local function buildBookWidget(data, options)
+local function buildLegacyBookWidget(data, options)
     options = options or {}
     local screen_size = Screen:getSize()
     local border = Screen:scaleBySize(1)
@@ -420,6 +654,7 @@ local function buildBookWidget(data, options)
 
     local title_face = Font:getFace("largeffont")
     local author_face = Font:getFace("smallffont")
+    local chapter_face = Font:getFace("ffont")
     local label_face = Font:getFace("smallffont")
     local value_face = Font:getFace("ffont")
     local card_background = Blitbuffer.COLOR_GRAY_E or Blitbuffer.COLOR_WHITE
@@ -436,9 +671,11 @@ local function buildBookWidget(data, options)
         show_time = ScreensaverConfig.getBoolean("show_time"),
         show_time_left_chapter = ScreensaverConfig.getBoolean("show_time_left_chapter"),
         show_time_left_book = ScreensaverConfig.getBoolean("show_time_left_book"),
+        show_today = ScreensaverConfig.getBoolean("show_today"),
         show_days = ScreensaverConfig.getBoolean("show_days"),
         show_pages_read = ScreensaverConfig.getBoolean("show_pages_read"),
         show_average_speed = ScreensaverConfig.getBoolean("show_average_speed"),
+        combine_remaining = ScreensaverConfig.getBoolean("combine_remaining"),
     }
 
     if visibility.show_title then
@@ -450,22 +687,10 @@ local function buildBookWidget(data, options)
     end
     if visibility.show_chapter and data.chapter ~= "" then
         table.insert(title_content, VerticalSpan:new{ width = Screen:scaleBySize(4) })
-        table.insert(title_content, makeText(data.chapter, author_face, panel_inner_width, false, Blitbuffer.COLOR_BLACK))
+        table.insert(title_content, makeText(data.chapter, chapter_face, panel_inner_width, false, Blitbuffer.COLOR_BLACK))
     end
-    if visibility.show_progress then
-        local progress_bar = ProgressWidget:new{
-            width = math.floor(panel_inner_width * 0.78),
-            height = Screen:scaleBySize(8),
-            percentage = data.progress,
-            ticks = nil,
-            last = nil,
-        }
-        table.insert(title_content, VerticalSpan:new{ width = Screen:scaleBySize(8) })
-        table.insert(title_content, CenterContainer:new{
-            dimen = Geom:new{ w = panel_inner_width, h = progress_bar:getSize().h },
-            progress_bar,
-        })
-    end
+    table.insert(title_content, VerticalSpan:new{ width = Screen:scaleBySize(8) })
+    table.insert(title_content, buildProgressRow(data, panel_inner_width, value_face))
 
     local title_card
     if #title_content > 0 then
@@ -478,7 +703,7 @@ local function buildBookWidget(data, options)
         }
     end
 
-    local stats = buildStats(
+    local stats = buildClassicStats(
         data,
         panel_width,
         visibility,
@@ -515,6 +740,92 @@ local function buildBookWidget(data, options)
         content.overlap_offset = { x, y }
         table.insert(children, content)
     end
+    if options.preview then
+        table.insert(children, buildPreviewHint(screen_size))
+    end
+
+    children.dimen = screen_size
+    return OverlapGroup:new(children)
+end
+
+local function buildBookWidget(data, options)
+    options = options or {}
+    if ScreensaverConfig.getValue("panel_style") == "cards" then
+        return buildLegacyBookWidget(data, options)
+    end
+
+    local screen_size = Screen:getSize()
+    local border = Screen:scaleBySize(1)
+    local padding = Screen:scaleBySize(9)
+    local panel_width = math.floor(screen_size.w * 0.86)
+    local panel_inner_width = panel_width - 2 * (padding + border)
+    local title_face = Font:getFace("largeffont")
+    local label_face = Font:getFace("smallffont")
+    local chapter_face = Font:getFace("ffont")
+    local value_face = Font:getFace("ffont")
+    local visibility = {
+        show_title = ScreensaverConfig.getBoolean("show_title"),
+        show_author = ScreensaverConfig.getBoolean("show_author"),
+        show_chapter = ScreensaverConfig.getBoolean("show_chapter"),
+        show_chapter_progress = ScreensaverConfig.getBoolean("show_chapter_progress"),
+        show_page = ScreensaverConfig.getBoolean("show_page"),
+        show_pages_left_chapter = ScreensaverConfig.getBoolean("show_pages_left_chapter"),
+        show_pages_left_book = ScreensaverConfig.getBoolean("show_pages_left_book"),
+        show_time = ScreensaverConfig.getBoolean("show_time"),
+        show_time_left_chapter = ScreensaverConfig.getBoolean("show_time_left_chapter"),
+        show_time_left_book = ScreensaverConfig.getBoolean("show_time_left_book"),
+        show_today = ScreensaverConfig.getBoolean("show_today"),
+        show_days = ScreensaverConfig.getBoolean("show_days"),
+        show_pages_read = ScreensaverConfig.getBoolean("show_pages_read"),
+        show_average_speed = ScreensaverConfig.getBoolean("show_average_speed"),
+        combine_remaining = ScreensaverConfig.getBoolean("combine_remaining"),
+    }
+
+    local content = VerticalGroup:new{ align = "left" }
+    if visibility.show_title then
+        table.insert(content, makeText(data.title, title_face, panel_inner_width, true,
+            Blitbuffer.COLOR_BLACK, "center"))
+    end
+    if visibility.show_author and data.author ~= "" then
+        table.insert(content, VerticalSpan:new{ width = Screen:scaleBySize(1) })
+        table.insert(content, makeText(data.author, label_face, panel_inner_width, false,
+            Blitbuffer.COLOR_BLACK, "center"))
+    end
+    if visibility.show_chapter and data.chapter ~= "" then
+        table.insert(content, VerticalSpan:new{ width = Screen:scaleBySize(3) })
+        table.insert(content, makeText(data.chapter, chapter_face, panel_inner_width, false,
+            Blitbuffer.COLOR_BLACK, "center"))
+    end
+
+    table.insert(content, VerticalSpan:new{ width = Screen:scaleBySize(6) })
+    table.insert(content, buildProgressRow(data, panel_inner_width, value_face))
+
+    local metrics = buildCompactMetrics(data, panel_inner_width, visibility, label_face, value_face)
+    if metrics then
+        table.insert(content, VerticalSpan:new{ width = Screen:scaleBySize(6) })
+        table.insert(content, metrics)
+    end
+
+    local panel = FrameContainer:new{
+        background = Blitbuffer.COLOR_WHITE,
+        bordersize = border,
+        color = Blitbuffer.COLOR_BLACK,
+        padding = padding,
+        content,
+    }
+    local panel_size = panel:getSize()
+    local x, y = calculateOffset(
+        panel_size,
+        screen_size,
+        ScreensaverConfig.getValue("vertical_position"),
+        ScreensaverConfig.getValue("horizontal_alignment")
+    )
+    panel.overlap_offset = { x, y }
+
+    local children = {
+        buildCoverWidget(data.cover, screen_size.w, screen_size.h),
+        panel,
+    }
     if options.preview then
         table.insert(children, buildPreviewHint(screen_size))
     end

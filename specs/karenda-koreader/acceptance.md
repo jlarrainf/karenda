@@ -10,8 +10,10 @@ backend real o Kindle real.
 
 **Dado** un entorno con la API pública de Quick Actions disponible, **cuando**
 se cargue el plugin, **entonces** SimpleUI registrará las acciones externas
-`Calendario` (`karenda_calendar`) y `Notas` (`karenda_notes`), que abrirán sus
-superficies sin editar archivos de SimpleUI.
+`Calendario` (`karenda_calendar`), `Notas` (`karenda_notes`) y `Karenda`
+(`karenda`). Las dos primeras abrirán sus superficies directas y la tercera
+abrirá la superficie unificada con cambio superior entre calendario y notas,
+sin editar archivos de SimpleUI.
 
 Verificación: prueba de integración en SimpleUI real. Estado: implementación
 local pendiente de verificación real.
@@ -20,7 +22,8 @@ local pendiente de verificación real.
 
 **Dado** un entorno sin Quick Actions, **cuando** el custom navbar u otro
 integrador invoque los puntos públicos del plugin, **entonces** podrá abrir
-calendario y notas sin depender de métodos heredados no enumerables.
+calendario, notas y la superficie unificada sin depender de métodos heredados
+no enumerables.
 
 Verificación: prueba Lua con objeto de plugin y mock de navbar. Estado:
 pendiente.
@@ -164,7 +167,8 @@ Verificación: fixture sin snapshot. Estado: pendiente.
 
 **Dado** un snapshot local, **cuando** se abra calendario, **entonces** se
 mostrarán eventos ordenados, estados textuales, relaciones, rangos y eventos de
-todo el día mediante widgets nativos.
+todo el día mediante widgets nativos. En `Agenda` solo aparecerán eventos
+pendientes; los eventos completados no se mostrarán en esa vista.
 
 Verificación: prueba de widgets con fixture. Estado: pendiente.
 
@@ -195,10 +199,10 @@ método nativo. Estado: implementado localmente; falta dispositivo real.
 ### KR-CA-021: Pantalla integrada de lectura
 
 **Dado** que Karenda no está visible y la persona está leyendo, **cuando** se
-muestre el salvapantallas, **entonces** Karenda mostrará una pantalla de libro
-de solo lectura con portada a pantalla completa, tarjeta de identificación,
-tarjetas tipo post-it con estadísticas y barra de progreso, y conservará el
-cierre y gesto nativos.
+muestre el salvapantallas, **entonces** la pantalla de bloqueo de lectura
+mostrará una portada protagonista y un único panel compacto de solo lectura con
+identidad, barra de progreso y porcentaje adyacente, además de las métricas
+seleccionadas, y conservará el cierre y gesto nativos.
 
 Verificación: smoke local con widgets simulados y dispositivo real. Estado:
 implementado localmente; falta dispositivo real.
@@ -206,7 +210,7 @@ implementado localmente; falta dispositivo real.
 ### KR-CA-021a: Activación visible
 
 **Dado** que la persona abre `Settings > Sleep screen > Wallpaper`, **cuando**
-active o desactive `Pantalla de bloqueo de Karenda`, **entonces** el estado
+active o desactive `Pantalla de bloqueo de lectura`, **entonces** el estado
 quedará marcado en ese mismo menú y la siguiente llamada al salvapantallas
 respetará la selección sin cambiar las opciones nativas de Wallpaper.
 
@@ -217,10 +221,11 @@ implementado localmente; falta dispositivo real.
 
 **Dado** que la persona abre `Personalizar pantalla de bloqueo`, **cuando**
 muestre u oculte cualquiera de las métricas disponibles —incluidos tiempo y
-páginas restantes de capítulo/libro— o cambie posición, alineación o
-distribución, **entonces** la siguiente pantalla de libro mostrará exactamente
-la selección guardada, recalculará el layout sin tarjetas vacías, respetará el
-ajuste de portada y conservará la configuración después de reiniciar KOReader.
+páginas restantes de capítulo/libro—, cambie su orden, posición, alineación o
+estilo, **entonces** la siguiente pantalla de libro mostrará exactamente la
+selección guardada, mantendrá el porcentaje junto a la barra sin duplicarlo,
+recalculará el layout sin filas vacías, respetará el ajuste de portada y
+conservará la configuración después de reiniciar KOReader.
 
 Verificación: `screensaver_config_spec`, `book_screensaver_smoke` y KOReader
 real. Estado: implementado localmente; pendiente de validación en dispositivo.
@@ -247,6 +252,45 @@ ese reemplazo visual.
 Verificación: `screensaver_integration_smoke` con una pantalla e-ink simulada y
 Kindle real, comprobando que el frame de la página anterior no quede visible.
 Estado: implementado localmente; pendiente de validación en dispositivo.
+
+### KR-CA-021e: Plugins independientes y política contextual
+
+**Dado** que solo está instalado `karenda-screensaver.koplugin`, **cuando** se
+bloquee un libro, **entonces** se mostrará la portada con estadísticas locales;
+fuera de un libro se delegará al método anterior y no se intentará cargar
+Karenda, InsForge ni la red. **Dado** que solo está instalado
+`karenda.koplugin`, **entonces** calendario, notas y sincronización seguirán
+funcionando sin instalar ni cargar el wrapper del wallpaper.
+
+**Dado** que ambos paquetes están instalados, **cuando** se cambie la política
+de Calendario/Notas o la política fuera de libro, **entonces** la decisión
+respetará la configuración: conservar la vista, mostrar el wallpaper, delegar o
+usar `Leave screen as-is` según corresponda.
+
+Verificación: tests de contexto y política, smoke de integración con módulos
+opcionales y KOReader real con cada combinación de instalación. Estado:
+pendiente de implementación y validación en dispositivo.
+
+### KR-CA-021f: Panel minimalista y orden de métricas
+
+**Dado** que la persona deja el estilo minimalista, **cuando** se muestre un
+libro, **entonces** la portada conservará el protagonismo, habrá un solo panel
+de información y el progreso del libro ocupará una fila con su porcentaje junto
+a la barra. **Cuando** se cambie el orden de métricas, **entonces** las filas
+visibles aparecerán en ese orden, omitirán datos no disponibles y no dejarán
+espacios reservados.
+
+**Cuando** la opción de agrupación esté activa y estén disponibles las páginas
+y el tiempo restantes, **entonces** se mostrarán las filas `Capítulo: páginas /
+tiempo` y `Libro completo: páginas / tiempo`; **cuando** esté desactivada o
+falte uno de los datos, **entonces** se mantendrán las métricas individuales
+disponibles. La cantidad se escribirá como `pág.` para una página y `págs.`
+para varias.
+
+Verificación: `book_screensaver_smoke`, `screensaver_config_spec` y vista previa
+con widgets simulados; validación visual en Kindle real. Estado: implementado
+localmente y verificado con runtime de KOReader; pendiente de validación visual
+en dispositivo.
 
 ### KR-CA-022: Wrapper idempotente
 
@@ -317,9 +361,11 @@ Estado: pendiente.
 
 ### KR-CA-029: Apertura cache-first
 
-**Dado** un snapshot local validado, **cuando** se toque `Calendario` o `Notas`
-desde la navbar, **entonces** se abrirá la vista correspondiente sin petición de
-red y se conservará la navegación de solo lectura.
+**Dado** un snapshot local validado, **cuando** se toque `Calendario`, `Notas` o
+`Karenda` desde la navbar, **entonces** se abrirá la vista correspondiente sin
+petición de red y se conservará la navegación de solo lectura. Dentro de
+`Karenda`, cambiar entre calendario y notas usará el snapshot local ya cargado y
+conservará la navbar en `Karenda`.
 
 Verificación: fixture local y mock de transporte. Estado: pendiente.
 
@@ -412,11 +458,12 @@ smoke correctos; verificación en Kindle real pendiente.
 
 **Dado** el plugin instalado, **cuando** se inspeccione la superficie y sus
 descriptores de SimpleUI, **entonces** el selector aparecerá como `Agenda`,
-`Mes`, `Semana`, `Día` y `Calendario`/`Notas` usarán SVG locales `48x48` de
-contorno monocromo, sin editar ni copiar archivos de SimpleUI.
+`Mes`, `Semana`, `Día` y `Calendario`/`Notas`/`Karenda` usarán SVG locales `48x48`
+de contorno monocromo, sin editar ni copiar archivos de SimpleUI.
 
-Verificación: smoke del selector e inspección estática de SVG. Estado:
-implementación local correcta; verificación en Kindle real pendiente.
+Verificación: smoke del selector, smoke de Quick Actions e inspección estática
+de SVG. Estado: implementación local correcta; verificación en Kindle real
+pendiente.
 
 ### KR-CA-037: Navegación y refresh
 
@@ -451,8 +498,13 @@ implementación local correcta; validación en Kindle pendiente.
 ### KR-CA-039: Quick Actions conservan el contexto
 
 **Dado** que la persona está en Home, Library o Reader, **cuando** toca
-`Calendario` o `Notas` desde una Quick Action, **entonces** la superficie de
-Karenda aparecerá sobre la pantalla actual sin navegar primero a Library.
+`Calendario`, `Notas` o `Karenda` desde una Quick Action, **entonces** la
+superficie de Karenda aparecerá sobre la pantalla actual sin navegar primero a
+Library.
+
+**Dado** que la superficie unificada está abierta, **cuando** se toque su
+selector superior, **entonces** cambiará entre calendario y notas sin pasar por
+Home ni cerrar la navbar de `Karenda`.
 
 **Dado** un overlay de Karenda abierto, **cuando** se cierre con el botón o el
 gesto nativo de volver, **entonces** reaparecerán la pantalla y el contexto que
@@ -515,9 +567,10 @@ pendiente.
 **Dado** calendario con subtítulo y notas sin el mismo subtítulo, **cuando** se
 construyan ambas superficies, **entonces** la cabecera propia aparecerá primero,
 su X estará arriba a la derecha y `Actualizar` quedará inmediatamente a su
-izquierda en la misma cabecera. No aparecerán botones internos `Calendario` ni
-`Notas`; la actualización será compacta, usará un símbolo y mantendrá su acción
-explícita de sincronización.
+izquierda en la misma cabecera. Las acciones separadas no mostrarán botones
+internos `Calendario` ni `Notas`; la superficie unificada sí mostrará debajo de
+la cabecera su selector superior de dos opciones. La actualización será
+compacta, usará un símbolo y mantendrá su acción explícita de sincronización.
 
 Verificación: smoke de geometría y revisión estática del botón. Estado:
 implementación local y smoke correctos; verificación visual real pendiente.
@@ -525,8 +578,10 @@ implementación local y smoke correctos; verificación visual real pendiente.
 ### KR-CA-044: Navbar inferior conservada
 
 **Dado** que existe una navbar inferior activa bajo la superficie actual,
-**cuando** se abra calendario o notas, **entonces** la navbar seguirá visible
-debajo de Karenda y sus acciones continuarán siendo táctiles.
+**cuando** se abra calendario, notas o la superficie unificada, **entonces** la
+navbar seguirá visible debajo de Karenda y sus acciones continuarán siendo
+táctiles. En la superficie unificada el indicador activo será `Karenda` aunque
+se alterne el contenido.
 
 **Dado** calendario o notas abiertos, **cuando** se pulse la X de la cabecera,
 **entonces** la superficie se cerrará y se conservará el contexto que estaba
@@ -538,18 +593,19 @@ dispositivo real sigue pendiente.
 
 ### KR-CA-045: Cambio de navbar desde una superficie
 
-**Dado** calendario o notas abiertos sobre Home, Library o Reader, **cuando** se
-toque otra acción de la navbar, **entonces** el gesto llegará al widget
+**Dado** calendario, notas o la superficie unificada abiertos sobre Home, Library
+o Reader, **cuando** se toque otra acción de la navbar, **entonces** el gesto llegará al widget
 subyacente, la superficie de Karenda se cerrará en el siguiente ciclo y quedará
 visible el destino que se seleccionó sin mostrar Home como estado intermedio. El
 cierre no deberá solicitar un repintado de la vista inferior antes de que la
 navegación termine ni dejar el destino debajo de una superficie antigua.
 
-**Dado** que se abre calendario o notas desde una acción de Karenda, **entonces**
-el indicador activo de la navbar marcará la acción correspondiente mientras la
-superficie esté visible. Si se selecciona otra pestaña antes del cierre diferido,
-el desmontaje conservará ese nuevo indicador en lugar de restaurar la pestaña
-anterior.
+**Dado** que se abre calendario o notas desde una acción directa, **entonces** el
+indicador activo de la navbar marcará la acción correspondiente mientras la
+superficie esté visible. **Dado** que se abre la superficie unificada desde
+`Karenda`, **entonces** el indicador marcará `Karenda` durante ambos modos. Si se
+selecciona otra pestaña antes del cierre diferido, el desmontaje conservará ese
+nuevo indicador en lugar de restaurar la pestaña anterior.
 
 Verificación: smoke de propagación y supresión de repintado, mock de
 `setTempTabActive` y SimpleUI/KOReader real desde Home, Library y Reader. Estado:

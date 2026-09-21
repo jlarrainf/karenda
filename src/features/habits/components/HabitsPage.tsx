@@ -14,6 +14,7 @@ import type { HabitView } from '../../../stores/habitStore.ts'
 import { useRecurringTaskStore } from '../../../stores/recurringTaskStore.ts'
 import type {
   Habit,
+  HabitLog,
   HabitOccurrenceResult,
   HabitStatistics,
   RecurringTask,
@@ -34,10 +35,14 @@ import {
 } from '../utils/habitRecurrence.ts'
 import { HabitForm } from './HabitForm.tsx'
 import { HabitNotesPanel } from './HabitNotesPanel.tsx'
+import { KoreaderStatsSetupPanel } from './KoreaderStatsSetupPanel.tsx'
 import { RecurringTaskForm } from './RecurringTaskForm.tsx'
 
 const DATE_FORMATTER = new Intl.DateTimeFormat('es-CL', { dateStyle: 'full' })
 const SHORT_DATE_FORMATTER = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' })
+const STAT_NUMBER_FORMATTER = new Intl.NumberFormat('es-CL', {
+  maximumFractionDigits: 2,
+})
 
 const STATUS_LABELS: Record<HabitOccurrenceResult['status'], string> = {
   completed: 'Completado',
@@ -70,6 +75,11 @@ function formatDate(value: string): string {
 
 function formatShortDate(value: string): string {
   return SHORT_DATE_FORMATTER.format(parseLocalDate(value))
+}
+
+function formatStatisticTotal(habit: Habit, value: number): string {
+  const total = STAT_NUMBER_FORMATTER.format(value)
+  return habit.unit ? `${total} ${habit.unit}` : total
 }
 
 function statusLabel(status: HabitOccurrenceResult['status']): string {
@@ -241,6 +251,39 @@ function HabitRow({
       </div>
     </li>
   )
+}
+
+function formatDatePart(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
+function getStatisticsRange(
+  dateValue: string,
+  period: 'day' | 'month' | 'year',
+): HabitRange {
+  const date = parseLocalDate(dateValue)
+  if (period === 'day') return { endDate: dateValue, startDate: dateValue }
+
+  if (period === 'month') {
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const lastDay = new Date(year, month, 0).getDate()
+    const today = getTodayDate()
+    const currentMonth = today.slice(0, 7) === `${year}-${formatDatePart(month)}`
+    return {
+      endDate: currentMonth
+        ? today
+        : `${year}-${formatDatePart(month)}-${formatDatePart(lastDay)}`,
+      startDate: `${year}-${formatDatePart(month)}-01`,
+    }
+  }
+
+  const today = getTodayDate()
+  const endDate = today.startsWith(`${date.getFullYear()}-`) ? today : `${date.getFullYear()}-12-31`
+  return {
+    endDate,
+    startDate: `${date.getFullYear()}-01-01`,
+  }
 }
 
 function HabitListSkeleton() {
@@ -501,17 +544,49 @@ function HistoryView({
 
 function StatisticsView({
   habits,
+  visibleHabits,
+  logs,
   statistics,
   range,
+  period,
+  onConfigured,
   onDateChange,
+  onPeriodChange,
 }: {
   habits: Habit[]
+  visibleHabits: Habit[]
+  logs: HabitLog[]
   statistics: HabitStatistics[]
   range: HabitRange
+  period: 'day' | 'month' | 'year'
+  onConfigured: () => void
   onDateChange: (field: 'startDate' | 'endDate', value: string) => void
+  onPeriodChange: (period: 'day' | 'month' | 'year') => void
 }) {
   return (
     <div className="space-y-5">
+      <KoreaderStatsSetupPanel habits={habits} onConfigured={onConfigured} />
+      <div
+        aria-label="Periodo de estadísticas"
+        className="grid grid-cols-3 gap-2 rounded-panel border border-border bg-surface-subtle p-2"
+        role="group"
+      >
+        {([
+          ['day', 'Día'],
+          ['month', 'Mes'],
+          ['year', 'Año'],
+        ] as const).map(([value, label]) => (
+          <button
+            aria-pressed={period === value}
+            className={`min-h-11 rounded-control px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-soft ${period === value ? 'bg-brand text-surface' : 'text-ink-muted hover:bg-surface hover:text-ink'}`}
+            key={value}
+            onClick={() => onPeriodChange(value)}
+            type="button"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
           id="stats-start"
@@ -536,7 +611,7 @@ function StatisticsView({
       ) : (
         <div className="grid gap-5 lg:grid-cols-2">
           {statistics.map((stat) => {
-            const habit = habits.find((item) => item.id === stat.habitId)
+            const habit = visibleHabits.find((item) => item.id === stat.habitId)
             if (!habit) return null
             return (
               <section
@@ -547,6 +622,17 @@ function StatisticsView({
                 <p className="mt-1 text-sm text-ink-muted">
                   {formatHabitSummary(habit)}
                 </p>
+                {logs.some(
+                  (log) =>
+                    log.habitId === habit.id &&
+                    log.source === 'koreader' &&
+                    log.localDate >= range.startDate &&
+                    log.localDate <= range.endDate,
+                ) ? (
+                  <span className="mt-3 inline-flex rounded-full bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand">
+                    Datos de KOReader
+                  </span>
+                ) : null}
                 <dl className="mt-5 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                   <div>
                     <dt className="text-ink-muted">Racha actual</dt>
@@ -571,7 +657,7 @@ function StatisticsView({
                   <div>
                     <dt className="text-ink-muted">Total</dt>
                     <dd className="mt-1 text-xl font-bold text-ink">
-                      {stat.totalValue}
+                      {formatStatisticTotal(habit, stat.totalValue)}
                     </dd>
                   </div>
                 </dl>
@@ -870,6 +956,7 @@ function RecurringTasksView({
 
 export function HabitsPage() {
   const habits = useHabitStore((state) => state.habits)
+  const logs = useHabitStore((state) => state.logs)
   const occurrences = useHabitStore((state) => state.occurrences)
   const statistics = useHabitStore((state) => state.statistics)
   const range = useHabitStore((state) => state.range)
@@ -907,6 +994,7 @@ export function HabitsPage() {
   const [relationFilter, setRelationFilter] = useState<HabitRelationFilter>('all')
   const [trackingFilter, setTrackingFilter] = useState<HabitTrackingFilter>('all')
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [statisticsPeriod, setStatisticsPeriod] = useState<'day' | 'month' | 'year'>('day')
 
   useEffect(() => {
     void loadCatalog()
@@ -917,15 +1005,6 @@ export function HabitsPage() {
     if (view === 'history' && range.startDate === range.endDate) {
       void loadRange(
         { startDate: getPreviousDate(selectedDate), endDate: selectedDate },
-        true,
-      )
-    }
-    if (view === 'statistics' && range.startDate === range.endDate) {
-      void loadRange(
-        {
-          startDate: getPreviousDate(getPreviousDate(selectedDate)),
-          endDate: selectedDate,
-        },
         true,
       )
     }
@@ -958,11 +1037,19 @@ export function HabitsPage() {
   const currentDateLabel = formatDate(selectedDate)
 
   const navigateDate = (date: string) => {
+    if (view === 'statistics') setStatisticsPeriod('day')
     setRange({ startDate: date, endDate: date })
     void load(date, true)
   }
+  const changeStatisticsPeriod = (period: 'day' | 'month' | 'year') => {
+    setStatisticsPeriod(period)
+    const nextRange = getStatisticsRange(selectedDate, period)
+    setRange(nextRange)
+    void loadRange(nextRange, true)
+  }
   const changeRange = (field: 'startDate' | 'endDate', value: string) => {
     const nextRange = { ...range, [field]: value }
+    if (view === 'statistics') setStatisticsPeriod('day')
     setRange(nextRange)
     if (value && nextRange.startDate <= nextRange.endDate)
       void loadRange(nextRange, true)
@@ -1285,10 +1372,15 @@ export function HabitsPage() {
       ) : null}
       {!formOpen && !isLoading && view === 'statistics' ? (
         <StatisticsView
-          habits={visibleHabits}
+          habits={habits}
+          visibleHabits={visibleHabits}
+          logs={logs}
           range={range}
           statistics={statistics}
+          period={statisticsPeriod}
+          onConfigured={() => void loadRange(range, true)}
           onDateChange={changeRange}
+          onPeriodChange={changeStatisticsPeriod}
         />
       ) : null}
       {!formOpen && view === 'tasks' ? (

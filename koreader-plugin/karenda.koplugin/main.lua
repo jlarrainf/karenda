@@ -12,11 +12,15 @@ local PairingClient = require("pairing_client")
 local Runtime = require("runtime")
 local SnapshotStore = require("snapshot_store")
 local SyncService = require("sync_service")
+local StatsApiClient = require("stats_api_client")
+local StatisticsCollector = require("statistics_collector")
+local AnkiStatsAdapter = require("anki_stats_adapter")
+local StatsSyncStore = require("stats_sync_store")
+local StatsSyncService = require("stats_sync_service")
 local CalendarView = require("calendar_view")
 local NotesView = require("notes_view")
 local SimpleUIIntegration = require("simpleui_integration")
-local ScreensaverConfig = require("screensaver_config")
-local ScreensaverIntegration = require("screensaver_integration")
+local ContextBridge = require("context_bridge")
 
 local Karenda = WidgetContainer:extend{
     name = "karenda",
@@ -27,7 +31,6 @@ function Karenda:init()
     self.config = Config
     self.store = SnapshotStore:new()
     self.activeKarendaView = nil
-    ScreensaverIntegration.ensureInstalled()
     local transport = HttpTransport:new()
     self.apiClient = ApiClient:new{ transport = transport }
     self.pairingClient = PairingClient:new{ transport = transport }
@@ -36,6 +39,13 @@ function Karenda:init()
         store = self.store,
         apiClient = self.apiClient,
         runtime = Runtime,
+    }
+    self.statsSyncService = StatsSyncService:new{
+        config = self.config,
+        store = StatsSyncStore:new(),
+        apiClient = StatsApiClient:new{ transport = transport },
+        collector = StatisticsCollector:new(),
+        anki = AnkiStatsAdapter:new(),
     }
     SimpleUIIntegration.register(self)
     self.ui.menu:registerToMainMenu(self)
@@ -128,7 +138,6 @@ function Karenda:showPairingDialog()
 end
 
 function Karenda:addToMainMenu(menu_items)
-    ScreensaverConfig.addToMainMenu(menu_items, self.ui)
     menu_items.karenda = {
         text = _("Karenda"),
         sorting_hint = "more_tools",
@@ -142,9 +151,20 @@ function Karenda:addToMainMenu(menu_items)
             {
                 text = _("Sincronizar ahora"),
                 callback = function()
-                    self:sync(function(result)
+                    self:syncAll(function(result)
                         UIManager:show(InfoMessage:new{
                             text = result.message or _("No se pudo sincronizar Karenda."),
+                            timeout = 4,
+                        })
+                    end)
+                end,
+            },
+            {
+                text = _("Sincronizar estadísticas"),
+                callback = function()
+                    self:syncStats(function(result)
+                        UIManager:show(InfoMessage:new{
+                            text = result.message or _("No se pudieron sincronizar las estadísticas."),
                             timeout = 4,
                         })
                     end)
@@ -158,12 +178,45 @@ function Karenda:sync(callback)
     return self.syncService:sync("manual", callback)
 end
 
-function Karenda:refreshView(view, viewModule, refresh_scope)
+function Karenda:syncStats(callback)
+    return self.statsSyncService:sync("manual", callback)
+end
+
+function Karenda:syncAll(callback)
+    callback = callback or function() end
+    local calendar_result
+    local stats_result
+    local function finish()
+        if not calendar_result or not stats_result then return end
+        local calendar_ok = calendar_result.kind == "updated" or calendar_result.kind == "not_modified"
+        local stats_ok = stats_result.kind == "updated" or stats_result.kind == "partial" or stats_result.kind == "not_configured"
+        if calendar_ok and stats_ok then
+            callback({ kind = "updated", message = "Se actualizaron el calendario y las estadísticas." })
+        elseif calendar_ok then
+            callback({ kind = "partial", message = "El calendario se actualizó, pero las estadísticas no." })
+        else
+            callback({ kind = "error", message = calendar_result.message or "No se pudo sincronizar Karenda." })
+        end
+    end
+    self:sync(function(result)
+        calendar_result = result
+        finish()
+    end)
+    self:syncStats(function(result)
+        stats_result = result
+        finish()
+    end)
+end
+
+function Karenda:refreshView(view, viewModule, refresh_scope, options)
     if self.activeKarendaView ~= view then
         return false
     end
 
     refresh_scope = refresh_scope or "Karenda"
+    if options == nil and view and type(view.getViewOptions) == "function" then
+        options = view:getViewOptions()
+    end
     local loading = InfoMessage:new{
         text = "Actualizando " .. refresh_scope .. "…",
         dismissable = false,
@@ -184,7 +237,13 @@ function Karenda:refreshView(view, viewModule, refresh_scope)
         end
 
         if result.kind == "updated" or result.kind == "not_modified" then
-            viewModule.show(self, result.snapshot)
+            viewModule.show(
+                self,
+                result.snapshot,
+                view.simpleuiPlugin,
+                view.fm,
+                options
+            )
             local completion_text
             if result.kind == "updated" then
                 completion_text = "Se actualizaron el calendario y las notas."
@@ -207,16 +266,17 @@ function Karenda:refreshView(view, viewModule, refresh_scope)
     return started
 end
 
-function Karenda:showKarendaView(view, kind, simpleui_plugin, fm)
+function Karenda:showKarendaView(view, kind, simpleui_plugin, fm, navbar_action_id)
     if self.activeKarendaView and self.activeKarendaView ~= view then
         UIManager:close(self.activeKarendaView)
     end
     self.activeKarendaView = view
-    self:setVisibleContext(kind)
+    self:setVisibleContext(kind, nil, view)
     SimpleUIIntegration.trackIndicator(
         simpleui_plugin or SimpleUIIntegration.resolveSimpleUIPlugin(fm),
         kind,
-        view
+        view,
+        navbar_action_id
     )
 end
 
@@ -225,13 +285,13 @@ function Karenda:onKarendaViewClosed(view)
         return
     end
     self.activeKarendaView = nil
-    self:clearVisibleContext()
+    self:clearVisibleContext(view)
 end
 
-function Karenda:openSnapshot(view_module, simpleui_plugin, fm)
+function Karenda:openSnapshot(view_module, simpleui_plugin, fm, options)
     local cached = self:getCachedSnapshot()
     if cached and cached.snapshot then
-        return view_module.show(self, cached.snapshot, simpleui_plugin, fm)
+        return view_module.show(self, cached.snapshot, simpleui_plugin, fm, options)
     end
 
     local loading = InfoMessage:new{
@@ -250,7 +310,7 @@ function Karenda:openSnapshot(view_module, simpleui_plugin, fm)
     local started = self:sync(function(result)
         closeLoading()
         if result.kind == "updated" or result.kind == "not_modified" then
-            view_module.show(self, result.snapshot, simpleui_plugin, fm)
+            view_module.show(self, result.snapshot, simpleui_plugin, fm, options)
             return
         end
 
@@ -274,9 +334,44 @@ function Karenda:openNotes(simpleui_plugin, fm)
     return self:openSnapshot(NotesView, simpleui_plugin, fm)
 end
 
+function Karenda:openKarenda(simpleui_plugin, fm)
+    return self:openSnapshot(
+        CalendarView,
+        simpleui_plugin,
+        fm,
+        {
+            combined = true,
+            navbar_action_id = "karenda",
+        }
+    )
+end
+
+function Karenda:switchKarendaView(view, kind, simpleui_plugin, fm)
+    if self.activeKarendaView ~= view then
+        return false
+    end
+    if kind ~= "calendar" and kind ~= "note" then
+        return false
+    end
+
+    local view_module = kind == "calendar" and CalendarView or NotesView
+    local options = {
+        combined = true,
+        navbar_action_id = "karenda",
+    }
+    local cached = self:getCachedSnapshot()
+    if cached and cached.snapshot then
+        view.navbarNavigationInProgress = true
+        view_module.show(self, cached.snapshot, simpleui_plugin, fm, options)
+        return true
+    end
+
+    return self:openSnapshot(view_module, simpleui_plugin, fm, options)
+end
+
 function Karenda:onResume()
-    ScreensaverIntegration.ensureInstalled()
     self.syncService:onResume()
+    self.statsSyncService:onResume()
     if self.activeKarendaView and self.activeKarendaView.onResume then
         self.activeKarendaView:onResume()
     end
@@ -286,12 +381,19 @@ function Karenda:getCachedSnapshot()
     return self.store:load()
 end
 
-function Karenda:setVisibleContext(kind, noteId)
-    return Runtime.setContext(kind, noteId)
+function Karenda:setVisibleContext(kind, noteId, owner)
+    owner = owner or self.activeKarendaView
+    local ok = Runtime.setContext(kind, noteId)
+    if not ok then
+        return false
+    end
+    ContextBridge.setContext(kind, noteId, owner)
+    return true
 end
 
-function Karenda:clearVisibleContext()
+function Karenda:clearVisibleContext(owner)
     Runtime.clearContext()
+    ContextBridge.clearContext(owner)
 end
 
 function Karenda:getVisibleContext()

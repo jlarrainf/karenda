@@ -54,18 +54,21 @@ function log(
   localDate: string,
   value: number,
   status: HabitLog['status'] = 'completed',
+  overrides: Partial<HabitLog> = {},
 ): HabitLog {
   return {
     createdAt: '2026-09-01T10:00:00.000Z',
     externalId: null,
     habitId: habit.id,
     id: `log-${localDate}`,
+    koreaderLinkId: null,
     localDate,
     ownerId: habit.ownerId,
     source: 'manual',
     status,
     updatedAt: '2026-09-01T10:00:00.000Z',
     value,
+    ...overrides,
   }
 }
 
@@ -148,5 +151,57 @@ describe('habit evaluation', () => {
     expect(statistics.achievedPeriods).toBe(1)
     expect(statistics.totalPeriods).toBe(1)
     expect(statistics.completionPercentage).toBe(100)
+  })
+
+  it('does not double count a manual value when KOReader imports that date', () => {
+    const results = [occurrence('2026-09-01')]
+    results[0] = { ...results[0], status: 'partial', value: 20 }
+    const statistics = calculateHabitStatistics(
+      habit,
+      results,
+      [
+        log('2026-09-01', 10),
+        log('2026-09-01', 20, 'partial', {
+          externalId: 'link:2026-09-01',
+          koreaderLinkId: 'link-1',
+          source: 'koreader',
+        }),
+      ],
+      '2026-09-01',
+      '2026-09-01',
+      '2026-09-02',
+    )
+
+    expect(statistics.totalValue).toBe(20)
+  })
+
+  it('uses the canonical source when calculating quota streaks', () => {
+    const quotaHabit: Habit = {
+      ...habit,
+      evaluationMode: 'period_quota',
+      quotaPeriod: 'week',
+      goalValue: 20,
+      trackingType: 'count',
+      unit: 'páginas',
+    }
+    const statistics = calculateHabitStatistics(
+      quotaHabit,
+      [],
+      [
+        log('2026-09-01', 10),
+        log('2026-09-01', 20, 'completed', {
+          externalId: 'link:2026-09-01',
+          koreaderLinkId: 'link-1',
+          source: 'koreader',
+          updatedAt: '2026-09-02T10:00:00.000Z',
+        }),
+      ],
+      '2026-09-01',
+      '2026-09-07',
+      '2026-09-08',
+    )
+
+    expect(statistics.achievedPeriods).toBe(1)
+    expect(statistics.bestStreak).toBe(1)
   })
 })

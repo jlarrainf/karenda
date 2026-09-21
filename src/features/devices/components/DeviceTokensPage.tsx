@@ -12,11 +12,13 @@ import {
 import type {
   CreatedPairingCode,
   CreatedDeviceToken,
+  DeviceTokenScope,
   DeviceTokenMetadata,
 } from '../../../types/deviceToken.ts'
 
 type PendingAction =
   | { kind: 'regenerate'; token: DeviceTokenMetadata }
+  | { kind: 'enable_stats'; token: DeviceTokenMetadata }
   | { kind: 'revoke'; token: DeviceTokenMetadata }
   | null
 
@@ -40,7 +42,9 @@ function formatDate(value: string | null): string {
 }
 
 function formatScope(scope: string): string {
-  return scope === 'read:snapshot' ? 'Lectura del calendario' : 'Escritura futura'
+  if (scope === 'read:snapshot') return 'Lectura del calendario'
+  if (scope === 'write:habit_logs') return 'Escritura de hábitos desde KOReader'
+  return 'Escritura futura'
 }
 
 function getTokenStatus(token: DeviceTokenMetadata): {
@@ -176,10 +180,12 @@ function TokenSecretPanel({
 function DeviceTokenRow({
   token,
   onRegenerate,
+  onEnableStats,
   onRevoke,
 }: {
   token: DeviceTokenMetadata
   onRegenerate: () => void
+  onEnableStats?: () => void
   onRevoke: () => void
 }) {
   const status = getTokenStatus(token)
@@ -215,6 +221,11 @@ function DeviceTokenRow({
           </dl>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
+          {onEnableStats ? (
+            <Button onClick={onEnableStats} variant="secondary">
+              Habilitar estadísticas
+            </Button>
+          ) : null}
           <Button onClick={onRegenerate} variant="secondary">
             Regenerar token
           </Button>
@@ -239,6 +250,7 @@ export function DeviceTokensPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [label, setLabel] = useState('Kindle')
+  const [includeStats, setIncludeStats] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [createdPairingCode, setCreatedPairingCode] =
     useState<CreatedPairingCode | null>(null)
@@ -283,7 +295,10 @@ export function DeviceTokensPage() {
     setError(null)
 
     try {
-      const result = await createDevicePairingCodeRequest(normalizedLabel)
+      const result = await createDevicePairingCodeRequest(
+        normalizedLabel,
+        includeStats ? ['read:snapshot', 'write:habit_logs'] : ['read:snapshot'],
+      )
       setCreatedPairingCode(result)
       setPairingCopyStatus('idle')
       setCreatedToken(null)
@@ -338,10 +353,18 @@ export function DeviceTokensPage() {
       if (pendingAction.kind === 'revoke') {
         await revokeDeviceToken(pendingAction.token.id)
       } else {
+        const scopes: DeviceTokenScope[] = pendingAction.kind === 'enable_stats'
+          ? Array.from(
+              new Set<DeviceTokenScope>([
+                ...pendingAction.token.scopes,
+                'write:habit_logs',
+              ]),
+            )
+          : pendingAction.token.scopes
         const result = await regenerateDeviceToken(
           pendingAction.token.id,
           pendingAction.token.label,
-          pendingAction.token.scopes,
+          scopes,
         )
         setCreatedToken(result)
         setCopyStatus('idle')
@@ -358,7 +381,9 @@ export function DeviceTokensPage() {
     }
   }
 
-  const confirmationIsRegeneration = pendingAction?.kind === 'regenerate'
+  const confirmationIsRegeneration =
+    pendingAction?.kind === 'regenerate' || pendingAction?.kind === 'enable_stats'
+  const confirmationEnablesStats = pendingAction?.kind === 'enable_stats'
 
   return (
     <section aria-labelledby="device-tokens-title" className="space-y-8">
@@ -441,9 +466,23 @@ export function DeviceTokensPage() {
                 value={label}
               />
               <p className="mt-2 text-xs leading-5 text-ink-muted">
-                Ejemplo: Kindle de estudio. El permiso será solo de lectura.
+                Ejemplo: Kindle de estudio. Puedes habilitar la sincronización diaria de hábitos.
               </p>
             </div>
+            <label className="flex items-start gap-3 text-sm leading-6 text-ink">
+              <input
+                checked={includeStats}
+                className="mt-1 size-4 accent-brand"
+                onChange={(event) => setIncludeStats(event.target.checked)}
+                type="checkbox"
+              />
+              <span>
+                <span className="font-semibold">Sincronizar estadísticas y hábitos</span>
+                <span className="block text-xs text-ink-muted">
+                  Permite que este Kindle envíe páginas, tiempo, libros terminados y Anki.
+                </span>
+              </span>
+            </label>
             <Button isLoading={isCreating} loadingLabel="Generando…" type="submit">
               Generar código
             </Button>
@@ -499,6 +538,14 @@ export function DeviceTokensPage() {
                     setActionError(null)
                     setPendingAction({ kind: 'regenerate', token })
                   }}
+                  onEnableStats={
+                    token.scopes.includes('write:habit_logs')
+                      ? undefined
+                      : () => {
+                          setActionError(null)
+                          setPendingAction({ kind: 'enable_stats', token })
+                        }
+                  }
                   onRevoke={() => {
                     setActionError(null)
                     setPendingAction({ kind: 'revoke', token })
@@ -512,10 +559,18 @@ export function DeviceTokensPage() {
       </div>
 
       <ConfirmDialog
-        confirmLabel={confirmationIsRegeneration ? 'Regenerar token' : 'Revocar token'}
+        confirmLabel={
+          confirmationEnablesStats
+            ? 'Habilitar estadísticas'
+            : confirmationIsRegeneration
+              ? 'Regenerar token'
+              : 'Revocar token'
+        }
         description={
           confirmationIsRegeneration
-            ? 'El token actual dejará de funcionar inmediatamente y recibirás un secreto nuevo para copiar a KOReader.'
+            ? confirmationEnablesStats
+              ? 'El token actual será reemplazado por uno con permiso para sincronizar hábitos. Tendrás que copiar el nuevo secreto a KOReader.'
+              : 'El token actual dejará de funcionar inmediatamente y recibirás un secreto nuevo para copiar a KOReader.'
             : 'El token dejará de funcionar inmediatamente. Esta acción no elimina tus eventos ni tus notas.'
         }
         error={actionError}

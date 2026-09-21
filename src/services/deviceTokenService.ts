@@ -51,10 +51,13 @@ export function createDeviceToken(
   )
 }
 
-export function createDevicePairingCode(label: string): Promise<CreatedPairingCode> {
+export function createDevicePairingCode(
+  label: string,
+  scopes: DeviceTokenScope[] = ['read:snapshot'],
+): Promise<CreatedPairingCode> {
   return invoke<CreatedPairingCode>(
     'POST',
-    { action: 'create_pairing', label },
+    { action: 'create_pairing', label, scopes },
     'No se pudo generar el código de emparejamiento.',
   )
 }
