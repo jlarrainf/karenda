@@ -216,11 +216,12 @@ credenciales de prueba.
 | RF-A-04 | Estado de conectividad y feedback de mutaciones | Test de componente; dispositivo sin red pendiente | Parcial |
 | RF-A-05 a RF-A-06 | Adaptador de botón Atrás y apertura externa | Smoke de navegación Android | Planificado |
 | RF-A-07 | Configuración pública y secretos fuera del código | Revisión estática del bundle; auditoría final pendiente | Parcial |
-| RF-A-08 | Persistencia web temporal documentada; puente seguro pendiente | Revisión de sesión en dispositivo | Planificado |
+| RF-A-08 | Sesión nativa persistida mediante `capacitor-secure-storage-plugin` (Android Keystore/SharedPreferences cifradas) | Typecheck, build Android y revisión de plugin | Automatizado + estático |
 | RF-A-09 | Encabezado compacto con ocultación al desplazarse y cubierta sólida de barra de estado | Test de visibilidad del layout; smoke Android pendiente | Parcial |
 | RF-A-10 | Cajón móvil bajo el área segura, cubierta sólida y solo rutas secundarias | Test del cajón; smoke Android pendiente | Parcial |
 | RF-A-11 | Flujo IA de eventos rápido/guiado, preguntas, `Otro` y propuestas de catálogo | `AiEventPromptPanel.test.tsx`, `aiEventService.test.ts`, typecheck y build Android | Automatizado + estático |
 | RF-A-12 | Ruta Canvas, bandeja de revisión y sincronización manual del calendario dentro de los assets Capacitor | `CanvasPage.test.tsx`, `CalendarPage.test.tsx`, `verify-android-canvas.mjs`, `npm run android:build` y APK debug | Automatizado + build Android |
+| RF-A-13 | Recuperación explícita de sesión no comprobable y retorno a la ruta protegida | `ProtectedRoute.test.tsx`, `sessionStore.test.ts`, typecheck y build Android | Automatizado + build Android |
 | RNF-A-01 a RNF-A-03 | `capacitor.config.ts`, `webDir` local y `android/` | Lint, typecheck, build y `cap doctor` | Automatizado |
 | RNF-A-04 a RNF-A-06 | HTTPS, `SystemBars` con variables CSS de insets, `applicationId` provisional y firma fuera del repositorio | Lint, build Android y auditoría de release pendiente | Parcial |
 | CA-A-01 | Shell Android con assets locales | APK debug generado; instalación pendiente | Parcial |
@@ -230,21 +231,26 @@ credenciales de prueba.
 | CA-A-09 | Cajón móvil respeta la barra de estado y evita repetir navegación principal | Test del layout; smoke físico pendiente | Parcial |
 | CA-A-10 | Preparación y confirmación de eventos asistidos desde Android | Tests de servicio/panel, build web y sincronización de Capacitor | Automatizado + parcial |
 | CA-A-11 | Paridad Canvas en APK local, incluyendo revisión, color de ramo y acción manual del calendario | `CanvasPage.test.tsx`, `CalendarPage.test.tsx`, `verify-android-canvas.mjs` y build Gradle | Automatizado + build Android |
+| CA-A-12 | Botón de inicio de sesión nuevamente, limpieza de sesión local y retorno al destino protegido | `ProtectedRoute.test.tsx`, `sessionStore.test.tsx` y build Android | Automatizado + build Android |
 
 ## Sincronización Canvas UC
 
 | Requisito | Implementación | Verificación | Estado |
 | --- | --- | --- | --- |
 | RF-C-01 a RF-C-02 | `karenda-canvas-connection`, AES-GCM, secretos server-side y allowlist por UUID | Funciones activas en producción, llamadas anónimas `401`, cero credenciales iniciales y tabla privada | Desplegado |
-| RF-C-03 a RF-C-08 | `karenda-canvas-sync`, tablas de vínculos, candidatos ±7 días y `CanvasPage` | `reconciliation.test.ts`, `CanvasPage.test.tsx`, migraciones aplicadas en producción | Desplegado + automatizado |
+| RF-C-03 a RF-C-08 | `karenda-canvas-sync`, tareas/discusiones/eventos, planificador resumido y contenido Canvas, tablas de vínculos, candidatos ±7 días y `CanvasPage` | `reconciliation.test.ts`, `CanvasPage.test.tsx`, migraciones aplicadas en producción | Desplegado + automatizado; smoke real pendiente |
 | RF-C-09 a RF-C-11 | Comparación base/local/remoto, conflictos y completitud monotónica | Tests unitarios de reconciliación y estado; piloto real pendiente | Automatizado + parcial |
-| RF-C-12 a RF-C-15 | Sanitización, esquema IA estricto, hashes, propuestas y avisos de retiro | Tests de HTML malicioso, salida IA inválida y deduplicación | Automatizado + estático |
+| RF-C-12 a RF-C-15 | Sanitización, filtro de indicaciones académicas, esquema IA estricto, hashes, propuestas y avisos de retiro | `canvasContent.test.ts`, tests de HTML malicioso, salida IA inválida y deduplicación | Automatizado + estático |
 | RF-C-16 a RF-C-20 | Ejecuciones idempotentes, `429`, vencimiento, desconexión y programador horario | Índice exclusivo, funciones activas y schedule `0 * * * *` en producción | Desplegado |
 | RF-C-21 | Categoría editable, procedencia y enlace Canvas en `EventDetail` | `EventDetail.test.tsx`, typecheck y build | Automatizado |
 | RF-C-22 | Estado de cursos Canvas en asignaturas, desvinculación reversible y confirmación | `SubjectsPage.test.tsx`, `SubjectForm.test.tsx`, migración/RPC RLS | Desplegado + automatizado |
 | RF-C-23 | Acción de sincronización Canvas en el encabezado del calendario | `CalendarPage.test.tsx`, build y E2E público | Desplegado + automatizado |
-| RF-C-24 | Recursos secundarios bloqueados producen ejecución parcial | `karenda-canvas-sync`, despliegue de función y tests de regresión del frontend | Desplegado + función compilada; smoke real pendiente |
+| RF-C-24 | Recursos secundarios bloqueados producen ejecución parcial; colecciones ausentes no generan avisos | `karenda-canvas-sync`, `canvasWarnings.test.ts`, despliegue de función y tests de regresión del frontend | Automatizado + desplegado; smoke real pendiente |
 | RF-C-25 | Texto HTML remoto se normaliza a Unicode bien formado antes de JSON/IA | `canvasText.test.ts`, función Canvas | Desplegado + automatizado; smoke real pendiente |
-| RF-C-26 | Anuncios resuelven ramo por curso y extraen ramo, fecha, hora, duración y abreviación | `canvasAssessment.test.ts`, `karenda-canvas-sync`, migración `20260905100000` | Desplegado en producción; piloto real pendiente |
+| RF-C-26 | Anuncios resuelven ramo por curso, filtran indicaciones académicas y extraen fecha, hora, duración, sala y abreviación | `canvasAssessment.test.ts`, `canvasContent.test.ts`, `karenda-canvas-sync`, migración `20260905100000` | Desplegado en producción; piloto real pendiente |
 | RF-C-27 | Bandeja muestra categoría, código, rango temporal y color del ramo | `CanvasPage.test.tsx`, `CanvasPage` | Desplegado en producción; piloto real pendiente |
-| CA-C-01 a CA-C-17 | Flujo del piloto integrado mediante PR #2 y desplegado en InsForge | 172 tests, lint, typecheck, build, E2E público de producción, migración/RLS y smoke anónimo de función; E2E autenticado y piloto real pendientes | Parcial |
+| RF-C-28 | Ventana histórica configurable por conexión entre 7 y 365 días, con cursor incremental reiniciado al cambiarla | `CanvasPage.test.tsx`, migración y función `set_lookback` | Automatizado + desplegado |
+| RF-C-29 | Avisos sanitizados de recursos bloqueados visibles en el historial aunque la bandeja no tenga propuestas | `CanvasPage.test.tsx`, conteos de `karenda-canvas-sync` | Automatizado + desplegado |
+| RF-C-30 | Sesión móvil renovable antes de consultar Canvas y mensaje diferenciado de sesión frente a red | `authService.test.ts`, cliente InsForge y build Android | Automatizado + build Android |
+| RF-C-31 | Allowlist CORS de las funciones Canvas incluye el origen fijo `https://localhost` de Capacitor | `verify-android-canvas.mjs`, preflight HTTP de las tres funciones y despliegue | Automatizado + desplegado |
+| CA-C-01 a CA-C-21 | Flujo del piloto integrado, con ventana histórica, avisos de ejecución, sesión móvil y CORS Android | Tests, lint, typecheck, build Android, preflight y smoke anónimo; E2E autenticado y piloto real pendientes | Parcial |

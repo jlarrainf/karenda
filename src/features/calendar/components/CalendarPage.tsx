@@ -353,10 +353,15 @@ export function CalendarPage({
     setCanvasSyncFeedback(null)
     try {
       const result = await synchronizeCanvas()
+      const warningMessages = Array.isArray(result.counts.warningMessages)
+        ? result.counts.warningMessages.filter((warning): warning is string => typeof warning === 'string')
+        : []
       setCanvasSyncFeedback({
         kind: 'success',
         message: result.status === 'partial'
-          ? 'Canvas se sincronizó con avisos. Revisa la bandeja de revisión.'
+          ? warningMessages.length > 0
+            ? `Canvas se sincronizó con avisos: ${warningMessages.join(' ')}`
+            : 'Canvas se sincronizó con avisos. Consulta el historial de Canvas para conocer el detalle.'
           : 'Canvas se sincronizó correctamente.',
       })
       await refreshEvents()

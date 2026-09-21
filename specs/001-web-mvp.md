@@ -167,7 +167,10 @@ notas no se asocian directamente a eventos en este MVP.
   deberá mostrar una interfaz de autenticación en español. Si una sesión
   vigente deja de ser válida mientras se usa una vista protegida, el sistema
   deberá limpiar el estado protegido, redirigir a `/login` y conservar el
-  destino solicitado para volver después de autenticarse.
+  destino solicitado para volver después de autenticarse. Si la comprobación
+  falla antes de determinar si la sesión sigue vigente, deberá ofrecer tanto
+  reintentar como iniciar sesión nuevamente, limpiando la sesión local antes
+  de abrir el formulario.
 - **RF-03 [EARS: ubicuo]:** El sistema deberá asociar cada asignatura, grupo,
   evento y nota a su cuenta propietaria y deberá consultar, crear, modificar o
   eliminar únicamente registros de esa cuenta.
@@ -366,7 +369,8 @@ los criterios siguientes:
   sesión autenticada se conserva tras recargar la misma pestaña; una sesión no
   autenticada no puede consultar el calendario protegido y, si la sesión expira
   durante una vista protegida, la aplicación vuelve a `/login` conservando el
-  destino solicitado.
+  destino solicitado. Ante una comprobación fallida, la persona puede limpiar
+  la sesión local e iniciar sesión nuevamente desde la misma pantalla.
 - **CA-02:** Una cuenta puede crear, editar y consultar asignaturas con nombre,
   sigla, abreviación y color; los cambios se reflejan en el calendario y en los
   filtros.

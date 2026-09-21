@@ -49,9 +49,10 @@ proyecto InsForge configurado para Karenda.
 - **RF-A-07:** El APK no deberá contener claves administrativas, secretos de
   funciones ni credenciales distintas de las variables públicas necesarias para
   inicializar el cliente de usuario.
-- **RF-A-08:** La persistencia de sesión que se habilite para producción deberá
-  usar almacenamiento seguro del sistema; el almacenamiento web se considera
-  únicamente una compatibilidad temporal del spike.
+- **RF-A-08:** La persistencia de sesión de producción deberá usar el plugin
+  `capacitor-secure-storage-plugin`, respaldado por Android Keystore y
+  SharedPreferences cifradas. El almacenamiento web se conserva únicamente
+  como compatibilidad del navegador y nunca guarda la sesión nativa.
 - **RF-A-09:** En las rutas autenticadas, el encabezado compacto deberá seguir
   continuamente el gesto al desplazar hacia abajo o hacia arriba, ocultándose o
   reapareciendo sin saltos. El área de la barra de estado deberá mantener un
@@ -70,6 +71,11 @@ proyecto InsForge configurado para Karenda.
   las categorías canónicas mediante los mismos contratos de InsForge que la
   web. El calendario deberá mostrar `Sincronizar Canvas` cuando corresponda y
   actualizar los eventos visibles después de la ejecución.
+- **RF-A-13:** Mientras una ruta protegida no pueda comprobar la sesión, Android
+  deberá ofrecer `Iniciar sesión nuevamente` además de reintentar la comprobación.
+  Esa acción limpiará el token en memoria y en el almacenamiento seguro, abrirá
+  `/login` y conservará la ruta protegida solicitada para volver a ella después
+  de autenticar.
 
 ## 4. Requisitos No Funcionales
 
@@ -145,6 +151,10 @@ la lógica de dominio.
   autenticada puede revisar un curso, ver el color y nombre de su asignatura,
   confirmar una propuesta con categoría y abreviación, y consultar el evento
   actualizado sin abrir la web publicada.
+- **CA-A-12:** Si Android no puede comprobar una sesión, la pantalla ofrece
+  `Iniciar sesión nuevamente`; al usarla, elimina la sesión inválida, muestra
+  el formulario de acceso y vuelve a la ruta protegida después de un login
+  exitoso.
 
 ## 8. Verificación Requerida
 

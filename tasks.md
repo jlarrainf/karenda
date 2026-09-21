@@ -319,3 +319,45 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   ramo de origen y color en la bandeja; aplicar la migración y verificar el
   despliegue real. El piloto autenticado queda como verificación manual del
   usuario porque requiere un token nuevo ingresado en la pantalla segura.
+
+- [x] **Tarea 125: Hacer renovable la sesión de Canvas en Android** (20-30 min).
+  Usar el flujo móvil de InsForge, restaurar el refresh token desde almacenamiento
+  seguro y renovar el access token antes de consultar rutas autenticadas.
+- [x] **Tarea 126: Configurar ventana histórica y avisos de sincronización**
+  (20-30 min). Permitir 7–365 días por conexión, reiniciar el cursor al cambiar
+  el periodo y mostrar avisos parciales en el historial aunque la bandeja esté vacía.
+- [ ] **Tarea 127: Validar APK y sesión en dispositivo** (20-30 min). Instalar la
+  APK unificada, iniciar sesión con la cuenta Karenda y confirmar que Canvas se
+  mantiene disponible tras expirar/renovar la sesión.
+- [x] **Tarea 128: Permitir Canvas desde el WebView Android** (20-30 min).
+  Añadir `https://localhost` a la allowlist CORS de conexión, sincronización y
+  revisión; desplegar las tres funciones y cubrir la regresión en la
+  verificación del empaquetado.
+- [x] **Tarea 129: Detallar avisos de colecciones Canvas bloqueadas** (20-30 min).
+  Identificar permisos, recursos inexistentes y respuestas temporales sin
+  exponer detalles remotos, y normalizar nombres de cursos mal formados.
+- [x] **Tarea 130: Tratar colecciones Canvas ausentes como opcionales** (15-20 min).
+  No marcar como parcial una ejecución cuando Canvas responde `404` para un
+  endpoint secundario no habilitado en el curso.
+- [x] **Tarea 131: Limitar Canvas a fuentes autorizadas** (20-30 min). No
+  consultar endpoints de quizzes que la cuenta piloto no puede leer; extraer
+  fechas e indicaciones desde tareas, discusiones, eventos, anuncios y páginas,
+  y reconocer un quiz cuando Canvas lo incluye dentro de una tarea.
+- [x] **Tarea 132: Permitir iniciar sesión nuevamente desde Android** (20-30 min).
+  Limpiar tokens inválidos en memoria y almacenamiento seguro, ofrecer una
+  acción accesible desde el error de sesión y conservar la ruta de retorno.
+- [x] **Tarea 133: Usar el planificador como respaldo de evaluaciones** (20-30
+  min). Extraer tipo, título y fecha de tareas o quizzes visibles en
+  `/api/v1/planner/items`, deduplicando los elementos ya recibidos por sus
+  colecciones autorizadas y sin consultar APIs de quizzes.
+- [x] **Tarea 134: Enriquecer eventos desde anuncios con IA** (20-30 min).
+  Pasar contenido HTML sanitizado a un esquema estricto, resolver fechas
+  relativas con la fecha de publicación, conservar un resumen de indicaciones
+  y usar el título/categoría propuestos al revisar el evento.
+- [x] **Tarea 135: Evitar fechas inferidas y filtrar ruido de anuncios** (20-30
+  min). No aplicar al evento una fecha derivada solo del día de publicación,
+  permitir candidatos sin fecha por título/código y conservar únicamente
+  indicaciones académicas relevantes en la descripción.
+- [x] **Tarea 136: Limpiar descripciones Canvas previas** (15-20 min). Detectar
+  cuando el evento contiene únicamente el extracto anterior de Canvas y
+  reemplazarlo, al confirmar la revisión, por el resumen académico filtrado.

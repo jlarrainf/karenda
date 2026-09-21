@@ -233,7 +233,9 @@ el contrato, también la spec correspondiente.
 
 Se usarán stores pequeños y orientados a responsabilidades:
 
-- `sessionStore`: sesión actual, estado de carga, usuario y cierre de sesión.
+- `sessionStore`: sesión actual, estado de carga, usuario, cierre de sesión y
+  recuperación explícita que limpia tokens locales antes de iniciar sesión otra
+  vez.
 - `calendarStore`: vista activa, fecha de referencia, búsqueda, filtros,
   selección de evento y rango visible.
 - `catalogStore`: asignaturas, grupos personales y sus estados de carga/error.
@@ -498,7 +500,9 @@ interfaz informará la falta de conexión y no mostrará escrituras como exitosa
 sin confirmación de InsForge. Una caché cifrada de solo lectura será una fase
 posterior con especificación propia, expiración, limpieza por cuenta y etiqueta
 de antigüedad. Notificaciones, widgets y accesos rápidos también requerirán
-specs independientes.
+specs independientes. Cuando la sesión no pueda comprobarse, la pantalla
+protegida ofrecerá reintentar o limpiar la sesión local e iniciar sesión
+nuevamente, conservando la ruta de retorno.
 
 El trabajo se dividirá en: contrato Android y decisiones de UI; spike de
 Capacitor; shell y build nativo; adaptadores de sesión y plataforma; prueba
@@ -523,7 +527,14 @@ clasifica actividades y genera propuestas. Cursos y elementos nuevos siempre
 requieren revisión; las actualizaciones posteriores aplican una reconciliación
 de tres versiones y solo actualizan automáticamente campos locales intactos.
 Anuncios y páginas pasan por extracción IA estructurada y nunca escriben sin
-confirmación.
+confirmación. La extracción de fechas e indicaciones se limita a tareas,
+discusiones, eventos, el planificador resumido y contenido de Canvas; no
+consulta endpoints de quizzes restringidos. Si una tarea incluye un quiz, se
+clasifica desde esa respuesta y, como respaldo, el planificador aporta solo
+tipo, título y fecha. Los anuncios y páginas pasan además por un filtro de
+indicaciones académicas: solo sala, materia/temario, instrucciones de entrega
+y datos temporales explícitos llegan a la propuesta; el día de publicación no
+puede reemplazar la fecha de un evento existente.
 
 El trabajo se divide en: spec y UI; migración y RLS; cliente Canvas y funciones;
 servicio y store; superficie `/canvas`; procedencia en detalle de evento;
