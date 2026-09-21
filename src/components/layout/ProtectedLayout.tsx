@@ -353,19 +353,27 @@ function SecondaryNavigation({ onNavigate }: { onNavigate?: () => void }) {
   )
 }
 
-function WorkspaceNavigation({ onNavigate }: { onNavigate?: () => void }) {
+function WorkspaceNavigation({
+  onNavigate,
+  showPrimaryNavigation = true,
+}: {
+  onNavigate?: () => void
+  showPrimaryNavigation?: boolean
+}) {
   return (
     <div className="space-y-7">
-      <section aria-label="Accesos principales">
-        <p className="px-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink-subtle">
-          Accesos principales
-        </p>
-        <PrimaryNavigation onNavigate={onNavigate} />
-      </section>
+      {showPrimaryNavigation ? (
+        <section aria-label="Accesos principales">
+          <p className="px-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink-subtle">
+            Accesos principales
+          </p>
+          <PrimaryNavigation onNavigate={onNavigate} />
+        </section>
+      ) : null}
 
       <section
         aria-label="Organización y conexiones"
-        className="border-t border-border pt-6"
+        className={showPrimaryNavigation ? 'border-t border-border pt-6' : undefined}
       >
         <p className="px-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink-subtle">
           Organización y conexiones
@@ -717,7 +725,10 @@ export function ProtectedLayout() {
       </div>
 
       {isDrawerOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden" role="presentation">
+        <div
+          className="fixed inset-x-0 bottom-0 top-[var(--safe-area-inset-top)] z-50 lg:hidden"
+          role="presentation"
+        >
           <button
             aria-label="Cerrar menú"
             className="absolute inset-0 bg-ink/40"
@@ -727,7 +738,7 @@ export function ProtectedLayout() {
           <aside
             aria-labelledby="mobile-navigation-title"
             aria-modal="true"
-            className="relative z-10 flex h-full w-[min(20rem,calc(100%-3rem))] flex-col overflow-y-auto overscroll-contain bg-surface px-4 py-5 shadow-overlay"
+            className="relative z-10 flex h-full w-[min(20rem,calc(100%-3rem))] flex-col overflow-y-auto overscroll-contain bg-surface px-4 pt-5 pb-[calc(1.25rem+var(--safe-area-inset-bottom))] shadow-overlay"
             id="mobile-navigation"
             ref={drawerRef}
             role="dialog"
@@ -750,7 +761,10 @@ export function ProtectedLayout() {
             </div>
 
             <div className="mt-10">
-              <WorkspaceNavigation onNavigate={closeDrawer} />
+              <WorkspaceNavigation
+                onNavigate={closeDrawer}
+                showPrimaryNavigation={false}
+              />
             </div>
 
             <div className="mt-auto pt-8">
