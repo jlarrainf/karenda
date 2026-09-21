@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   aiEventDraftResponseSchema,
   entityIdSchema,
+  eventPatchSchema,
   eventInputSchema,
   eventRangeSchema,
   noteInputSchema,
@@ -143,6 +144,15 @@ describe('domain validation', () => {
         ],
       }).success,
     ).toBe(false)
+  })
+
+  it('keeps all-day events valid when only their status changes', () => {
+    const result = eventPatchSchema.safeParse({ status: 'completed' })
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data).toEqual({ status: 'completed' })
+    }
   })
 
   it('RF-IA-13 accepts an academic draft that proposes a new subject', () => {
