@@ -77,7 +77,27 @@ debe informar sus rutas y no permitir que otro agente los incluya por accidente.
 
 ## 3. Worktrees Para Concurrencia Real
 
-La opción recomendada para dos agentes escritores es un worktree por tarea:
+La opción recomendada para dos agentes escritores es un worktree por tarea.
+Los worktrees no se sincronizan automáticamente: antes de crear cada uno,
+registra en la incidencia, el plan o el Pull Request la ruta, responsable,
+rama, SHA base, destino, dependencias, alcance y estado. Mantén esos datos
+actualizados al pasar de `activa` a `lista para integrar` y luego a
+`integrada`; no hace falta duplicarlo en un registro global.
+
+Las ramas independientes parten del destino actualizado. Una rama dependiente
+parte de la rama de integración que ya contenga sus prerrequisitos confirmados y
+verificados. Los cambios sin commit de un worktree nunca cuentan como base de
+otro. Para combinar tareas, se designa una persona integradora por destino; esa
+persona integra una rama a la vez, revisa el diff completo y verifica el
+candidato combinado. Los demás agentes conservan sus worktrees y actualizan su
+base coordinadamente después de cada merge relevante; no cambian ramas con
+trabajo local pendiente.
+
+Una tarea queda `lista para integrar` solo con su diff revisado, archivos de
+spec/trazabilidad/tests completos, árbol limpio y verificaciones de tarea
+exitosas. Queda `integrada` cuando el destino contiene el cambio y pasan las
+verificaciones sobre el commit resultante. Ver `docs/git-workflow.md`, sección
+10, para los criterios detallados.
 
 ```text
 git fetch --prune origin
@@ -94,8 +114,11 @@ contexto de prueba. Aun así, dos agentes no deben mutar el mismo proyecto o
 rama de InsForge simultáneamente: los worktrees aíslan Git, pero no crean una
 base de datos aislada si ambos apuntan al mismo backend.
 
-Al cerrar una tarea se verifica que el worktree no tenga cambios pendientes y
-se elimina solo después de confirmar que la rama no es base de otra tarea:
+No se cierra ni elimina un worktree solo porque terminó la edición. Se conserva
+hasta confirmar que la rama fue integrada al destino previsto, que pasaron las
+verificaciones sobre el resultado combinado y que ninguna tarea activa depende
+de ella. Si queda trabajo sin commit, el worktree y su estado pertenecen a su
+autor y se mantienen hasta una entrega explícita:
 
 ```text
 git worktree list
