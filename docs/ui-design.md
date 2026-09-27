@@ -567,6 +567,14 @@ de datos.
   `Activo` o `Revocado`, fecha de creación, último uso y scopes. Las acciones
   `Regenerar token` y `Revocar token` serán explícitas; revocar o regenerar pedirá
   confirmación accesible.
+- El scope opcional `write:event_status` no aparecerá en el formulario de
+  vinculación y quedará desactivado por defecto. En la fila de un dispositivo
+  activo sin ese scope, `Permitir cambios de estado` abrirá una confirmación que
+  limitará claramente el permiso a marcar eventos propios como pendientes o
+  completados. Con el permiso activo, la fila mostrará `Retirar permiso`; retirar
+  o concederlo conservará el token actual y el resto de scopes. Los dispositivos
+  revocados o vencidos no ofrecerán estas acciones, y la metadata mostrará
+  `Cambiar estado de eventos desde InkDesk` mientras el permiso esté activo.
 - En escritorio el formulario de alta y el listado compartirán el área principal
   en una composición de dos columnas cuando haya espacio. En móvil se apilarán,
   manteniendo la acción primaria y el panel del código dentro del flujo vertical.

@@ -250,6 +250,24 @@ InsForge confirme la aplicación en una rama y la prueba autenticada.
 | CA-A-11 | Paridad Canvas en APK local, incluyendo revisión, color de ramo y acción manual del calendario | `CanvasPage.test.tsx`, `CalendarPage.test.tsx`, `verify-android-canvas.mjs` y build Gradle | Automatizado + build Android |
 | CA-A-12 | Botón de inicio de sesión nuevamente, limpieza de sesión local y retorno al destino protegido | `ProtectedRoute.test.tsx`, `sessionStore.test.tsx` y build Android | Automatizado + build Android |
 
+## Estado De Eventos Desde InkDesk
+
+**Relación de ramas y despliegue:** la rama Git `fix/karenda-koreader-event-status`
+parte de `origin/codex/release-all-changes` en `1b796b4232bc6401b2ec37a3e08a9c3f622456ef`.
+Se reutiliza la rama InsForge existente `karenda-mcp` (`schema-only`, lista para
+uso); no se creó, reinició ni fusionó una rama InsForge, y no se desplegó a
+producción. La migración `20260926120000_add-event-status-device-scope.sql` fue
+aplicada explícitamente en esa rama. `karenda-koreader-device-tokens` se actualizó
+y `karenda-koreader-event-status` se creó; ambas aparecen activas. Karenda Web
+quedó en estado `READY` en `https://5zz5dxgt-tkp.insforge.site` (despliegue
+`b2216141-8cea-4cea-9519-3f77da494e4c`).
+
+Comprobaciones ejecutadas: Deno 2.9.6 typecheck de ambas funciones, npm run lint, npm run typecheck, build Vite y cinco pruebas de DeviceTokensPage pasan. La rama Git fix/karenda-koreader-event-status se relacionó con la rama InsForge existente karenda-mcp, basada en origin/codex/release-all-changes (1b796b4232bc6401b2ec37a3e08a9c3f622456ef). La migración está aplicada y ambas funciones están activas allí; la web staging está READY en https://5zz5dxgt-tkp.insforge.site. OPTIONS sin credenciales da 204; POST anónimo y bearer inválido dan 401; token sin permiso da 403; cuerpo/estado/UUID inválidos dan 400; evento ajeno o inexistente da 404. El popup físico cambió un evento sintético propio pending → completed → pending y Karenda Web mostró cada estado. El evento de otro dueño siguió pending. Se retiró write:event_status al terminar: el token físico quedó activo con read:snapshot, y el token auxiliar fue revocado. ADB confirma NUHD220386 conectado y los paquetes debug/staging instalados; no se leyeron tokens. La consulta actual de snapshot omite eventos de día completo con end_at IS NULL; el evento E2E se configuró como horario para validar este cambio, sin ampliar el alcance a esa regla. Producción permanece sin cambios.
+
+| Requisito | Implementación | Verificación | Estado |
+| --- | --- | --- | --- |
+| KR-REQ-042 | Scope opcional, acciones web para dispositivos activos, función Edge con estado allowlist y filtro de propietario, actualización confirmada en InkDesk | Suite Dispositivos, lint/typecheck/build, Deno, migración/despliegue staging, rechazos 401/403/400/404, popup físico pending → completed → pending y confirmación de ambos estados en Karenda Web | E2E verificado en karenda-mcp; cambios Git locales/no integrados; no desplegado a producción |
+
 ## Sincronización Canvas UC
 
 | Requisito | Implementación | Verificación | Estado |

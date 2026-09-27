@@ -256,3 +256,21 @@ implementan sin una spec propia:
 - **Contexto de salvapantallas:** mostrar el siguiente compromiso o una nota
   seleccionada cuando la coexistencia con KOReader y el parche de Pedro esté
   validada.
+
+## Estado De Eventos Desde InkDesk
+
+- [x] **KR-T46:** Añadir migración y scope `write:event_status`, autorización y
+  retiro explícitos para tokens activos, función de estado limitada al evento
+  propio y controles en Dispositivos. Migración y funciones activas únicamente
+  en `karenda-mcp`; typecheck Deno y suite web pasan.
+- [x] **KR-T47:** Verificar el flujo InkDesk y conservar el estado confirmado en
+  el snapshot privado; diferenciar endpoint ausente de pérdida de conexión.
+  JUnit, assembleDebug, testKarendaStagingUnitTest y
+  assembleKarendaStaging pasan. El popup del Nabuk cambió un evento sintético
+  en ambos sentidos y mostró el resultado persistido; Karenda Web reflejó
+  completed y luego pending.
+- [x] **KR-T48:** Aplicar la migración y desplegar/verificar en InsForge no
+  productivo. karenda-mcp responde OPTIONS 204; se verificaron permiso
+  ausente, autenticación, validación e aislamiento de propietario. La web de
+  staging confirmó las dos transiciones del evento desechable; no se alteró
+  ningún evento personal normal ni se desplegó a producción.

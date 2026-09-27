@@ -29,12 +29,14 @@ antes de validar el backend real.
 
 ## 2. Requisitos Funcionales
 
-### KR-REQ-001: Solo lectura
+### KR-REQ-001: Solo lectura de KOReader
 
-El plugin deberá consultar y mostrar snapshots. No deberá exponer acciones ni
-llamadas que creen, editen, eliminen o cambien el estado de eventos o notas.
-Los botones y menús del Kindle no deberán sugerir que esas operaciones están
-disponibles.
+El plugin de KOReader deberá consultar y mostrar snapshots. No deberá exponer
+acciones ni llamadas que creen, editen, eliminen o cambien el estado de eventos
+o notas. Los botones y menús de KOReader no deberán sugerir que esas operaciones
+están disponibles. La única excepción es el cambio explícito de estado desde
+InkDesk, limitado por KR-REQ-042; no convierte al plugin de KOReader en cliente
+de escritura.
 
 ### KR-REQ-002: Apertura desde SimpleUI
 
@@ -81,9 +83,13 @@ guardado. Las redirecciones a HTTP deberán rechazarse.
 
 ### KR-REQ-005: Scopes
 
-El contrato deberá transportar scopes asociados al token aunque el MVP solo
-requiera `read:snapshot`. El scope futuro `write:events` se reserva para una
-fase posterior y no habilita ninguna escritura en este MVP.
+El contrato deberá transportar scopes asociados al token. `read:snapshot` seguirá
+siendo obligatorio. `write:event_status` podrá concederse de forma explícita a
+dispositivos InkDesk para alternar únicamente el estado de eventos propios entre
+`pending` y `completed`; no habilitará cambios en otros campos, creación ni
+eliminación. Estará desactivado por defecto. El scope general `write:events`
+permanece reservado y no autoriza operaciones mientras no exista un contrato
+específico. KOReader mantendrá su cliente de solo lectura.
 
 Un token ausente, inválido, expirado o revocado deberá producir un estado de
 autenticación fallida sin revelar el valor recibido. Un token sin
@@ -684,3 +690,17 @@ Un error de estadísticas no impedirá abrir ni actualizar calendario y notas.
 Un registro importado sustituirá como fuente canónica al manual del mismo día
 sin borrar el historial manual. El token no aparecerá en URLs, logs, snapshot ni
 cola local, y `write:habit_logs` no concederá permisos sobre eventos.
+
+### KR-REQ-042: Cambio autorizado del estado de un evento desde InkDesk
+
+Karenda Web permitirá que el dueño de la cuenta active explícitamente
+`write:event_status` para un dispositivo existente y activo desde `Dispositivos`,
+conservando los demás permisos y el token actual. El permiso estará desactivado
+por defecto, se mostrará en la metadata y podrá retirarse por separado sin
+revocar la lectura. Solo `karenda-koreader-event-status` podrá usarlo. La función
+aceptará un UUID de evento y únicamente `pending` o `completed`, validará un
+token vigente con el scope y cambiará exclusivamente `events.status` para una
+fila cuyo `owner_id` coincida con el dueño del token. No permitirá crear,
+eliminar ni modificar otros campos. Sin permiso responderá
+`403 INSUFFICIENT_SCOPE`; un evento inexistente o de otra cuenta responderá
+`404 EVENT_NOT_FOUND` sin revelar datos. KOReader seguirá siendo de solo lectura.
