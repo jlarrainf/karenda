@@ -230,7 +230,68 @@ spec, los commits y el contexto del usuario, detener la integración y pedir
 aclaración. Nunca resolver un conflicto reemplazando todo el archivo por una
 de las dos versiones sin inspección.
 
-## 10. Fuentes De La Práctica
+## 10. Convergencia De Worktrees Y Verificación Integrada
+
+Un worktree es una copia aislada de archivos en un commit concreto; no recibe
+los cambios de otras ramas automáticamente. Para mantener una vista completa
+del proyecto, cada tarea paralela registra en su incidencia, plan o
+Pull Request:
+
+- responsable y ruta del worktree;
+- rama Git y SHA base usados al comenzar;
+- rama y Pull Request de destino;
+- ramas o cambios previos de los que depende;
+- alcance de archivos y requisitos cubiertos;
+- estado: `activa`, `lista para integrar` o `integrada`, junto con las
+  verificaciones ejecutadas.
+
+No hace falta crear un registro global adicional: usa el artefacto de trabajo
+que ya corresponda. Un estado local sin commit siempre pertenece a su autor y
+no es una dependencia integrada. Para una tarea dependiente, parte de una rama
+de integración que ya contenga los cambios previos confirmados y verificados;
+no bases una implementación en archivos sin commit de otro worktree. Las ramas
+independientes pueden partir del destino actualizado y abrir Pull Requests
+separados.
+
+La integración tiene una persona responsable por destino y se hace de forma
+serializada. Antes de combinar una rama, el integrador confirma que:
+
+1. la rama fuente está identificada, su alcance está revisado y el worktree no
+   contiene cambios locales ajenos o sin explicar;
+2. el diff completo contra el destino corresponde a la spec, sus criterios,
+   las tareas y la trazabilidad, y no deja documentación, migraciones o tests
+   requeridos fuera de la rama;
+3. los conflictos están resueltos archivo por archivo, sin descartar la
+   intención de ninguna rama, y la rama fue actualizada contra la base de
+   integración vigente según las reglas de la sección 8;
+4. pasan las verificaciones de la tarea y CI evalúa la combinación propuesta,
+   no solo la rama fuente. Si CI no evalúa esa combinación, se valida el
+   resultado conjunto en una rama de integración temporal y revisable.
+
+Se fusionan solo ramas `listas para integrar`, en el orden de sus dependencias,
+mediante Pull Request y la política del repositorio. No se auto-fusionan todas
+las ramas ni se mezclan cambios locales sin confirmar para producir una falsa
+sensación de completitud. Una tarea pendiente conserva su rama y responsable y
+se informa como pendiente, no como integrada.
+
+Después de cada merge, el integrador actualiza referencias, confirma que el PR
+quedó integrado en el destino esperado y ejecuta las verificaciones pertinentes
+sobre ese commit combinado: CI completo requerido por el repo y pruebas
+adicionales que exijan la spec, el backend o el dispositivo. Para cambios
+generales del frontend se usa el conjunto base de la sección 5. Solo entonces
+marca la tarea `integrada`, registra SHA/PR y resultado, y avisa a las tareas
+dependientes. Antes del siguiente merge, estas ramas incorporan el destino ya
+actualizado de forma coordinada y repiten las comprobaciones afectadas.
+La integración se considera terminada cuando el destino incluye todos los
+cambios previstos, las ramas dependientes usan la nueva base y se verifica el
+conjunto final.
+
+Si falla una comprobación, falta un archivo requerido o el resultado combinado
+no está claro, se detiene la siguiente integración. Se conserva el trabajo,
+se corrige la rama responsable y se repiten las verificaciones. Una rama no se
+considera completa solo porque haya pasado pruebas locales de forma aislada.
+
+## 11. Fuentes De La Práctica
 
 Estas reglas se basan en la documentación oficial de GitHub y Git:
 

@@ -61,6 +61,13 @@ GitHub. En cada tarea el agente debe:
 - En una carpeta compartida, solo un agente puede escribir, cambiar de rama,
   preparar commits o mutar el contexto de InsForge; para dos agentes escritores
   se deben usar worktrees separados.
+- Los worktrees aíslan archivos, pero no sincronizan ramas: cada tarea debe
+  registrar base, destino, dependencias y estado, y actualizarse desde el
+  destino integrado antes de combinarla. Sigue los criterios de convergencia y
+  verificación de `docs/git-workflow.md` y `docs/agent-collaboration.md`.
+- Una tarea solo se declara integrada cuando el cambio revisado está confirmado
+  en su rama, incorporado al destino previsto y verificado sobre el resultado
+  combinado. Un cambio local sin commit no se incluye ni se considera integrado.
 - Cada cambio de backend debe registrar la relación entre la rama Git y la
   rama InsForge. No crear ramas InsForge por sesión ni superar su cuota;
   reutilizar una rama coincidente o cerrar una rama ya auditada con respaldo.
