@@ -5,6 +5,8 @@ import { EmptyState } from '../../../components/ui/EmptyState.tsx'
 import { copyTextToClipboard } from '../../../lib/browser/clipboard.ts'
 import {
   createDevicePairingCode as createDevicePairingCodeRequest,
+  disableDeviceEventStatus,
+  enableDeviceEventStatus,
   listDeviceTokens,
   regenerateDeviceToken,
   revokeDeviceToken,
@@ -19,6 +21,8 @@ import type {
 type PendingAction =
   | { kind: 'regenerate'; token: DeviceTokenMetadata }
   | { kind: 'enable_stats'; token: DeviceTokenMetadata }
+  | { kind: 'enable_event_status'; token: DeviceTokenMetadata }
+  | { kind: 'disable_event_status'; token: DeviceTokenMetadata }
   | { kind: 'revoke'; token: DeviceTokenMetadata }
   | null
 
@@ -44,6 +48,7 @@ function formatDate(value: string | null): string {
 function formatScope(scope: string): string {
   if (scope === 'read:snapshot') return 'Lectura del calendario'
   if (scope === 'write:habit_logs') return 'Escritura de hábitos desde KOReader'
+  if (scope === 'write:event_status') return 'Cambiar estado de eventos desde InkDesk'
   return 'Escritura futura'
 }
 
@@ -181,11 +186,15 @@ function DeviceTokenRow({
   token,
   onRegenerate,
   onEnableStats,
+  onEnableEventStatus,
+  onDisableEventStatus,
   onRevoke,
 }: {
   token: DeviceTokenMetadata
   onRegenerate: () => void
   onEnableStats?: () => void
+  onEnableEventStatus?: () => void
+  onDisableEventStatus?: () => void
   onRevoke: () => void
 }) {
   const status = getTokenStatus(token)
@@ -224,6 +233,16 @@ function DeviceTokenRow({
           {onEnableStats ? (
             <Button onClick={onEnableStats} variant="secondary">
               Habilitar estadísticas
+            </Button>
+          ) : null}
+          {onDisableEventStatus ? (
+            <Button onClick={onDisableEventStatus} variant="secondary">
+              Retirar permiso
+            </Button>
+          ) : null}
+          {onEnableEventStatus ? (
+            <Button onClick={onEnableEventStatus} variant="secondary">
+              Permitir cambios de estado
             </Button>
           ) : null}
           <Button onClick={onRegenerate} variant="secondary">
@@ -352,6 +371,10 @@ export function DeviceTokensPage() {
     try {
       if (pendingAction.kind === 'revoke') {
         await revokeDeviceToken(pendingAction.token.id)
+      } else if (pendingAction.kind === 'enable_event_status') {
+        await enableDeviceEventStatus(pendingAction.token.id)
+      } else if (pendingAction.kind === 'disable_event_status') {
+        await disableDeviceEventStatus(pendingAction.token.id)
       } else {
         const scopes: DeviceTokenScope[] = pendingAction.kind === 'enable_stats'
           ? Array.from(
@@ -384,6 +407,8 @@ export function DeviceTokensPage() {
   const confirmationIsRegeneration =
     pendingAction?.kind === 'regenerate' || pendingAction?.kind === 'enable_stats'
   const confirmationEnablesStats = pendingAction?.kind === 'enable_stats'
+  const confirmationEnablesEventStatus = pendingAction?.kind === 'enable_event_status'
+  const confirmationDisablesEventStatus = pendingAction?.kind === 'disable_event_status'
 
   return (
     <section aria-labelledby="device-tokens-title" className="space-y-8">
@@ -396,7 +421,7 @@ export function DeviceTokensPage() {
             Dispositivos
           </h1>
           <p className="mt-3 max-w-2xl text-base leading-7 text-ink-muted">
-            Conecta KOReader a tu calendario sin compartir tu sesión de Karenda.
+            Conecta KOReader e InkDesk a tu calendario sin compartir tu sesión de Karenda.
           </p>
         </div>
       </header>
@@ -441,8 +466,8 @@ export function DeviceTokensPage() {
             Conectar dispositivo
           </h2>
           <p className="mt-2 text-sm leading-6 text-ink-muted">
-            Genera un código de seis dígitos para vincular un Kindle o instalación de
-            KOReader sin copiar un token largo.
+            Genera un código de seis dígitos para vincular KOReader o InkDesk sin
+            copiar un token largo.
           </p>
           <form
             className="mt-6 space-y-5"
@@ -466,7 +491,7 @@ export function DeviceTokensPage() {
                 value={label}
               />
               <p className="mt-2 text-xs leading-5 text-ink-muted">
-                Ejemplo: Kindle de estudio. Puedes habilitar la sincronización diaria de hábitos.
+                Ejemplo: InkDesk o Kindle de estudio. Los permisos de escritura se habilitan después.
               </p>
             </div>
             <label className="flex items-start gap-3 text-sm leading-6 text-ink">
@@ -479,7 +504,7 @@ export function DeviceTokensPage() {
               <span>
                 <span className="font-semibold">Sincronizar estadísticas y hábitos</span>
                 <span className="block text-xs text-ink-muted">
-                  Permite que este Kindle envíe páginas, tiempo, libros terminados y Anki.
+                  Permite que un dispositivo compatible envíe páginas, tiempo, libros terminados y Anki.
                 </span>
               </span>
             </label>
@@ -525,7 +550,7 @@ export function DeviceTokensPage() {
           ) : null}
           {isLoaded && tokens.length === 0 ? (
             <EmptyState
-              description="Genera un código para conectar tu primer Kindle sin usar tus credenciales de Karenda."
+              description="Genera un código para conectar tu primer dispositivo sin usar tus credenciales de Karenda."
               title="Todavía no tienes dispositivos"
             />
           ) : null}
@@ -544,7 +569,25 @@ export function DeviceTokensPage() {
                       : () => {
                           setActionError(null)
                           setPendingAction({ kind: 'enable_stats', token })
+                      }
+                  }
+                  onEnableEventStatus={
+                    token.scopes.includes('write:event_status') ||
+                    getTokenStatus(token).label !== 'Activo'
+                      ? undefined
+                      : () => {
+                          setActionError(null)
+                          setPendingAction({ kind: 'enable_event_status', token })
                         }
+                  }
+                  onDisableEventStatus={
+                    token.scopes.includes('write:event_status') &&
+                    getTokenStatus(token).label === 'Activo'
+                      ? () => {
+                          setActionError(null)
+                          setPendingAction({ kind: 'disable_event_status', token })
+                        }
+                      : undefined
                   }
                   onRevoke={() => {
                     setActionError(null)
@@ -562,20 +605,36 @@ export function DeviceTokensPage() {
         confirmLabel={
           confirmationEnablesStats
             ? 'Habilitar estadísticas'
-            : confirmationIsRegeneration
-              ? 'Regenerar token'
-              : 'Revocar token'
+            : confirmationEnablesEventStatus
+              ? 'Permitir cambios de estado'
+              : confirmationDisablesEventStatus
+                ? 'Retirar permiso'
+                : confirmationIsRegeneration
+                  ? 'Regenerar token'
+                  : 'Revocar token'
         }
         description={
-          confirmationIsRegeneration
-            ? confirmationEnablesStats
-              ? 'El token actual será reemplazado por uno con permiso para sincronizar hábitos. Tendrás que copiar el nuevo secreto a KOReader.'
-              : 'El token actual dejará de funcionar inmediatamente y recibirás un secreto nuevo para copiar a KOReader.'
-            : 'El token dejará de funcionar inmediatamente. Esta acción no elimina tus eventos ni tus notas.'
+          confirmationDisablesEventStatus
+            ? 'Este dispositivo dejará de cambiar estados de eventos y conservará el permiso de lectura y su token actual.'
+            : confirmationEnablesEventStatus
+              ? 'Este dispositivo podrá marcar eventos de tu cuenta como pendientes o completados. No podrá editarlos ni eliminarlos y conservará su token actual.'
+              : confirmationIsRegeneration
+                ? confirmationEnablesStats
+                  ? 'El token actual será reemplazado por uno con permiso para sincronizar hábitos. Tendrás que copiar el nuevo secreto a KOReader.'
+                  : 'El token actual dejará de funcionar inmediatamente y recibirás un secreto nuevo para copiar a KOReader.'
+                : 'El token dejará de funcionar inmediatamente. Esta acción no elimina tus eventos ni tus notas.'
         }
         error={actionError}
         isLoading={isActionLoading}
-        loadingLabel={confirmationIsRegeneration ? 'Regenerando…' : 'Revocando…'}
+        loadingLabel={
+          confirmationDisablesEventStatus
+            ? 'Retirando permiso…'
+            : confirmationEnablesEventStatus
+              ? 'Aplicando permiso…'
+              : confirmationIsRegeneration
+                ? 'Regenerando…'
+                : 'Revocando…'
+        }
         onCancel={() => {
           if (!isActionLoading) {
             setActionError(null)
@@ -584,7 +643,15 @@ export function DeviceTokensPage() {
         }}
         onConfirm={handleConfirmAction}
         open={pendingAction !== null}
-        title={confirmationIsRegeneration ? '¿Regenerar token?' : '¿Revocar token?'}
+        title={
+          confirmationDisablesEventStatus
+            ? '¿Retirar el permiso de cambio de estado?'
+            : confirmationEnablesEventStatus
+              ? '¿Permitir cambios de estado?'
+              : confirmationIsRegeneration
+                ? '¿Regenerar token?'
+                : '¿Revocar token?'
+        }
       />
     </section>
   )

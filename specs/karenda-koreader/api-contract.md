@@ -388,3 +388,38 @@ La configuración web usa `karenda-koreader-habit-links` y el RPC
 `setup_koreader_habit_links`. Permite vincular un hábito cuantitativo compatible
 o crear uno diario nuevo con meta explícita. El snapshot v1 y las superficies de
 SimpleUI no cambian.
+
+## Extensión InkDesk: cambio del estado del evento
+
+InkDesk puede alternar el estado de un evento si el dueño habilitó
+`write:event_status` para su token. El permiso está desactivado por defecto y se
+concede después de vincular el dispositivo, desde `Karenda > Dispositivos`. La
+concesión agrega solo ese scope y conserva el token y el resto de permisos.
+
+```http
+POST <functions_base_url>/karenda-koreader-event-status
+Authorization: Bearer <device_token>
+Content-Type: application/json
+
+{"event_id":"<uuid>","status":"completed"}
+```
+
+`status` admite exclusivamente `pending` o `completed`. La función filtra por
+`event_id` y por `owner_id` obtenido del token, y responde `200` con el
+identificador, el nuevo estado y `updated_at`. Solo cambia `events.status`;
+requiere una acción explícita desde el popup de InkDesk y no se ejecuta al abrir
+o cerrar detalles ni al sincronizar el snapshot. `OPTIONS` sin credenciales ni
+body debe responder `204` para CORS.
+
+Errores: `400 INVALID_REQUEST` para UUID, body o estado inválidos;
+`401 UNAUTHORIZED` para token inválido, revocado o vencido;
+`403 INSUFFICIENT_SCOPE` si falta `write:event_status`;
+`404 EVENT_NOT_FOUND` para evento inexistente o ajeno al dueño; y
+`503 BACKEND_UNAVAILABLE` si InsForge no puede completar la operación. Un
+evento ajeno no revela datos.
+
+Las acciones web `enable_event_status` y `disable_event_status` requieren una
+sesión web y el `token_id` de un dispositivo activo propio. Habilitar es
+idempotente y agrega solo el scope; retirar elimina solo ese scope. Ambas
+conservan lectura, otros permisos y token, no muestran secretos y devuelven la
+metadata actualizada.

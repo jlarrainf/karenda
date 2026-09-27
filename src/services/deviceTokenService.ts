@@ -62,6 +62,28 @@ export function createDevicePairingCode(
   )
 }
 
+export function enableDeviceEventStatus(tokenId: string): Promise<void> {
+  return runInsForgeAction(
+    () =>
+      insforge.functions.invoke<DeviceTokenActionResponse>(DEVICE_TOKEN_FUNCTION, {
+        body: { action: 'enable_event_status', token_id: tokenId },
+        method: 'POST',
+      }),
+    'No se pudo habilitar el cambio de estado de eventos.',
+  )
+}
+
+export function disableDeviceEventStatus(tokenId: string): Promise<void> {
+  return runInsForgeAction(
+    () =>
+      insforge.functions.invoke<DeviceTokenActionResponse>(DEVICE_TOKEN_FUNCTION, {
+        body: { action: 'disable_event_status', token_id: tokenId },
+        method: 'POST',
+      }),
+    'No se pudo retirar el permiso de cambio de estado.',
+  )
+}
+
 export function revokeDeviceToken(tokenId: string): Promise<void> {
   return runInsForgeAction(
     () =>

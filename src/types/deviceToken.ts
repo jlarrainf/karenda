@@ -2,6 +2,7 @@ export type DeviceTokenScope =
   | 'read:snapshot'
   | 'write:events'
   | 'write:habit_logs'
+  | 'write:event_status'
 
 export interface DeviceTokenMetadata {
   id: string

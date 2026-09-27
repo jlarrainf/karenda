@@ -24,6 +24,7 @@ export type DeviceTokenScope =
   | 'read:snapshot'
   | 'write:events'
   | 'write:habit_logs'
+  | 'write:event_status'
 export type KoreaderMetricKey =
   | 'reading_pages'
   | 'reading_minutes'

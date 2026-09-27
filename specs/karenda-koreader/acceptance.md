@@ -622,3 +622,17 @@ El MVP no podrá declararse listo mientras alguno de estos puntos siga abierto:
 - instalación de SimpleUI y `2-custom-navbar.lua` no inspeccionada en el Kindle;
 - tests del cliente, caché, Markdown, filtros de notas y estados offline
   ausentes.
+
+### KR-CA-049: Escritura limitada del estado de eventos por InkDesk
+
+**Dado** un token activo cuyo dueño habilitó explícitamente
+`write:event_status`, **cuando** se envía un UUID propio con `pending` o
+`completed`, **entonces** solo cambia `events.status` y la siguiente lectura del
+snapshot y Karenda Web refleja el mismo estado. **Dado** un token sin permiso,
+una autenticación inválida, un evento ajeno/inexistente, un UUID inválido o un
+estado no admitido, **entonces** la petición se rechaza sin modificar eventos.
+Conceder el permiso desde Dispositivos conserva el token y los demás scopes;
+retirarlo elimina únicamente `write:event_status`. Los dispositivos nuevos
+permanecen sin este permiso hasta una concesión explícita.
+
+Verificación completa en staging: rama Git fix/karenda-koreader-event-status (base origin/codex/release-all-changes, 1b796b4232bc6401b2ec37a3e08a9c3f622456ef) asociada a la rama InsForge existente karenda-mcp; no se creó otra rama ni se tocó producción. Se aplicó 20260926120000_add-event-status-device-scope.sql y están activas karenda-koreader-device-tokens y karenda-koreader-event-status. Deno 2.9.6, cinco pruebas de Dispositivos, lint, typecheck y build web pasan. La web staging está READY en https://5zz5dxgt-tkp.insforge.site. OPTIONS sin credenciales respondió 204; POST sin autenticación y bearer inválido respondieron 401; token sin scope respondió 403; estado/UUID/campos inválidos respondieron 400; evento de otro dueño e inexistente respondieron 404. Un evento sintético propio completó pending → completed → pending desde el popup físico y ambos estados se confirmaron en Karenda Web. El evento ajeno permaneció pendiente. Conceder desde Dispositivos preservó el token y read:snapshot; al finalizar, ambos dispositivos de staging quedaron sin write:event_status, el equipo físico activo en modo lectura y el token auxiliar revocado. ADB confirma NUHD220386 conectado, com.inkdesk.debug y com.inkdesk.staging instalados. Producción no fue modificada.
