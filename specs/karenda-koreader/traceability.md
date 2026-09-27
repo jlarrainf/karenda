@@ -49,7 +49,7 @@ dispositivo cuando corresponda.
 | KR-NFR-004 | Atribuciones y bloqueo de código de licencia desconocida | Revisión legal de distribución | Bloqueado por licencia del parche |
 | KR-NFR-005 | Tareas y contrato señalan backend implementado e integración pendiente | Revisión de specs y estado InsForge | Backend desplegado; integración pendiente |
 
-| KR-REQ-042 | Scope opcional, acciones web para dispositivos activos, función Edge con estado allowlist y filtro de propietario, actualización confirmada en InkDesk | Deno 2.9.6; cinco pruebas de Dispositivos; lint, typecheck y build; migración y funciones activas en karenda-mcp; OPTIONS 204, sin permiso 403, auth inválida/anónima 401, entradas inválidas 400, evento ajeno/inexistente 404; popup físico pending → completed → pending, ambos estados verificados en Web y scope retirado conservando read:snapshot/token | E2E verificado en staging; rama de trabajo local, producción intacta |
+| KR-REQ-042 | Scope opcional, acciones web para dispositivos activos, función Edge con estado allowlist y filtro de propietario, actualización confirmada en InkDesk | Deno 2.9.6; cinco pruebas de Dispositivos; lint, typecheck, build y suite combinada (55 archivos/195 pruebas); migración y funciones activas en karenda-mcp; OPTIONS 204 en staging, POST sin autenticación 401, sin permiso 403, auth inválida 401, entradas inválidas 400, evento ajeno/inexistente 404; popup físico pending → completed → pending, ambos estados verificados en Web y scope retirado conservando read:snapshot/token | E2E verificado en staging; integrado en `codex/release-all-changes` (`b8e763a`, verificado sobre `9e56680`); producción intacta |
 
 ## Dependencias De Cierre
 
