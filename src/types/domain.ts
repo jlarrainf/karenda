@@ -64,6 +64,8 @@ export interface CalendarEvent {
   status: EventStatus
   location: string | null
   description: string | null
+  lateSubmissionDays: number | null
+  lateSubmissionPenaltyDescription: string | null
   academicActivityType?: AcademicActivityType | null
   createdAt: IsoDateTime
   updatedAt: IsoDateTime

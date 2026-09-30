@@ -32,6 +32,8 @@ const event: CalendarEvent = {
   id: '44444444-4444-4444-8444-444444444444',
   isAllDay: false,
   kind: 'academic',
+  lateSubmissionDays: null,
+  lateSubmissionPenaltyDescription: null,
   location: null,
   ownerId: '22222222-2222-4222-8222-222222222222',
   personalGroupId: null,

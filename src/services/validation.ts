@@ -163,6 +163,19 @@ const eventInputBaseSchema = z.object({
     .max(5000, 'La descripción es demasiado larga.')
     .nullable()
     .optional(),
+  lateSubmissionDays: z
+    .number({ error: 'Los días de atraso deben ser un número entero positivo.' })
+    .int('Los días de atraso deben ser un número entero positivo.')
+    .positive('Los días de atraso deben ser un número entero positivo.')
+    .nullable()
+    .default(null),
+  lateSubmissionPenaltyDescription: z
+    .string()
+    .trim()
+    .max(1000, 'La descripción del descuento es demasiado larga.')
+    .transform((value) => value || null)
+    .nullable()
+    .default(null),
   academicActivityType: academicActivityTypeSchema.nullable().optional(),
 })
 
@@ -199,6 +212,25 @@ export const eventInputSchema = eventInputBaseSchema.superRefine((value, context
       code: 'custom',
       path: ['academicActivityType'],
       message: 'Los eventos personales no usan una categoría académica.',
+    })
+  }
+
+  if (value.kind === 'personal' && value.lateSubmissionDays !== null) {
+    context.addIssue({
+      code: 'custom',
+      path: ['lateSubmissionDays'],
+      message: 'Los eventos personales no permiten entregas atrasadas.',
+    })
+  }
+
+  if (
+    value.lateSubmissionDays === null &&
+    value.lateSubmissionPenaltyDescription !== null
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['lateSubmissionDays'],
+      message: 'Activa el plazo de atraso antes de describir su condición.',
     })
   }
 

@@ -319,3 +319,34 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   ramo de origen y color en la bandeja; aplicar la migración y verificar el
   despliegue real. El piloto autenticado queda como verificación manual del
   usuario porque requiere un token nuevo ingresado en la pantalla segura.
+
+## Fase 19: Plazos De Entrega Atrasada
+
+Rama Git `feature/001-late-delivery-window`, worktree
+`C:\Users\juani\Desktop\Programacion\karenda-wt-late-delivery`, base
+`f0a2d54`, destino `origin/main`, dependencias ninguna, estado `activa`.
+Relación Git/InsForge: `feature/001-late-delivery-window` → proyecto `karenda`
+(contexto principal usado solo para consultar el historial y numerar la
+migración). Las ramas `karenda-mcp` y `karenda-canvas-fix` ya ocupan los dos
+espacios activos; la migración no se aplicará hasta disponer de una rama
+compatible y validar su estado.
+
+- [x] **Tarea 125: Definir el contrato y la dirección de interfaz**. Documentar
+  días corridos, descripción opcional del descuento, fecha límite derivada,
+  nulabilidad y compatibilidad del snapshot.
+- [x] **Tarea 126: Implementar configuración y detalle web**. Añadir columnas,
+  validación, carga/guardado, cálculo local de la fecha límite y presentación
+  accesible en el formulario y el detalle.
+- [ ] **Tarea 127: Propagar metadatos al snapshot KOReader**. Actualizar
+  proyección, contrato y mapper sin cambiar el número de versión mayor.
+- [ ] **Tarea 128: Cubrir criterios y verificar**. Añadir pruebas de validación,
+  persistencia, formulario, detalle, fecha local y mapeo Lua; ejecutar las
+  comprobaciones pertinentes.
+- [ ] **Tarea 129: Validar migración en InsForge**. Reutilizar una rama
+  compatible o esperar a que se audite y libere un espacio; aplicar y verificar
+  allí sin modificar el proyecto principal.
+
+Evidencia de la Tarea 126: `npm run typecheck`, `npm run lint`,
+`npm test -- --run` (179 pruebas aprobadas) y `npm run build` finalizaron con
+código 0. El build mostró advertencias de externalización de `crypto` y de
+tamaño del bundle.

@@ -555,6 +555,20 @@ Verificación: smoke de propagación y supresión de repintado, mock de
 `setTempTabActive` y SimpleUI/KOReader real desde Home, Library y Reader. Estado:
 implementación local y smokes correctos; el dispositivo real sigue pendiente.
 
+### KR-CA-046: Metadatos de entrega atrasada en el snapshot
+
+**Dado** un evento académico con plazo adicional, **cuando** el endpoint genera
+el snapshot, **entonces** el evento incluye `late_submission_days` y
+`late_submission_penalty_description` sin alterar su fecha programada. Para
+eventos sin plazo y personales ambos valores son nulos. El mapper conserva los
+valores y acepta snapshots cacheados antiguos que todavía no incluyan esos
+campos.
+
+Verificación requerida: aplicar la migración en una rama InsForge aislada,
+ejecutar `snapshot_mapper_spec.lua`, verificar la función Edge y correr los
+smokes del plugin. Sigue pendiente porque no hay una rama InsForge disponible
+ni runtimes Deno/Lua en este entorno.
+
 ## 8. Puerta De Salida
 
 El MVP no podrá declararse listo mientras alguno de estos puntos siga abierto:

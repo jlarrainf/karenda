@@ -124,6 +124,8 @@ export type Database = {
           status: EventStatus
           location: string | null
           description: string | null
+          late_submission_days: number | null
+          late_submission_penalty_description: string | null
           academic_activity_type?: AcademicActivityType | null
           created_at: string
           updated_at: string
@@ -141,6 +143,8 @@ export type Database = {
           status?: EventStatus
           location?: string | null
           description?: string | null
+          late_submission_days?: number | null
+          late_submission_penalty_description?: string | null
           academic_activity_type?: AcademicActivityType | null
           created_at?: string
           updated_at?: string
@@ -158,6 +162,8 @@ export type Database = {
           status?: EventStatus
           location?: string | null
           description?: string | null
+          late_submission_days?: number | null
+          late_submission_penalty_description?: string | null
           academic_activity_type?: AcademicActivityType | null
           created_at?: string
           updated_at?: string

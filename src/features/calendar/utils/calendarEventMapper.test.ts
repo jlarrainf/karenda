@@ -12,6 +12,8 @@ const baseEvent: CalendarEvent = {
   id: 'event-1',
   isAllDay: false,
   kind: 'academic',
+  lateSubmissionDays: null,
+  lateSubmissionPenaltyDescription: null,
   location: 'Sala 12',
   ownerId: 'owner-1',
   personalGroupId: null,
