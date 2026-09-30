@@ -91,6 +91,8 @@ describe('EventForm', () => {
       description: null,
       endAt: null,
       isAllDay: false,
+      lateSubmissionDays: null,
+      lateSubmissionPenaltyDescription: null,
       kind: 'academic',
       location: 'Sala 12',
       personalGroupId: null,
@@ -135,6 +137,66 @@ describe('EventForm', () => {
         title: 'Consulta médica',
       }),
     )
+  })
+
+  it('saves the late-submission window and its optional condition for academic events', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+
+    render(<EventForm {...defaultProps} onSubmit={onSubmit} />)
+
+    await user.type(screen.getByLabelText(/^Título/), 'Entrega 1')
+    await user.selectOptions(screen.getByLabelText(/^Asignatura/), subject.id)
+    fireEvent.change(screen.getByLabelText(/^Fecha de inicio/), {
+      target: { value: '2026-09-01' },
+    })
+    fireEvent.change(screen.getByLabelText(/^Hora de inicio/), {
+      target: { value: '23:59' },
+    })
+    await user.click(
+      screen.getByRole('checkbox', { name: /Permitir entrega atrasada/ }),
+    )
+    await user.type(screen.getByLabelText(/^Días corridos de atraso/), '2')
+    await user.type(
+      screen.getByLabelText(/^Condición o descuento por atraso/),
+      'Se descuenta 10 %.',
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Guardar evento' }))
+
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lateSubmissionDays: 2,
+        lateSubmissionPenaltyDescription: 'Se descuenta 10 %.',
+        startAt: '2026-09-01T23:59',
+      }),
+    )
+  })
+
+  it('requires positive whole days when late submission is enabled', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+
+    render(<EventForm {...defaultProps} onSubmit={onSubmit} />)
+    await user.type(screen.getByLabelText(/^Título/), 'Entrega 1')
+    await user.selectOptions(screen.getByLabelText(/^Asignatura/), subject.id)
+    fireEvent.change(screen.getByLabelText(/^Fecha de inicio/), {
+      target: { value: '2026-09-01' },
+    })
+    fireEvent.change(screen.getByLabelText(/^Hora de inicio/), {
+      target: { value: '23:59' },
+    })
+    await user.click(
+      screen.getByRole('checkbox', { name: /Permitir entrega atrasada/ }),
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Guardar evento' }))
+
+    expect(
+      await screen.findByText('Indica un número entero positivo de días corridos.'),
+    ).toBeVisible()
+    expect(onSubmit).not.toHaveBeenCalled()
   })
 
   it('keeps local dates for an all-day event and hides time controls', async () => {

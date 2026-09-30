@@ -100,6 +100,39 @@ describe('domain validation', () => {
     ).toBe(false)
   })
 
+  it('RF-29 accepts a positive late window and rejects invalid combinations', () => {
+    const baseEvent = {
+      kind: 'academic' as const,
+      lateSubmissionDays: 2,
+      lateSubmissionPenaltyDescription: 'Se descuenta 10 %.',
+      startAt: '2026-09-01T23:59',
+      subjectId,
+      title: 'Entrega 1',
+    }
+
+    expect(eventInputSchema.safeParse(baseEvent).success).toBe(true)
+    expect(
+      eventInputSchema.safeParse({ ...baseEvent, lateSubmissionDays: 0 }).success,
+    ).toBe(false)
+    expect(
+      eventInputSchema.safeParse({ ...baseEvent, lateSubmissionDays: 1.5 }).success,
+    ).toBe(false)
+    expect(
+      eventInputSchema.safeParse({
+        ...baseEvent,
+        lateSubmissionDays: null,
+      }).success,
+    ).toBe(false)
+    expect(
+      eventInputSchema.safeParse({
+        kind: 'personal',
+        lateSubmissionDays: 2,
+        startAt: '2026-09-01T23:59',
+        title: 'Cita',
+      }).success,
+    ).toBe(false)
+  })
+
   it('RF-IA-12 accepts a personal draft that proposes a new group', () => {
     const result = aiEventDraftResponseSchema.safeParse({
       events: [

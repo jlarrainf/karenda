@@ -31,10 +31,13 @@ interface EventFormProps {
 
 interface EventFormValues {
   academicActivityType: AcademicActivityType | ''
+  allowsLateSubmission: boolean
   description: string
   endDate: string
   endTime: string
   isAllDay: boolean
+  lateSubmissionDays: string
+  lateSubmissionPenaltyDescription: string
   location: string
   personalGroupId: string
   startDate: string
@@ -52,6 +55,8 @@ const eventFieldOrder: (keyof EventFormValues)[] = [
   'startTime',
   'endDate',
   'endTime',
+  'lateSubmissionDays',
+  'lateSubmissionPenaltyDescription',
   'status',
   'location',
   'description',
@@ -94,10 +99,13 @@ function getDefaultValues(
   if (!source) {
     return {
       academicActivityType: '',
+      allowsLateSubmission: false,
       description: '',
       endDate: '',
       endTime: '',
       isAllDay: false,
+      lateSubmissionDays: '',
+      lateSubmissionPenaltyDescription: '',
       location: '',
       personalGroupId: '',
       startDate: '',
@@ -114,10 +122,15 @@ function getDefaultValues(
 
   return {
     academicActivityType: source.academicActivityType ?? '',
+    allowsLateSubmission:
+      source.kind === 'academic' && source.lateSubmissionDays != null,
     description: source.description ?? '',
     endDate: end.date,
     endTime: end.time,
     isAllDay,
+    lateSubmissionDays: source.lateSubmissionDays?.toString() ?? '',
+    lateSubmissionPenaltyDescription:
+      source.lateSubmissionPenaltyDescription ?? '',
     location: source.location ?? '',
     personalGroupId: source.personalGroupId ?? '',
     startDate: start.date,
@@ -158,8 +171,10 @@ function getInputFieldForIssue(
     field === 'subjectId' ||
     field === 'status' ||
     field === 'location' ||
-    field === 'description'
-    || field === 'academicActivityType'
+    field === 'description' ||
+    field === 'academicActivityType' ||
+    field === 'lateSubmissionDays' ||
+    field === 'lateSubmissionPenaltyDescription'
   ) {
     return field
   }
@@ -188,6 +203,14 @@ function getEventInput(values: EventFormValues, kind: EventKind): EventInput {
         : combineDateTime(values.endDate, values.endTime)
       : null,
     isAllDay: values.isAllDay,
+    lateSubmissionDays:
+      isAcademic && values.allowsLateSubmission
+        ? Number(values.lateSubmissionDays)
+        : null,
+    lateSubmissionPenaltyDescription:
+      isAcademic && values.allowsLateSubmission
+        ? values.lateSubmissionPenaltyDescription || null
+        : null,
     kind,
     location: values.location || null,
     personalGroupId: isAcademic ? null : values.personalGroupId || null,
@@ -229,9 +252,26 @@ export function EventForm({
     mode: 'onBlur',
   })
   const isAllDay = useWatch({ control, name: 'isAllDay' })
+  const allowsLateSubmission = useWatch({
+    control,
+    name: 'allowsLateSubmission',
+  })
 
   const handleFormSubmit = async (values: EventFormValues) => {
     clearErrors()
+
+    if (isAcademic && values.allowsLateSubmission) {
+      const lateSubmissionDays = Number(values.lateSubmissionDays)
+
+      if (!Number.isSafeInteger(lateSubmissionDays) || lateSubmissionDays < 1) {
+        setError('lateSubmissionDays', {
+          message: 'Indica un número entero positivo de días corridos.',
+          type: 'manual',
+        })
+        setFocus('lateSubmissionDays')
+        return
+      }
+    }
 
     if (!values.isAllDay && Boolean(values.endDate) !== Boolean(values.endTime)) {
       const field = values.endDate ? 'endTime' : 'endDate'
@@ -411,6 +451,56 @@ export function EventForm({
           />
         ) : null}
       </div>
+
+      {isAcademic ? (
+        <fieldset className="space-y-4 rounded-control border border-border bg-surface-subtle px-4 py-3">
+          <legend className="px-1 text-sm font-semibold text-ink">
+            Entrega atrasada
+          </legend>
+          <label
+            className="flex min-h-11 items-start gap-3 text-sm text-ink"
+            htmlFor="event-late-submission-enabled"
+          >
+            <input
+              className="mt-0.5 size-4 accent-brand focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-soft"
+              id="event-late-submission-enabled"
+              type="checkbox"
+              {...registerField('allowsLateSubmission')}
+            />
+            <span>
+              <span className="block font-semibold">
+                Permitir entrega atrasada
+              </span>
+              <span className="mt-1 block text-xs leading-5 text-ink-muted">
+                La fecha programada no cambiará; el plazo adicional se contará
+                en días corridos.
+              </span>
+            </span>
+          </label>
+          {allowsLateSubmission ? (
+            <div className="space-y-4 border-t border-border pt-4">
+              <TextField
+                error={errors.lateSubmissionDays?.message}
+                id="event-late-submission-days"
+                label="Días corridos de atraso"
+                min={1}
+                required
+                step={1}
+                type="number"
+                {...registerField('lateSubmissionDays')}
+              />
+              <TextAreaField
+                error={errors.lateSubmissionPenaltyDescription?.message}
+                hint="Describe el descuento u otra condición, si corresponde."
+                id="event-late-submission-penalty"
+                label="Condición o descuento por atraso"
+                maxLength={1000}
+                {...registerField('lateSubmissionPenaltyDescription')}
+              />
+            </div>
+          ) : null}
+        </fieldset>
+      ) : null}
 
       <SelectField id="event-status" label="Estado" {...registerField('status')}>
         <option value="pending">Pendiente</option>

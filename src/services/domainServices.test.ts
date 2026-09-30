@@ -99,6 +99,8 @@ const eventRow: EventRow = {
   created_at: timestamp,
   description: 'Repasar derivadas.',
   end_at: null,
+  late_submission_days: null,
+  late_submission_penalty_description: null,
   id: eventId,
   is_all_day: false,
   kind: 'academic',
@@ -227,13 +229,22 @@ describe('domain services', () => {
   })
 
   it('RF-10 and RF-14 serializes and maps event date contracts', async () => {
-    mocks.primaryQuery.single.mockResolvedValue({ data: eventRow, error: null })
+    mocks.primaryQuery.single.mockResolvedValue({
+      data: {
+        ...eventRow,
+        late_submission_days: 2,
+        late_submission_penalty_description: 'Se descuenta 10 %.',
+      },
+      error: null,
+    })
 
-    await createEvent({
+    const created = await createEvent({
       description: 'Repasar derivadas.',
       endAt: null,
       isAllDay: false,
       kind: 'academic',
+      lateSubmissionDays: 2,
+      lateSubmissionPenaltyDescription: 'Se descuenta 10 %.',
       location: 'Sala 12',
       personalGroupId: null,
       startAt: '2026-09-10T10:00',
@@ -242,9 +253,16 @@ describe('domain services', () => {
       title: 'Control 1',
     })
 
+    expect(created).toMatchObject({
+      lateSubmissionDays: 2,
+      lateSubmissionPenaltyDescription: 'Se descuenta 10 %.',
+    })
+
     expect(mocks.primaryQuery.insert).toHaveBeenCalledWith([
       expect.objectContaining({
         end_at: null,
+        late_submission_days: 2,
+        late_submission_penalty_description: 'Se descuenta 10 %.',
         owner_id: ownerId,
         start_at: new Date('2026-09-10T10:00').toISOString(),
       }),

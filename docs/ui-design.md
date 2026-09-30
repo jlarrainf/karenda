@@ -306,7 +306,19 @@ de datos.
   del formulario mediante un selector visible `Académico`/`Personal`. La
   acción `Agregar con IA` permanece separada como flujo asistido.
 - El orden de captura es título, relación con asignatura o grupo, inicio, modo
-  de todo el día, término, estado, lugar y descripción.
+  de todo el día, término, plazo de atraso académico, estado, lugar y
+  descripción.
+- Solo en eventos académicos se ofrece `Permitir entrega atrasada`. Al
+  activarlo aparecen `Días corridos de atraso` (obligatorio, entero positivo) y
+  `Condición o descuento por atraso` (opcional). En eventos personales estos
+  valores no se muestran y se guardan como nulos.
+- El detalle conserva la fecha programada original y añade `Fecha límite con
+  atraso` calculada desde el término programado, junto con la descripción del
+  descuento cuando exista. La ayuda deja claro que son días corridos y que la
+  hora local del evento se conserva cuando tiene horario.
+- Los controles adicionales siguen la columna de lectura del formulario, se
+  apilan en móvil, tienen etiquetas visibles y muestran los errores junto al
+  campo correspondiente; la selección no depende solo del color.
 - La etiqueta de cada campo es visible. Los campos obligatorios se identifican
   con texto y no únicamente con color; los errores se muestran junto al campo
   que puede corregirse.
