@@ -15,6 +15,8 @@ const event: CalendarEvent = {
   id: '44444444-4444-4444-8444-444444444444',
   isAllDay: false,
   kind: 'academic',
+  lateSubmissionDays: 2,
+  lateSubmissionPenaltyDescription: 'Se descuenta 10 %.',
   location: 'Sala 12',
   ownerId: '22222222-2222-4222-8222-222222222222',
   personalGroupId: null,
@@ -54,6 +56,9 @@ describe('EventDetail', () => {
     expect(screen.getByText('Pendiente')).toBeVisible()
     expect(screen.getByText('Sala 12')).toBeVisible()
     expect(screen.getByText('Prueba')).toBeVisible()
+    expect(screen.getByText('Fecha límite con atraso')).toBeVisible()
+    expect(screen.getByText(/2 días corridos/)).toBeVisible()
+    expect(screen.getByText('Se descuenta 10 %.')).toBeVisible()
     expect(await screen.findByRole('link', { name: 'Abrir elemento original' })).toHaveAttribute(
       'href',
       'https://cursos.canvas.uc.cl/courses/42/assignments/99',

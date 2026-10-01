@@ -42,6 +42,7 @@ dispositivo cuando corresponda.
 | KR-REQ-033 | `NoteFilter`, consulta de notas de asignaturas y navegación `Todos los ramos` + asignaturas | Tests de service/store/navigation y smoke de `NotesScreen` | Implementación local, tests y smoke correctos; verificación visual real pendiente |
 | KR-REQ-034 | Cabecera con cierre arriba a la derecha, refresh compacto inmediatamente a su izquierda y sin fila interna Calendario/Notas | Smoke de geometría, inspección estática de acciones y KOReader real | Implementación local y smoke correctos; verificación visual real pendiente |
 | KR-REQ-035 | Navbar inferior visible durante la consulta, cierre diferido sin repintado intermedio al cambiar de acción y gestos delegados al widget subyacente | Smoke con navbar simulada, propagación/cierre/supresión de repintado e indicador, SimpleUI/KOReader real desde Home/Library/Reader | Implementación local y smokes correctos; verificación real bloqueada por dispositivo |
+| KR-REQ-036 | Snapshot y mapper conservan días y descripción opcional de atraso como datos de dominio | Proyección Edge, `snapshot_mapper_spec.lua` y fixture de snapshot anterior | Pendiente: no hay runtime Deno/Lua y la migración no está aplicada |
 | KR-NFR-001 | Paquete separado `.koplugin` | Inspección del árbol de distribución | Pendiente |
 | KR-NFR-002 | InsForge como fuente y store local no autoritativo | Revisión de arquitectura | Especificado |
 | KR-NFR-003 | APIs/ciclo de vida nativos de KOReader | Prueba en KOReader fijado/real | Pendiente |

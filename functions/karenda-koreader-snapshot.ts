@@ -16,7 +16,7 @@ const ALLOWED_ORIGINS = new Set([
 const SUBJECT_COLUMNS = 'id, name, code, abbreviation, color, updated_at'
 const PERSONAL_GROUP_COLUMNS = 'id, name, color, updated_at'
 const EVENT_COLUMNS =
-  'id, kind, title, subject_id, personal_group_id, start_at, end_at, is_all_day, status, location, description, updated_at'
+  'id, kind, title, subject_id, personal_group_id, start_at, end_at, is_all_day, status, location, description, late_submission_days, late_submission_penalty_description, updated_at'
 const NOTE_COLUMNS = 'id, target_type, target_id, title, content_markdown, updated_at'
 const TOKEN_COLUMNS = 'id, owner_id, scopes, revoked_at, expires_at'
 
@@ -510,6 +510,9 @@ function mapEvent(
     status: row.status,
     location: row.location ?? null,
     description: row.description ?? null,
+    late_submission_days: row.late_submission_days ?? null,
+    late_submission_penalty_description:
+      row.late_submission_penalty_description ?? null,
     updated_at: normalizeInstant(row.updated_at),
   }
 }

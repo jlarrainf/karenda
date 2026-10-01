@@ -539,6 +539,16 @@ seleccionado otra pestaña.
 Si no existe una navbar inferior activa, la superficie podrá usar toda la altura
 disponible sin dibujar una barra alternativa.
 
+### KR-REQ-036: Metadatos de plazo de entrega atrasada
+
+Cada evento del snapshot incluirá `late_submission_days` y
+`late_submission_penalty_description`. Los días serán un entero positivo o
+`null`; la descripción será texto de hasta 1000 caracteres o `null`. Los eventos
+personales y los eventos académicos sin plazo mostrarán ambos valores como
+`null`. El mapper conservará ambos campos en el modelo local; clientes que
+ignoren las propiedades adicionales seguirán siendo compatibles con
+`schema_version: 1`.
+
 ## 3. Requisitos No Funcionales
 
 ### KR-NFR-001: Separación

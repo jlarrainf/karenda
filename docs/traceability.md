@@ -41,6 +41,9 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | RF-26 | `MarkdownRenderer` y vista previa | `MarkdownRenderer.test.tsx`, `NoteEditor.test.tsx` | Automatizado |
 | RF-27 | `rehype-sanitize` y enlaces seguros | `MarkdownRenderer.test.tsx` | Automatizado |
 | RF-28 | `AppError`, estados de stores y feedback de formularios | `errors.test.ts`, tests de stores y componentes | Automatizado |
+| RF-29 | `EventForm`, `eventService`, validación y migración de plazo/condición de atraso | `EventForm.test.tsx`, `validation.test.ts`, `domainServices.test.ts` | Automatizado |
+| RF-30 | Cálculo de fecha límite y `EventDetail` | `lateSubmission.test.ts`, `EventDetail.test.tsx` | Automatizado |
+| RF-31 | Proyección snapshot y mapeo Lua de metadatos opcionales | `snapshot_mapper_spec.lua`, verificación de función Edge | Pendiente: no hay runtime Deno/Lua disponible y la migración no está aplicada |
 
 ## Requisitos De Creación Asistida Con IA
 

@@ -154,6 +154,11 @@ local function mapEvent(row, subjectIds, personalGroupIds)
     local end_at = optionalField(row, "end_at")
     local location = optionalField(row, "location")
     local description = optionalField(row, "description")
+    local late_submission_days = optionalField(row, "late_submission_days")
+    local late_submission_penalty_description = optionalField(
+        row,
+        "late_submission_penalty_description"
+    )
     local updated_at = optionalField(row, "updated_at")
     if type(row) ~= "table"
         or not isNonEmptyString(row.id)
@@ -163,6 +168,16 @@ local function mapEvent(row, subjectIds, personalGroupIds)
         or type(row.all_day) ~= "boolean"
         or not isNonEmptyString(row.start_at)
         or not validateTimestamp(updated_at, false)
+        or (late_submission_days ~= nil
+            and (type(late_submission_days) ~= "number"
+                or late_submission_days < 1
+                or late_submission_days % 1 ~= 0))
+        or (late_submission_penalty_description ~= nil
+            and (type(late_submission_penalty_description) ~= "string"
+                or late_submission_penalty_description == ""
+                or #late_submission_penalty_description > 1000))
+        or (late_submission_penalty_description ~= nil
+            and late_submission_days == nil)
     then
         return nil
     end
@@ -170,7 +185,9 @@ local function mapEvent(row, subjectIds, personalGroupIds)
     if row.kind == "academic" and not isNonEmptyString(subject_id) then
         return nil
     end
-    if row.kind == "personal" and subject_id ~= nil then
+    if row.kind == "personal"
+        and (subject_id ~= nil or late_submission_days ~= nil)
+    then
         return nil
     end
     if subject_id ~= nil and not subjectIds[subject_id] then
@@ -207,6 +224,8 @@ local function mapEvent(row, subjectIds, personalGroupIds)
         status = row.status,
         location = location,
         description = description,
+        lateSubmissionDays = late_submission_days,
+        lateSubmissionPenaltyDescription = late_submission_penalty_description,
         updatedAt = updated_at,
     }
 end

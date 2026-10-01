@@ -37,6 +37,8 @@ local function validSnapshot()
                 status = "pending",
                 location = nil,
                 description = nil,
+                late_submission_days = 2,
+                late_submission_penalty_description = "Se descuenta 10 %.",
                 updated_at = "2026-08-30T20:00:00.000Z",
             },
         },
@@ -52,6 +54,11 @@ describe("snapshot_mapper", function()
         assert.are.equal("fixture-1", snapshot.snapshotId)
         assert.are.equal("subject-1", snapshot.events[1].subjectId)
         assert.are.equal("2026-09-04T13:00:00Z", snapshot.events[1].startAt)
+        assert.are.equal(2, snapshot.events[1].lateSubmissionDays)
+        assert.are.equal(
+            "Se descuenta 10 %.",
+            snapshot.events[1].lateSubmissionPenaltyDescription
+        )
     end)
 
     it("acepta timestamps RFC 3339 con milisegundos y zona Z", function()
@@ -75,6 +82,8 @@ describe("snapshot_mapper", function()
         event.all_day = true
         event.location = json.util.null
         event.description = json.util.null
+        event.late_submission_days = json.util.null
+        event.late_submission_penalty_description = json.util.null
 
         local snapshot, err = SnapshotMapper.map(payload)
 
@@ -82,6 +91,30 @@ describe("snapshot_mapper", function()
         assert.is_nil(snapshot.events[1].subjectId)
         assert.is_nil(snapshot.events[1].endAt)
         assert.is_nil(snapshot.events[1].location)
+        assert.is_nil(snapshot.events[1].lateSubmissionDays)
+        assert.is_nil(snapshot.events[1].lateSubmissionPenaltyDescription)
+    end)
+
+    it("accepts cached events created before late-submission fields existed", function()
+        local payload = validSnapshot()
+        payload.events[1].late_submission_days = nil
+        payload.events[1].late_submission_penalty_description = nil
+
+        local snapshot, err = SnapshotMapper.map(payload)
+
+        assert.is_nil(err)
+        assert.is_nil(snapshot.events[1].lateSubmissionDays)
+        assert.is_nil(snapshot.events[1].lateSubmissionPenaltyDescription)
+    end)
+
+    it("rejects invalid late-submission values", function()
+        local payload = validSnapshot()
+        payload.events[1].late_submission_days = 0
+
+        local snapshot, err = SnapshotMapper.map(payload)
+
+        assert.is_nil(snapshot)
+        assert.are.equal("INVALID_SNAPSHOT", err.code)
     end)
 
     it("rechaza referencias de eventos que no están en el catálogo", function()

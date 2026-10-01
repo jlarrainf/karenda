@@ -71,6 +71,9 @@ interfaz web o que obliguen al plugin a interpretar datos presentacionales.
   leerlas sin tener que interpretar la sintaxis.
 - **HU-16:** Como estudiante, quiero que mis datos sean privados y no estén
   disponibles para otras cuentas.
+- **HU-17:** Como estudiante, quiero configurar un plazo de atraso y describir
+  su descuento en una entrega académica para saber hasta cuándo puedo
+  entregarla y qué condición se aplica.
 
 # 3. Requisitos Funcionales (RF)
 
@@ -131,13 +134,25 @@ Un evento contiene:
 - `status`: `pending` o `completed`.
 - `location`: opcional; representa una sala, dirección o lugar.
 - `description`: opcional; contiene el temario o descripción del evento.
+- `late_submission_days`: cantidad positiva de días corridos adicionales para
+  una entrega académica; nulo cuando no se permite atraso.
+- `late_submission_penalty_description`: descripción opcional de la condición
+  o descuento por atraso; nula cuando no corresponde.
 
 La fecha de inicio siempre es obligatoria. La hora de inicio es obligatoria
 cuando `is_all_day` es falso. Un evento de varios días o con duración debe
 tener `end_at`, y su término debe ser posterior a su inicio. En eventos de todo
 el día se conserva la fecha local sin desplazamientos visibles por zona
- horaria; la fecha de término indicada por el usuario se considera incluida en
+horaria; la fecha de término indicada por el usuario se considera incluida en
  el rango ocupado.
+
+El plazo adicional solo se configura en eventos académicos. Su fecha límite se
+calcula desde el término programado (`end_at` si existe; en caso contrario,
+`start_at`) sumando `late_submission_days` días corridos. En eventos de todo el
+día se conserva la fecha local; en eventos con hora se conserva la hora local.
+La fecha calculada no se persiste por separado y el evento sigue ocupando su
+fecha programada original en el calendario. Si no se permite atraso, ambos
+campos adicionales deben quedar nulos.
 
 El cambio de `status` es manual. La fecha pasada no cambia automáticamente un
 evento de `pending` a `completed`.
@@ -266,6 +281,22 @@ notas no se asocian directamente a eventos en este MVP.
   el sistema deberá mostrar un mensaje de error en español, no deberá informar
   un éxito falso y deberá conservar los datos introducidos siempre que sea
   posible.
+- **RF-29 [EARS: evento]:** Cuando el usuario cree o edite un evento académico,
+  el sistema deberá permitir activar un plazo de entrega atrasada con una
+  cantidad positiva de días corridos y una descripción opcional de la
+  condición o descuento. Si el plazo no está activo, o el evento es personal,
+  ambos valores deberán guardarse como nulos. El valor de días será obligatorio
+  cuando el plazo esté activo.
+- **RF-30 [EARS: estado]:** Mientras un evento académico tenga plazo de atraso,
+  el sistema deberá mostrar en su detalle la fecha límite calculada a partir de
+  su fecha/hora programada y los días corridos permitidos, además de la
+  descripción del descuento cuando exista; deberá mantener intacta la fecha
+  programada del evento.
+- **RF-31 [EARS: evento]:** Cuando InsForge genere un snapshot para KOReader,
+  deberá incluir `late_submission_days` y
+  `late_submission_penalty_description` en cada evento, conservando los valores
+  nulos cuando no se permita atraso y sin cambiar la versión mayor del
+  contrato.
 
 # 4. Requisitos No Funcionales (RNF)
 
@@ -411,4 +442,13 @@ los criterios siguientes:
   de tipos y las comprobaciones de calidad del proyecto pasan correctamente, y
   la documentación permanece sincronizada con el comportamiento implementado.
 - **CA-17:** No se incluye en el MVP ninguna funcionalidad de compartir eventos
-  entre cuentas ni código de implementación del plugin de KOReader/SimpleUI.
+  entre cuentas ni edición de eventos desde el plugin de KOReader/SimpleUI.
+- **CA-18:** Un evento académico permite guardar y volver a editar un plazo de
+  atraso con días corridos positivos y una descripción opcional; un plazo
+  desactivado o evento personal conserva ambos valores nulos, y la fecha
+  programada original no se altera.
+- **CA-19:** El detalle muestra la fecha límite adicional calculada con la zona
+  horaria local y la condición por atraso cuando está definida.
+- **CA-20:** El snapshot de KOReader contiene ambos campos para cada evento,
+  preserva su nulabilidad y mantiene compatibilidad con clientes que ignoran
+  campos nuevos del contrato v1.

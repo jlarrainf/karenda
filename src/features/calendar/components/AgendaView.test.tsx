@@ -14,6 +14,8 @@ function makeEvent(overrides: Partial<CalendarEvent>): CalendarEvent {
     id: 'event-default',
     isAllDay: false,
     kind: 'academic',
+    lateSubmissionDays: null,
+    lateSubmissionPenaltyDescription: null,
     location: null,
     ownerId: '22222222-2222-4222-8222-222222222222',
     personalGroupId: null,
