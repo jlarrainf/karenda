@@ -17,6 +17,7 @@
 # Frontend build artifacts and local environment files
 node_modules
 dist
+functions/.deploy/
 playwright-report
 test-results
 coverage

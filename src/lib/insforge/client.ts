@@ -120,6 +120,13 @@ export function persistCurrentAccessToken(): void {
   }
 }
 
+export function getCurrentAccessToken(): string | null {
+  const authorization = insforge.getHttpClient().getHeaders().Authorization
+  return authorization?.startsWith('Bearer ')
+    ? authorization.slice('Bearer '.length)
+    : null
+}
+
 export function clearPersistedAuthSession(): void {
   const storage = getSessionStorage()
 

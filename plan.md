@@ -529,3 +529,66 @@ El trabajo se divide en: spec y UI; migración y RLS; cliente Canvas y funciones
 servicio y store; superficie `/canvas`; procedencia en detalle de evento;
 programador diario; tests de dominio, funciones, RLS, UI y E2E; despliegue
 limitado a la cuenta piloto.
+
+## 16. Integración MCP Multiharness
+
+La spec `specs/007-mcp-integration.md` define el servidor MCP remoto de
+Karenda y es el contrato obligatorio de la integración. El objetivo es cubrir
+las operaciones de dominio ya definidas para eventos, asignaturas, grupos
+personales, notas, hábitos, registros, tareas recurrentes, borradores IA y
+revisión Canvas, manteniendo las mismas validaciones y restricciones que la
+web. La paridad no autoriza reproducir operaciones visuales ni ampliar los
+contratos de Canvas o KOReader.
+
+### Arquitectura
+
+- Un endpoint remoto Streamable HTTP permite reutilizar configuración en
+  Codex, Claude Code, OpenCode y otros clientes compatibles.
+- InsForge Edge Functions y PostgreSQL siguen siendo la única plataforma
+  backend autorizada. Fase 0 valida que sus rutas, runtime Deno, streaming,
+  redirects OAuth y límites de ejecución soporten el protocolo; una limitación
+  no autoriza añadir un servidor externo.
+- El usuario inicia OAuth desde el harness y completa login/consentimiento en
+  Karenda. Authorization Code con PKCE S256 vincula un grant MCP al usuario
+  InsForge. El token MCP es independiente y de audiencia limitada; el token de
+  InsForge nunca se comparte con el harness.
+- La concesión guarda cifrado solo el access token temporal de InsForge, nunca
+  su refresh token. Si expira, el cliente vuelve a iniciar OAuth en Karenda;
+  así el MCP no rota ni invalida la sesión web.
+- Cada herramienta deriva identidad del grant, exige scopes en servidor y
+  llama a servicios de dominio con contexto de usuario/RLS. No hay SQL ni RPC
+  arbitraria.
+- CIMD se prefiere si el spike verifica interoperabilidad; DCR, duración de
+  tokens, SDK y redirects se fijan con evidencia en la misma fase.
+
+### Cobertura Funcional Y Salvaguardas
+
+La superficie planificada ofrece lectura y escritura tipada por familia. Los
+scopes de lectura, escritura y borrado se separan. Borrar exige destino
+resumido y confirmación verificable; cuando un harness no pueda pedir
+confirmación, el servidor exige confirmación/versionado explícitos o rechaza la
+acción. Las ediciones aplican control optimista e idempotencia en operaciones
+reintentables.
+
+La generación IA produce borradores sin persistir. Guardar es una llamada
+separada que vuelve a validar los campos. Canvas permite estado, sync y
+decisiones de revisión dentro de Karenda si Canvas fue configurado desde la
+web; no acepta tokens desde el modelo ni escribe en Canvas. La gestión de
+credenciales y cuenta permanece en web/InsForge.
+
+### Seguridad, UI Y Verificación
+
+El flujo OAuth publica metadata estándar, valida audience/redirect/state/PKCE,
+rota refresh tokens MCP y los revoca desde una pantalla accesible. La web presenta
+cliente, scopes, fecha y opción de revocación, sin volver a mostrar secretos.
+RLS, scopes, aislamiento entre cuentas, límites de uso, protección de logs y
+auditoría mínima deben verificarse antes del piloto.
+
+La implementación se ejecutará por las fases 0-8 de la spec: factibilidad,
+contratos, OAuth/conexiones, endpoint, lectura, escritura, flujos avanzados,
+seguridad/interoperabilidad y piloto. Ninguna fase avanza sin su gate de salida.
+La matriz de docs/traceability.md relaciona criterios MCP con cambios y pruebas;
+tasks.md desglosa el trabajo. La implementación inicial y migración están en
+una rama InsForge aislada, con producción intacta. OAuth real, pruebas entre
+cuentas, límites de tasa, idempotencia y la matriz E2E de harnesses siguen
+abiertos; véase docs/mcp-clients.md antes de conectar un cliente.

@@ -1,0 +1,6 @@
+{
+  "nodeModulesDir": "auto",
+  "imports": {
+    "zod": "npm:zod@4.5.4"
+  }
+}

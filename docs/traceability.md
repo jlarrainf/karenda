@@ -248,3 +248,46 @@ credenciales de prueba.
 | RF-C-26 | Anuncios resuelven ramo por curso y extraen ramo, fecha, hora, duración y abreviación | `canvasAssessment.test.ts`, `karenda-canvas-sync`, migración `20260905100000` | Desplegado en producción; piloto real pendiente |
 | RF-C-27 | Bandeja muestra categoría, código, rango temporal y color del ramo | `CanvasPage.test.tsx`, `CanvasPage` | Desplegado en producción; piloto real pendiente |
 | CA-C-01 a CA-C-17 | Flujo del piloto integrado mediante PR #2 y desplegado en InsForge | 172 tests, lint, typecheck, build, E2E público de producción, migración/RLS y smoke anónimo de función; E2E autenticado y piloto real pendientes | Parcial |
+
+## Integración MCP Multiharness
+
+Spec rectora: specs/007-mcp-integration.md. Evidencia recopilada en la rama
+aislada `feature/007-mcp-server`; el estado staging y las limitaciones se
+mantienen separados de los gates de release.
+
+| Requisito | Implementación planificada | Verificación requerida | Estado |
+| --- | --- | --- | --- |
+| RF-MCP-01 | OAuth, PKCE, consentimiento web y grant vinculados a sesión InsForge | UI desplegada en preview de staging; metadata/challenge/CORS verificados; login y consentimiento reales pendientes | Parcial |
+| RF-MCP-02 a RF-MCP-04 | Validación de audiencia/grant/scope, token MCP opaco, cliente InsForge por usuario y filtros owner_id | Pruebas unitarias de PKCE/scopes/cifrado; RLS multiusuario e IDs cruzados pendientes | Parcial |
+| RF-MCP-05 a RF-MCP-08 | Tools CRUD/status de eventos, confirmación de delete y rango/página acotados | Schemas registrados y ownership explícito; pruebas DB y concurrencia pendientes | Parcial |
+| RF-MCP-09 a RF-MCP-10 | CRUD de asignaturas, grupos y notas con relaciones propias | Implementado localmente; integración con filas reales pendiente | Parcial |
+| RF-MCP-11 a RF-MCP-13 | CRUD de hábitos, registros y notas; no incluye estadísticas ni cada vista de historial | Validadores compartidos; cobertura de historial/RLS pendiente | Parcial |
+| RF-MCP-14 a RF-MCP-15 | Recurrencias, lifecycle, reglas y ocurrencias; se archiva, no se ofrece delete físico | Implementado localmente; pruebas de repetición e historial pendientes | Parcial |
+| RF-MCP-16 a RF-MCP-17 | IA draft/save separadas y tools Canvas de lectura/sync/revisión | Implementado con confirmación; comportamiento de funciones upstream y cuentas piloto pendiente | Parcial |
+| RF-MCP-18 | IDs y relaciones filtrados por propietario con cliente InsForge de usuario | Revisión estática; pruebas A/B pendientes | Parcial |
+| RF-MCP-19 a RF-MCP-20 | Actualizaciones aceptan expectedUpdatedAt; no hay clave idempotente de creación | Control optimista local; idempotencia pendiente | Parcial |
+| RF-MCP-21 a RF-MCP-23 | Refresh rotativo, revocación individual/global y pantallas de conexiones/consentimiento | Suite de lifecycle, teclado/lector y navegador pendientes | Parcial |
+| RF-MCP-24 | Guía inicial en docs/mcp-clients.md, configuración local de Codex y servidor HTTP común | Registro/login/lectura/escritura/revoke en los tres harnesses pendiente | Parcial |
+| RF-MCP-25 a RF-MCP-26 | Errores sanitizados, límites de body/rango/página y validación Origin | Rate limit por cliente/IP/tool y auditoría adversarial pendientes | Parcial |
+| RF-MCP-27 | Contexto español, fecha local y zona indicada por el harness (por defecto America/Santiago) | Test de protocolo/scope pendiente | Parcial |
+| CA-MCP-01 | SDK MCP 2.0.0 en Deno 2.9.6; bundle único y función activa en staging, con preview web en la misma rama | 13 tests locales; en host: ambas páginas de metadata 200, sin bearer 401 con resource_metadata, CORS del preview/loopback 204 y origen extranjero 403; streaming/herramienta autenticada pendientes | Parcial |
+| CA-MCP-02 | Configuración local de Codex hacia staging y guía de setup para los tres harnesses | OAuth E2E aún no iniciado; Claude Code y OpenCode sin configurar | Parcial |
+| CA-MCP-03 | Inventario parcial de familias del dominio y exclusiones de conexión Canvas | Falta auditar cada acción visible de las specs 001-006 | Parcial |
+| CA-MCP-04 a CA-MCP-05 | Migration OAuth y cobertura unitaria local | Usuarios A/B, emisión/rotación/revocación reales y RLS pendientes | Parcial |
+| CA-MCP-06 a CA-MCP-08 | Schemas cerrados, separaciones draft/save y errores genéricos | Idempotencia, límites de tasa, auditoría de logs y revisión adversarial pendientes; bundle reproducible y desplegado en staging | Parcial |
+| CA-MCP-09 a CA-MCP-11 | 172 pruebas web, 13 pruebas MCP, lint, typecheck, build y UI de consentimiento/revocación desplegada al preview aislado | Accesibilidad auditada, tres harnesses y rollback probado pendientes | Parcial |
+
+Seguridad de ramas/datos: el trabajo se realizó en el worktree
+`C:\\Users\\juani\\Desktop\\Programacion\\karenda-wt-mcp-plan` sobre
+`feature/007-mcp-server`; la carpeta principal siguió en
+`fix/karenda-koreader-markdown-rendering` y conservó su WIP. InsForge quedó en
+la rama `karenda-mcp` (`7663ead2-52b2-43b3-852d-684f378d7790`), de tipo
+`schema-only`, enlazada a la rama Git de MCP; su conteo de filas de dominio era
+cero. La función MCP y el frontend de consentimiento están desplegados en ese
+entorno aislado; la prueba de autenticación con una cuenta de staging sigue
+pendiente. El esquema padre previo se exportó fuera del repositorio a
+`C:\\Users\\juani\\Desktop\\Programacion\\karenda-mcp-backups-20260923\\karenda-parent-schema.sql`
+(SHA-256 `28040BD02CDDA3090F2A66C9120D8A19AB319DD7C593A0D89CE14651C0739B7B`).
+No se modificó InsForge de producción. La validación funcional con cuenta real
+queda pendiente porque requiere completar consentimiento contra un frontend
+desplegado con este código.
