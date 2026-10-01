@@ -23,6 +23,30 @@ probado: el intento E2E se detuvo porque la API administrativa de staging
 respondió `401` al crear una cuenta sintética; no se creó ninguna cuenta. La
 rama no tiene datos de dominio y no debe usarse para validar datos de producción.
 
+## Producción
+
+La implementación integrada en `main` mediante PR #17 está desplegada en el
+proyecto principal de InsForge. El endpoint Streamable HTTP para clientes es:
+
+~~~text
+https://5zz5dxgt.function2.insforge.app/karenda-mcp/mcp
+~~~
+
+El consentimiento usa `https://karenda.insforge.site/mcp/consent`. La web de
+producción responde `200` en `/` y `/mcp/consent`; el despliegue del 1 de
+octubre de 2026 es `f54c0480-451e-4ba2-9351-f8e302b0896c`. La variable de
+compilación `VITE_KARENDA_MCP_URL` contiene la base
+`https://5zz5dxgt.function2.insforge.app/karenda-mcp`, sin el sufijo `/mcp`,
+porque la web usa esa base para consultar y decidir solicitudes OAuth.
+
+El smoke de producción confirma metadata OAuth y de recurso protegido `200`,
+endpoint MCP sin token `401` con challenge, CORS permitido para el origen web,
+bloqueo de origen externo y registro DCR `201`. La ruta de consentimiento
+carga y muestra los permisos parciales de Codex. El grant OAuth de una cuenta
+real sigue pendiente de la autorización explícita del titular; no se debe
+interpretar el despliegue como cierre de los gates de seguridad o
+interoperabilidad.
+
 ## Codex CLI y Codex IDE
 
 Codex CLI y el IDE comparten configuración. Añade el endpoint del entorno que
@@ -35,8 +59,9 @@ codex mcp login karenda
 ~~~
 
 El comando de login abre el navegador para OAuth y consentimiento. Revisa los
-permisos antes de autorizar. Este worktree contiene una configuración local de
-Codex; no uses staging para consultar o modificar datos reales de Karenda.
+permisos antes de autorizar. El checkout principal de Karenda y la configuración
+global de Codex apuntan a producción. No uses staging para consultar o modificar
+datos reales de Karenda.
 
 ## Claude Code
 

@@ -353,11 +353,13 @@ tamaño del bundle.
 
 ## Fase 20: Integración MCP Multiharness
 
-La spec rectora es specs/007-mcp-integration.md. La implementación inicial vive
-en un worktree y una rama InsForge aislados; la función se valida allí y no se
-publicó a producción. Cada tarea conserva evidencia y pendientes en
-docs/traceability.md; esta fase no cierra los gates de seguridad ni de
-interoperabilidad.
+La spec rectora es specs/007-mcp-integration.md. La implementación de
+`feature/007-mcp-server` se integró mediante PR #17 y se desplegó en el proyecto
+principal de InsForge desde `main` (`9eab71b`). El servidor de producción está
+disponible y la web/consentimiento usa el deployment
+`f54c0480-451e-4ba2-9351-f8e302b0896c`. El despliegue no cierra los gates de
+seguridad ni de interoperabilidad; cada tarea conserva evidencia y pendientes
+en `docs/traceability.md`.
 
 ### Fase 0: Factibilidad Y Contratos De Cobertura
 
@@ -368,20 +370,29 @@ interoperabilidad.
   matriz de cobertura revisada.
 - [ ] **Tarea 131: Probar InsForge Streamable HTTP** (45-90 min). En entorno
   aislado, verificar runtime Deno, SDK MCP oficial, headers, streaming,
-  cancelación, rutas, timeout y límites de Edge Functions. No desplegar en
-  producción. Evidencia: spike reproducible y restricciones documentadas.
+  cancelación, rutas, timeout y límites de Edge Functions. El spike de esta
+  tarea se limita al entorno aislado; la publicación posterior a producción se
+  registra abajo y se autorizó después del merge PR #17. Evidencia: spike
+  reproducible y restricciones documentadas.
   Evidencia parcial: `npm run test:mcp` (22 tests), bundle único en
   `functions/.deploy/karenda-mcp.js`, función activa en la rama limpia
   `karenda-mcp-release`, metadata OAuth/recurso 200, desafío sin bearer 401,
   CORS permitido 204/origen extranjero 403 y registro DCR 201. Las migraciones
   OAuth y de controles están aplicadas. El preview web también está desplegado
-  y sus rutas principal/consentimiento responden 200. Falta cancelación bajo
-  carga y flujo OAuth autenticado. El intento E2E de staging se detuvo al
-  recibir 401 al crear una cuenta sintética; no se creó ninguna cuenta.
+  y sus rutas principal/consentimiento responden 200. Después del merge PR #17,
+  las migraciones MCP se aplicaron al proyecto principal, se publicó la función
+  y se hizo un smoke de producción: metadata/recurso 200, challenge 401, CORS
+  permitido 204/origen externo 403 y DCR 201. La web de consentimiento de
+  producción ya carga la solicitud OAuth. Falta completar el grant autenticado,
+  validar una lectura con la cuenta autorizada y probar cancelación bajo carga.
+  El intento E2E de staging se detuvo al recibir 401 al crear una cuenta
+  sintética; no se creó ninguna cuenta.
 - [ ] **Tarea 132: Probar OAuth con los tres harnesses** (45-90 min). Validar
   descubrimiento de metadata, CIMD/DCR, redirects de escritorio, login, refresh
   y logout/revocación en Codex, Claude Code y OpenCode. Evidencia: tabla de
-  versiones/resultado con configuración sin secretos.
+  versiones/resultado con configuración sin secretos. Estado actual: Codex
+  apunta a producción; consentimiento del titular pendiente. Claude Code y
+  OpenCode aún no se configuraron.
 - [ ] **Tarea 133: Cerrar decisión de arquitectura** (20-30 min). Elegir SDK,
   metadata de clientes, rutas OAuth, duraciones y límites solo desde evidencia
   de 126-127. Si InsForge no alcanza los requisitos, detenerse y documentar

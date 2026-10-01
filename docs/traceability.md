@@ -254,13 +254,14 @@ credenciales de prueba.
 
 ## Integración MCP Multiharness
 
-Spec rectora: specs/007-mcp-integration.md. Evidencia recopilada en la rama
-aislada `feature/007-mcp-server`; el estado staging y las limitaciones se
-mantienen separados de los gates de release.
+Spec rectora: specs/007-mcp-integration.md. La implementación de
+`feature/007-mcp-server` se integró mediante PR #17 y se desplegó en producción
+el 1 de octubre de 2026. El smoke de producción y el estado staging se registran
+por separado; las verificaciones incompletas mantienen sus gates abiertos.
 
 | Requisito | Implementación planificada | Verificación requerida | Estado |
 | --- | --- | --- | --- |
-| RF-MCP-01 | OAuth, PKCE, consentimiento web y grant vinculados a sesión InsForge | Metadata/challenge/CORS y rutas de consentimiento verificadas en staging; login y consentimiento OAuth reales pendientes | Parcial |
+| RF-MCP-01 | OAuth, PKCE, consentimiento web y grant vinculados a sesión InsForge | Metadata/challenge/CORS y pantalla de consentimiento verificadas en producción; grant, callback y llamada autenticada pendientes de autorización explícita | Parcial |
 | RF-MCP-02 a RF-MCP-04 | Validación de audiencia/grant/scope, token MCP opaco, cliente InsForge por usuario y filtros owner_id | Pruebas unitarias de PKCE/scopes/cifrado; RLS multiusuario e IDs cruzados pendientes | Parcial |
 | RF-MCP-05 a RF-MCP-08 | Tools CRUD/status de eventos, confirmación de delete y rango/página acotados | Schemas registrados y ownership explícito; pruebas DB y concurrencia pendientes | Parcial |
 | RF-MCP-09 a RF-MCP-10 | CRUD de asignaturas, grupos y notas con relaciones propias | Implementado localmente; integración con filas reales pendiente | Parcial |
@@ -270,15 +271,15 @@ mantienen separados de los gates de release.
 | RF-MCP-18 | IDs y relaciones filtrados por propietario con cliente InsForge de usuario | Revisión estática; pruebas A/B pendientes | Parcial |
 | RF-MCP-19 a RF-MCP-20 | Actualizaciones aceptan expectedUpdatedAt; las mutaciones exigen idempotencyKey y cachean respuesta por 30 días | Reintento, clave reutilizada con otra entrada y ejecución en curso cubiertos localmente; RPC aplicada a staging, E2E autenticado pendiente | Parcial |
 | RF-MCP-21 a RF-MCP-23 | Refresh rotativo, revocación individual/global y pantallas de conexiones/consentimiento | Suite de lifecycle, teclado/lector y navegador pendientes | Parcial |
-| RF-MCP-24 | Guía inicial en docs/mcp-clients.md, configuración local de Codex y servidor HTTP común | Registro/login/lectura/escritura/revoke en los tres harnesses pendiente | Parcial |
-| RF-MCP-25 a RF-MCP-26 | Errores sanitizados, límites de body/rango/página, validación Origin y rate limits por IP/grant/tool | HMAC de IP, buckets y RPC aplicados; metadata/challenge/CORS/DCR pasan smoke en staging; revisión adversarial pendiente | Parcial |
+| RF-MCP-24 | Guía inicial en docs/mcp-clients.md, configuración local de Codex y servidor HTTP común | Codex apunta a producción; falta completar login/lectura. Registro/login/lectura/escritura/revocación en tres harnesses sigue pendiente | Parcial |
+| RF-MCP-25 a RF-MCP-26 | Errores sanitizados, límites de body/rango/página, validación Origin y rate limits por IP/grant/tool | HMAC de IP, buckets y RPC aplicados; metadata/challenge/CORS/DCR pasan smoke en producción y staging; revisión adversarial pendiente | Parcial |
 | RF-MCP-27 | Contexto español, fecha local y zona indicada por el harness (por defecto America/Santiago) | Test de protocolo/scope pendiente | Parcial |
-| CA-MCP-01 | SDK MCP 2.0.0 en Deno 2.9.6; rama limpia `karenda-mcp-release` creada desde el esquema actual para validar función y preview | 22 tests MCP locales; metadata 200, challenge 401, CORS allow/deny y DCR 201; preview `/` y `/mcp/consent` 200; OAuth autenticado pendiente | Parcial |
-| CA-MCP-02 | Configuración local de Codex hacia staging y guía de setup para los tres harnesses | OAuth E2E detenido: crear una cuenta sintética en staging respondió 401; no se creó ninguna cuenta. Claude Code y OpenCode sin configurar | Parcial |
+| CA-MCP-01 | SDK MCP 2.0.0 en Deno 2.9.6; rama limpia `karenda-mcp-release` creada desde el esquema actual; release integrada en `main` | 22 tests MCP locales; metadata 200, challenge 401, CORS allow/deny y DCR 201 en producción; web `/` y `/mcp/consent` 200; grant OAuth y llamada autenticada pendientes | Parcial |
+| CA-MCP-02 | Configuración global y local de Codex hacia producción; guía de setup para los tres harnesses | Pantalla de consentimiento real carga y propone permisos de solo lectura acotados; falta autorización/callback. El intento con cuenta sintética de staging respondió 401 y no creó cuentas. Claude Code y OpenCode sin configurar | Parcial |
 | CA-MCP-03 | Inventario parcial de familias del dominio y exclusiones de conexión Canvas | Falta auditar cada acción visible de las specs 001-006 | Parcial |
 | CA-MCP-04 a CA-MCP-05 | Migración OAuth aplicada y cobertura unitaria local | Usuarios A/B, emisión/rotación/revocación reales y RLS pendientes | Parcial |
-| CA-MCP-06 a CA-MCP-08 | Schemas cerrados, separaciones draft/save, idempotencia durable, rate limits y errores genéricos | 22 tests MCP, bundle y RPC desplegados en staging; auditoría de logs y revisión adversarial pendientes | Parcial |
-| CA-MCP-09 a CA-MCP-11 | 179 pruebas web, 22 pruebas MCP, lint, typecheck y build; UI de consentimiento/revocación desplegada a staging | Accesibilidad auditada, tres harnesses y rollback probado pendientes | Parcial |
+| CA-MCP-06 a CA-MCP-08 | Schemas cerrados, separaciones draft/save, idempotencia durable, rate limits y errores genéricos | 22 tests MCP; bundle, RPC y función desplegados en staging y producción; auditoría de logs y revisión adversarial pendientes | Parcial |
+| CA-MCP-09 a CA-MCP-11 | 179 pruebas web, 22 pruebas MCP, lint, typecheck y build; UI de consentimiento/revocación desplegada en staging y producción | Accesibilidad auditada, tres harnesses y rollback probado pendientes | Parcial |
 
 Seguridad de ramas/datos: el trabajo se realizó en el worktree
 `C:\\Users\\juani\\Desktop\\Programacion\\karenda-wt-mcp-plan` sobre
@@ -296,11 +297,18 @@ función `karenda-mcp` pasa el smoke anónimo, el preflight CORS allow/deny y el
 registro DCR. El preview web con deployment
 `756137ec-93ec-4e56-af1f-163636b306f6` responde 200 en `/` y `/mcp/consent`.
 El E2E se detuvo al recibir 401 al crear una cuenta sintética; no se crearon
-cuentas. OAuth autenticado, pruebas RLS A/B y merge a producción siguen pendientes. El
-esquema padre previo se exportó fuera del repositorio a
+cuentas. La feature se integró en `main` mediante PR #17 (`9eab71bf`); las
+migraciones `20261001000000_karenda-mcp-oauth.sql` y
+`20261001001000_karenda-mcp-safety-controls.sql` se aplicaron también al
+proyecto principal. La función de producción
+`https://5zz5dxgt.function2.insforge.app/karenda-mcp/mcp` pasa metadata OAuth y
+recurso 200, challenge 401, CORS permitido 204/origen externo 403 y DCR 201.
+La web de consentimiento se publicó en el deployment
+`f54c0480-451e-4ba2-9351-f8e302b0896c`; `/` y `/mcp/consent` responden 200.
+El consentimiento de Codex ya carga y permite scopes parciales, pero el titular
+aún no ha aprobado el grant y no se ha ejecutado una lectura autenticada. Las
+pruebas RLS A/B, otros harnesses, revisión adversarial y rollback siguen
+pendientes. El esquema padre previo se exportó fuera del repositorio a
 `C:\\Users\\juani\\Desktop\\Programacion\\karenda-mcp-backups-20260923\\karenda-parent-schema.sql`
 (SHA-256 `28040BD02CDDA3090F2A66C9120D8A19AB319DD7C593A0D89CE14651C0739B7B`).
-No se aplicó ninguna migración MCP a producción. Se conservaron sin staging
-tres migraciones untracked ajenas a esta rama. La validación funcional con
-cuenta real queda pendiente hasta completar consentimiento en el endpoint
-producción después de integrar y desplegar el cambio.
+Se conservaron sin staging tres migraciones untracked ajenas a esta rama.
