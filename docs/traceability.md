@@ -260,7 +260,7 @@ mantienen separados de los gates de release.
 
 | Requisito | Implementación planificada | Verificación requerida | Estado |
 | --- | --- | --- | --- |
-| RF-MCP-01 | OAuth, PKCE, consentimiento web y grant vinculados a sesión InsForge | Metadata/challenge/CORS verificados en la función limpia; preview web y login/consentimiento reales pendientes | Parcial |
+| RF-MCP-01 | OAuth, PKCE, consentimiento web y grant vinculados a sesión InsForge | Metadata/challenge/CORS y rutas de consentimiento verificadas en staging; login y consentimiento OAuth reales pendientes | Parcial |
 | RF-MCP-02 a RF-MCP-04 | Validación de audiencia/grant/scope, token MCP opaco, cliente InsForge por usuario y filtros owner_id | Pruebas unitarias de PKCE/scopes/cifrado; RLS multiusuario e IDs cruzados pendientes | Parcial |
 | RF-MCP-05 a RF-MCP-08 | Tools CRUD/status de eventos, confirmación de delete y rango/página acotados | Schemas registrados y ownership explícito; pruebas DB y concurrencia pendientes | Parcial |
 | RF-MCP-09 a RF-MCP-10 | CRUD de asignaturas, grupos y notas con relaciones propias | Implementado localmente; integración con filas reales pendiente | Parcial |
@@ -273,12 +273,12 @@ mantienen separados de los gates de release.
 | RF-MCP-24 | Guía inicial en docs/mcp-clients.md, configuración local de Codex y servidor HTTP común | Registro/login/lectura/escritura/revoke en los tres harnesses pendiente | Parcial |
 | RF-MCP-25 a RF-MCP-26 | Errores sanitizados, límites de body/rango/página, validación Origin y rate limits por IP/grant/tool | HMAC de IP, buckets y RPC aplicados; metadata/challenge/CORS/DCR pasan smoke en staging; revisión adversarial pendiente | Parcial |
 | RF-MCP-27 | Contexto español, fecha local y zona indicada por el harness (por defecto America/Santiago) | Test de protocolo/scope pendiente | Parcial |
-| CA-MCP-01 | SDK MCP 2.0.0 en Deno 2.9.6; rama limpia `karenda-mcp-release` creada desde el esquema actual para validar función y preview | 22 tests MCP locales; metadata 200, challenge 401, CORS allow/deny y DCR 201 en función limpia; preview y OAuth autenticado pendientes | Parcial |
-| CA-MCP-02 | Configuración local de Codex hacia staging y guía de setup para los tres harnesses | OAuth E2E aún no iniciado; Claude Code y OpenCode sin configurar | Parcial |
+| CA-MCP-01 | SDK MCP 2.0.0 en Deno 2.9.6; rama limpia `karenda-mcp-release` creada desde el esquema actual para validar función y preview | 22 tests MCP locales; metadata 200, challenge 401, CORS allow/deny y DCR 201; preview `/` y `/mcp/consent` 200; OAuth autenticado pendiente | Parcial |
+| CA-MCP-02 | Configuración local de Codex hacia staging y guía de setup para los tres harnesses | OAuth E2E detenido: crear una cuenta sintética en staging respondió 401; no se creó ninguna cuenta. Claude Code y OpenCode sin configurar | Parcial |
 | CA-MCP-03 | Inventario parcial de familias del dominio y exclusiones de conexión Canvas | Falta auditar cada acción visible de las specs 001-006 | Parcial |
 | CA-MCP-04 a CA-MCP-05 | Migración OAuth aplicada y cobertura unitaria local | Usuarios A/B, emisión/rotación/revocación reales y RLS pendientes | Parcial |
 | CA-MCP-06 a CA-MCP-08 | Schemas cerrados, separaciones draft/save, idempotencia durable, rate limits y errores genéricos | 22 tests MCP, bundle y RPC desplegados en staging; auditoría de logs y revisión adversarial pendientes | Parcial |
-| CA-MCP-09 a CA-MCP-11 | 179 pruebas web, 22 pruebas MCP, lint, typecheck y build; UI de consentimiento/revocación ya existente | Preview web, accesibilidad auditada, tres harnesses y rollback probado pendientes | Parcial |
+| CA-MCP-09 a CA-MCP-11 | 179 pruebas web, 22 pruebas MCP, lint, typecheck y build; UI de consentimiento/revocación desplegada a staging | Accesibilidad auditada, tres harnesses y rollback probado pendientes | Parcial |
 
 Seguridad de ramas/datos: el trabajo se realizó en el worktree
 `C:\\Users\\juani\\Desktop\\Programacion\\karenda-wt-mcp-plan` sobre
@@ -293,8 +293,11 @@ y está asociada a `feature/007-mcp-server`. Las migraciones
 `20261001000000_karenda-mcp-oauth.sql` y
 `20261001001000_karenda-mcp-safety-controls.sql` están aplicadas allí; la
 función `karenda-mcp` pasa el smoke anónimo, el preflight CORS allow/deny y el
-registro DCR. El preview web, OAuth autenticado, pruebas RLS A/B y merge a
-producción siguen pendientes. El esquema padre previo se exportó fuera del repositorio a
+registro DCR. El preview web con deployment
+`756137ec-93ec-4e56-af1f-163636b306f6` responde 200 en `/` y `/mcp/consent`.
+El E2E se detuvo al recibir 401 al crear una cuenta sintética; no se crearon
+cuentas. OAuth autenticado, pruebas RLS A/B y merge a producción siguen pendientes. El
+esquema padre previo se exportó fuera del repositorio a
 `C:\\Users\\juani\\Desktop\\Programacion\\karenda-mcp-backups-20260923\\karenda-parent-schema.sql`
 (SHA-256 `28040BD02CDDA3090F2A66C9120D8A19AB319DD7C593A0D89CE14651C0739B7B`).
 No se aplicó ninguna migración MCP a producción. Se conservaron sin staging

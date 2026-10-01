@@ -6,9 +6,13 @@ proyecto principal y no se promoverá. La rama limpia `karenda-mcp-release`
 parte del esquema actual de producción; las migraciones OAuth y de controles
 están aplicadas y la función MCP está desplegada. Metadata OAuth/recurso,
 challenge 401, CORS y registro DCR pasan smoke tests en esa rama. Producción no
-se modificó. El preview web todavía debe desplegarse y falta completar OAuth
-autenticado desde Codex, pruebas RLS A/B, la matriz E2E de
-Codex/Claude/OpenCode, auditoría adversarial y rollback. La cobertura
+se modificó. El preview web está publicado en
+`https://5zz5dxgt-h6d.insforge.site` (deployment
+`756137ec-93ec-4e56-af1f-163636b306f6`) y sus rutas `/` y `/mcp/consent`
+responden 200. El intento E2E de staging se detuvo porque crear una cuenta
+sintética respondió 401; no se creó ninguna cuenta. Falta completar OAuth
+autenticado desde Codex, pruebas RLS A/B, la matriz E2E de Codex/Claude/OpenCode,
+auditoría adversarial y rollback. La cobertura
 disponible no debe interpretarse como paridad completa con todas las pantallas
 de Karenda.
 

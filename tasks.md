@@ -374,8 +374,10 @@ interoperabilidad.
   `functions/.deploy/karenda-mcp.js`, función activa en la rama limpia
   `karenda-mcp-release`, metadata OAuth/recurso 200, desafío sin bearer 401,
   CORS permitido 204/origen extranjero 403 y registro DCR 201. Las migraciones
-  OAuth y de controles están aplicadas. Falta el preview web, cancelación bajo
-  carga y flujo OAuth autenticado.
+  OAuth y de controles están aplicadas. El preview web también está desplegado
+  y sus rutas principal/consentimiento responden 200. Falta cancelación bajo
+  carga y flujo OAuth autenticado. El intento E2E de staging se detuvo al
+  recibir 401 al crear una cuenta sintética; no se creó ninguna cuenta.
 - [ ] **Tarea 132: Probar OAuth con los tres harnesses** (45-90 min). Validar
   descubrimiento de metadata, CIMD/DCR, redirects de escritorio, login, refresh
   y logout/revocación en Codex, Claude Code y OpenCode. Evidencia: tabla de

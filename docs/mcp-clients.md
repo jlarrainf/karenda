@@ -9,12 +9,19 @@ InsForge. Su endpoint Streamable HTTP es:
 https://5zz5dxgt-h6d.function2.insforge.app/karenda-mcp/mcp
 ~~~
 
+La aplicación web de staging que presenta el consentimiento está publicada en:
+
+~~~text
+https://5zz5dxgt-h6d.insforge.site/mcp/consent
+~~~
+
 La metadata OAuth y de recurso protegido responde, el endpoint MCP sin token
 responde `401`, el origen web configurado pasa CORS y los orígenes externos se
 bloquean. El registro dinámico de clientes responde `201`. El preview web para
-consentimiento aún debe publicarse; hasta entonces el flujo de login completo
-no está disponible. La rama no tiene datos de dominio y no debe usarse para
-validar datos de producción.
+consentimiento responde `200`, aunque el flujo OAuth autenticado aún no se ha
+probado: el intento E2E se detuvo porque la API administrativa de staging
+respondió `401` al crear una cuenta sintética; no se creó ninguna cuenta. La
+rama no tiene datos de dominio y no debe usarse para validar datos de producción.
 
 ## Codex CLI y Codex IDE
 
