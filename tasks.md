@@ -383,16 +383,20 @@ en `docs/traceability.md`.
   las migraciones MCP se aplicaron al proyecto principal, se publicó la función
   y se hizo un smoke de producción: metadata/recurso 200, challenge 401, CORS
   permitido 204/origen externo 403 y DCR 201. La web de consentimiento de
-  producción ya carga la solicitud OAuth. Falta completar el grant autenticado,
-  validar una lectura con la cuenta autorizada y probar cancelación bajo carga.
+  producción ya carga la solicitud OAuth. Falta validar una lectura autenticada
+  con la cuenta autorizada y probar cancelación bajo carga.
+  Codex completó OAuth y callback. Un primer refresh encontró la sesión vencida;
+  se reautorizó con `codex mcp login karenda` y una sesión nueva descubrió las
+  herramientas. No se invocaron herramientas que acceden a datos de cuenta.
   El intento E2E de staging se detuvo al recibir 401 al crear una cuenta
   sintética; no se creó ninguna cuenta.
 - [ ] **Tarea 132: Probar OAuth con los tres harnesses** (45-90 min). Validar
   descubrimiento de metadata, CIMD/DCR, redirects de escritorio, login, refresh
   y logout/revocación en Codex, Claude Code y OpenCode. Evidencia: tabla de
   versiones/resultado con configuración sin secretos. Estado actual: Codex
-  apunta a producción; consentimiento del titular pendiente. Claude Code y
-  OpenCode aún no se configuraron.
+  apunta a producción, muestra `enabled OAuth` y descubre las herramientas tras
+  reautorizar; no se validó una lectura autenticada. Claude Code y OpenCode aún
+  no se configuraron.
 - [ ] **Tarea 133: Cerrar decisión de arquitectura** (20-30 min). Elegir SDK,
   metadata de clientes, rutas OAuth, duraciones y límites solo desde evidencia
   de 126-127. Si InsForge no alcanza los requisitos, detenerse y documentar

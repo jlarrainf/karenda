@@ -41,11 +41,13 @@ porque la web usa esa base para consultar y decidir solicitudes OAuth.
 
 El smoke de producción confirma metadata OAuth y de recurso protegido `200`,
 endpoint MCP sin token `401` con challenge, CORS permitido para el origen web,
-bloqueo de origen externo y registro DCR `201`. La ruta de consentimiento
-carga y muestra los permisos parciales de Codex. El grant OAuth de una cuenta
-real sigue pendiente de la autorización explícita del titular; no se debe
-interpretar el despliegue como cierre de los gates de seguridad o
-interoperabilidad.
+bloqueo de origen externo y registro DCR `201`. Codex completó OAuth; después de
+que un refresh indicara sesión vencida, `codex mcp login karenda` terminó con
+éxito y una sesión nueva de Codex descubrió el catálogo de herramientas. No se
+llamaron herramientas que leen o modifican datos de la cuenta. Para cargar el
+catálogo en una conversación que ya estaba abierta, inicia una conversación
+nueva o reinicia Codex. La verificación de descubrimiento no cierra los gates
+de seguridad ni de interoperabilidad.
 
 ## Codex CLI y Codex IDE
 
