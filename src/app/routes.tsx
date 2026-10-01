@@ -10,6 +10,8 @@ import { PersonalGroupsPage } from '../features/personal-groups/components/Perso
 import { SubjectsPage } from '../features/subjects/components/SubjectsPage.tsx'
 import { DeviceTokensPage } from '../features/devices/components/DeviceTokensPage.tsx'
 import { CanvasPage } from '../features/canvas/components/CanvasPage.tsx'
+import { McpConsentPage } from '../features/mcp/components/McpConsentPage.tsx'
+import { McpConnectionsPage } from '../features/mcp/components/McpConnectionsPage.tsx'
 import { ProtectedRoute } from './ProtectedRoute.tsx'
 
 export const appRouter = createBrowserRouter([
@@ -33,6 +35,8 @@ export const appRouter = createBrowserRouter([
               { path: 'notes', element: <NotesPage /> },
               { path: 'devices', element: <DeviceTokensPage /> },
               { path: 'canvas', element: <CanvasPage /> },
+              { path: 'mcp/consent', element: <McpConsentPage /> },
+              { path: 'mcp/connections', element: <McpConnectionsPage /> },
             ],
           },
         ],

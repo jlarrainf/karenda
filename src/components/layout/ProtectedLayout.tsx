@@ -349,6 +349,13 @@ function SecondaryNavigation({ onNavigate }: { onNavigate?: () => void }) {
         <CanvasIcon className="size-5 shrink-0" />
         <span>Canvas</span>
       </NavLink>
+      <NavLink className={navigationClassName} onClick={onNavigate} to="/mcp/connections">
+        <svg aria-hidden="true" className="size-5 shrink-0" fill="none" viewBox="0 0 24 24">
+          <path d="M8 8.5h3.5v-3H8v3Zm4.5 0H16v-3h-3.5v3ZM8 18.5h3.5v-3H8v3Zm4.5 0H16v-3h-3.5v3ZM11.5 7h1m-1 10h1M5 10v4m14-4v4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
+          <path d="M5 10h14M5 14h14" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" />
+        </svg>
+        <span>Conexiones MCP</span>
+      </NavLink>
     </nav>
   )
 }
@@ -416,6 +423,20 @@ function getPageMeta(pathname: string) {
     return {
       title: 'Canvas',
       description: 'Revisa y sincroniza tu actividad académica',
+    }
+  }
+
+  if (pathname.startsWith('/mcp/connections')) {
+    return {
+      title: 'Conexiones MCP',
+      description: 'Administra el acceso de tus herramientas a Karenda',
+    }
+  }
+
+  if (pathname.startsWith('/mcp/consent')) {
+    return {
+      title: 'Autorizar conexión MCP',
+      description: 'Revisa los permisos que solicita la herramienta',
     }
   }
 
