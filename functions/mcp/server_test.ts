@@ -34,7 +34,12 @@ Deno.test("every registered tool advertises its OAuth scope", async () => {
   const body = await secured.text();
   const dataLine = body.split("\n").find((line) => line.startsWith("data:"));
   if (!dataLine) throw new Error("The MCP tools/list response did not contain an SSE message.");
-  const payload = JSON.parse(dataLine.slice(5).trim()) as { result?: { tools?: Array<{ name: string; securitySchemes?: Array<{ type: string; scopes: string[] }> }> } };
+  const payload = JSON.parse(dataLine.slice(5).trim()) as { result?: { tools?: Array<{
+    name: string;
+    securitySchemes?: Array<{ type: string; scopes: string[] }>;
+    annotations?: { readOnlyHint?: boolean };
+    inputSchema?: { properties?: Record<string, unknown> };
+  }> } };
   const tools = payload.result?.tools ?? [];
 
   if (tools.length < 40) throw new Error("Expected the complete Karenda tool set, got " + tools.length + ".");
@@ -44,6 +49,12 @@ Deno.test("every registered tool advertises its OAuth scope", async () => {
     if (tool.securitySchemes?.[0]?.type !== "oauth2" || tool.securitySchemes[0].scopes[0] !== expectedScope) {
       throw new Error("Tool " + tool.name + " does not advertise " + expectedScope + ".");
     }
+    if (tool.annotations?.readOnlyHint !== true && expectedScope !== "ai:draft" && !tool.inputSchema?.properties?.idempotencyKey) {
+      throw new Error("Mutating tool " + tool.name + " does not require an idempotency key.");
+    }
+  }
+  if (!tools.some((tool) => tool.name === "habits.statistics.get") || !tools.some((tool) => tool.name === "habits.schedule_versions.list")) {
+    throw new Error("The MCP server does not expose the complete habit history and statistics reads.");
   }
 });
 

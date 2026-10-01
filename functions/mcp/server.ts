@@ -15,6 +15,7 @@ import {
   deleteNote,
   DomainOperationError,
   getEvent,
+  getHabitStatistics,
   getCatalog,
   getHabit,
   getNote,
@@ -24,6 +25,7 @@ import {
   listHabitLogs,
   listHabitNotes,
   listHabits,
+  listHabitScheduleVersions,
   listNotes,
   listPersonalGroups,
   listSubjects,
@@ -62,6 +64,13 @@ import {
 } from "./domain.ts";
 import type { McpPrincipal } from "./oauth.ts";
 import {
+  enforceToolRateLimit,
+  McpProtectionError,
+  runIdempotently,
+  type McpProtectionStore,
+  type McpToolOutcome,
+} from "./protections.ts";
+import {
   applyCanvasReview,
   getCanvasConnection,
   listCanvasCourseLinks,
@@ -76,6 +85,7 @@ import {
 } from "./integrations.ts";
 
 type ToolOperation = (input: any) => Promise<unknown> | unknown;
+const protectionStores = new WeakMap<McpServer, McpProtectionStore>();
 
 function success(value: unknown, message: string) {
   return {
@@ -102,17 +112,28 @@ function registerTool(
   inputSchema: z.ZodType,
   operation: ToolOperation,
   options: { destructive?: boolean; readOnly?: boolean; successMessage?: string } = {},
+  protections?: McpProtectionStore,
 ): void {
+  const protectionStore = protections ?? protectionStores.get(server);
+  const isReadOnly = options.readOnly === true;
+  const requiresIdempotency = !isReadOnly && scope !== "ai:draft";
+  const registeredSchema = requiresIdempotency
+    ? (inputSchema as z.ZodObject<any>).extend({
+      idempotencyKey: z.string().uuid().describe("UUID única para esta operación lógica. Reutilízala solo si reintentas exactamente la misma solicitud."),
+    }).strict()
+    : inputSchema;
   server.registerTool(
     name,
     {
-      description,
-      inputSchema,
+      description: requiresIdempotency
+        ? `${description} Incluye una idempotencyKey UUID y reutilízala solo al reintentar esta misma solicitud.`
+        : description,
+      inputSchema: registeredSchema,
       annotations: {
         title: name,
-        readOnlyHint: options.readOnly ?? false,
+        readOnlyHint: isReadOnly,
         destructiveHint: options.destructive ?? false,
-        idempotentHint: options.readOnly ?? false,
+        idempotentHint: isReadOnly || requiresIdempotency,
         openWorldHint: false,
       },
     },
@@ -121,9 +142,29 @@ function registerTool(
         return failure(`Esta conexión no tiene el permiso «${scope}». Reautoriza Karenda y concede ese permiso.`);
       }
       try {
-        const result = await operation(input);
-        return success(result, options.successMessage ?? "Operación completada en Karenda.");
+        if (!protectionStore) {
+          return failure("Los controles seguros de Karenda MCP no están disponibles. Intenta nuevamente más tarde.");
+        }
+        await enforceToolRateLimit(protectionStore, principal, name, isReadOnly);
+        const { idempotencyKey, ...domainInput } = input as Record<string, unknown>;
+        if (requiresIdempotency && typeof idempotencyKey !== "string") {
+          return failure("Incluye una clave idempotente UUID para ejecutar esta escritura.");
+        }
+        const execute = async (): Promise<McpToolOutcome> => {
+          try {
+            return { ok: true, value: await operation(domainInput) };
+          } catch (error) {
+            return { ok: false, message: safeError(error) };
+          }
+        };
+        const outcome = requiresIdempotency
+          ? await runIdempotently(protectionStore, principal, name, idempotencyKey as string, domainInput, execute)
+          : await execute();
+        return outcome.ok
+          ? success(outcome.value, options.successMessage ?? "Operación completada en Karenda.")
+          : failure(outcome.message);
       } catch (error) {
+        if (error instanceof McpProtectionError) return failure(error.message);
         return failure(safeError(error));
       }
     },
@@ -267,6 +308,8 @@ function registerHabitTools(server: McpServer, principal: McpPrincipal, client: 
   registerTool(server, principal, "habits.update", "habits:write", "Edita un hábito con las mismas validaciones que Karenda.", z.object({ id: idSchema, patch: habitPatchSchema, expectedUpdatedAt: versionSchema }).strict(), (input) => updateHabit(client, principal, input.id, input.patch, input.expectedUpdatedAt), { successMessage: "Hábito actualizado:" });
   registerTool(server, principal, "habits.set_lifecycle", "habits:write", "Activa, pausa o archiva un hábito sin borrar su historial.", z.object({ id: idSchema, lifecycleStatus: z.enum(["active", "paused", "archived"]), expectedUpdatedAt: versionSchema }).strict(), (input) => updateHabit(client, principal, input.id, { lifecycleStatus: input.lifecycleStatus }, input.expectedUpdatedAt), { successMessage: "Estado del hábito actualizado:" });
   registerTool(server, principal, "habits.list_logs", "habits:read", "Lista registros de un hábito propio en un rango de fechas locales.", z.object({ habitId: idSchema, startDate: z.string(), endDate: z.string() }).strict(), (input) => listHabitLogs(client, principal, input.habitId, { startDate: input.startDate, endDate: input.endDate }), { readOnly: true, successMessage: "Registros encontrados:" });
+  registerTool(server, principal, "habits.schedule_versions.list", "habits:read", "Lee el historial de cambios de frecuencia, meta y evaluación de un hábito propio.", z.object({ habitId: idSchema }).strict(), (input) => listHabitScheduleVersions(client, principal, input.habitId), { readOnly: true, successMessage: "Historial de reglas del hábito:" });
+  registerTool(server, principal, "habits.statistics.get", "habits:read", "Calcula las estadísticas del hábito con las mismas reglas de Karenda. Respeta statsEnabled y admite hasta 366 días; la zona horaria predeterminada es America/Santiago.", z.object({ habitId: idSchema, startDate: z.string(), endDate: z.string(), timeZone: z.string().trim().min(1).max(64).default("America/Santiago") }).strict(), (input) => getHabitStatistics(client, principal, input.habitId, input), { readOnly: true, successMessage: "Estadísticas del hábito:" });
   registerTool(server, principal, "habits.mark_log", "habits:write", "Registra o corrige el progreso manual de un hábito en una fecha local. Los registros importados desde KOReader no se pueden suplantar.", habitLogInputSchema, (input) => saveHabitLog(client, principal, input), { successMessage: "Progreso guardado:" });
   registerTool(server, principal, "habits.clear_log", "habits:delete", "Quita un registro manual del hábito. Requiere confirm=true; los registros importados no se pueden borrar desde MCP.", z.object({ id: idSchema, confirm: z.literal(true) }).strict(), (input) => clearHabitLog(client, principal, input.id).then(() => ({ id: input.id, deleted: true })), { destructive: true, successMessage: "Registro eliminado:" });
   registerTool(server, principal, "habits.list_notes", "habits:read", "Lista notas de hábitos, opcionalmente limitadas a un hábito.", z.object({ habitId: idSchema.optional() }).strict(), (input) => listHabitNotes(client, principal, input.habitId), { readOnly: true, successMessage: "Notas de hábitos encontradas:" });
@@ -275,8 +318,9 @@ function registerHabitTools(server: McpServer, principal: McpPrincipal, client: 
   registerTool(server, principal, "habits.delete_note", "habits:delete", "Elimina una nota de hábito. Requiere confirm=true.", confirmedDeleteSchema, (input) => deleteHabitNote(client, principal, input.id, input.expectedUpdatedAt).then(() => ({ id: input.id, deleted: true })), { destructive: true, successMessage: "Nota de hábito eliminada:" });
 }
 
-export function createKarendaMcpServer(client: KarendaClient, principal: McpPrincipal): McpServer {
+export function createKarendaMcpServer(client: KarendaClient, principal: McpPrincipal, protections?: McpProtectionStore): McpServer {
   const server = new McpServer({ name: "karenda", version: "0.1.0" });
+  if (protections) protectionStores.set(server, protections);
 
   registerTool(server, principal, "profile.get_context", "profile:read", "Obtiene idioma, zona horaria y fecha/hora actual. Si el harness conoce tu zona, indícala como timeZone; el valor inicial es America/Santiago. No revela correo ni identificadores de cuenta.", z.object({ timeZone: z.string().trim().min(1).max(64).optional() }).strict(), (input) => {
     const timeZone = input.timeZone || "America/Santiago";
@@ -290,7 +334,7 @@ export function createKarendaMcpServer(client: KarendaClient, principal: McpPrin
       throw new DomainOperationError("invalid_argument", "La zona horaria indicada no es válida.");
     }
     return { language: "es", timeZone, localDate, currentTime: now.toISOString() };
-  }, { readOnly: true, successMessage: "Contexto de Karenda:" });
+  }, { readOnly: true, successMessage: "Contexto de Karenda:" }, protections);
   registerEventTools(server, principal, client);
   registerCatalogTools(server, principal, client);
   registerNoteTools(server, principal, client);

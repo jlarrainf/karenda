@@ -1,14 +1,16 @@
 # Integración MCP Multiharness De Karenda
 
-Estado: implementación inicial en `feature/007-mcp-server`. La migración OAuth
-se aplicó a la rama InsForge aislada `karenda-mcp` y la función se valida en
-esa rama; la web de consentimiento también está desplegada allí en
-`https://5zz5dxgt-tkp.insforge.site`; producción no se modificó. El servidor
-OAuth/MCP, los adaptadores de dominio y las pantallas españolas están
-implementados. Siguen pendientes la prueba OAuth con una cuenta de staging, la
-matriz E2E de los tres harnesses, las pruebas RLS entre cuentas, límites de tasa
-e idempotencia de escrituras. La cobertura disponible no debe interpretarse
-como paridad completa con todas las pantallas de Karenda.
+Estado: implementación en `feature/007-mcp-server`. La rama de staging anterior
+`karenda-mcp` conserva el primer despliegue, pero su historial diverge del
+proyecto principal y no se promoverá. La rama limpia `karenda-mcp-release`
+parte del esquema actual de producción; las migraciones OAuth y de controles
+están aplicadas y la función MCP está desplegada. Metadata OAuth/recurso,
+challenge 401, CORS y registro DCR pasan smoke tests en esa rama. Producción no
+se modificó. El preview web todavía debe desplegarse y falta completar OAuth
+autenticado desde Codex, pruebas RLS A/B, la matriz E2E de
+Codex/Claude/OpenCode, auditoría adversarial y rollback. La cobertura
+disponible no debe interpretarse como paridad completa con todas las pantallas
+de Karenda.
 
 ## 1. Objetivo Y Decisión De Integración
 
@@ -256,7 +258,7 @@ de hábitos se exponen bajo sus herramientas de hábito.
 | habits.notes.list / habits.notes.get | Leer nota general o diaria | habits:read | Respeta modelo actual |
 | habits.notes.create / habits.notes.update | Crear/editar nota | habits:write | Distingue general y fecha diaria |
 | habits.notes.delete | Eliminar nota | habits:delete | Confirmable |
-| habits.schedule_versions.list / habits.statistics.get | Leer cambios y estadísticas | habits:read | Misma definición que la web |
+| habits.schedule_versions.list / habits.statistics.get | Leer cambios y estadísticas | habits:read | Misma definición que la web; respeta statsEnabled y limita el rango a 366 días |
 | habits.prepare_ai_draft | Proponer un hábito | ai:draft | Solo borrador |
 | habits.save_ai_draft | Crear desde campos revisados | habits:write | Escritura explícita separada |
 
@@ -309,8 +311,13 @@ solo del lenguaje del modelo.
   confirmación de InsForge. No informar éxito antes de persistencia.
 - Las ediciones reciben expected_updated_at o versión. Si cambió desde la
   lectura, devolver CONFLICT sin sobrescribir.
-- Creaciones y cambios de ocurrencia usan idempotency_key por usuario,
-  herramienta y operación. La clave no autoriza la llamada.
+- Cada tool que modifica datos exige `idempotencyKey`, un UUID generado para
+  esa operación lógica. Karenda limita la clave al grant y a la tool, compara
+  un hash canónico de los argumentos y conserva la respuesta 30 días. El mismo
+  contenido reproduce la respuesta sin ejecutar otra escritura; cambiar el
+  contenido con la misma clave produce conflicto. Si el registro queda en curso
+  tras una interrupción, el cliente consulta Karenda antes de reintentar. La
+  clave no autoriza la llamada ni reemplaza `expectedUpdatedAt`.
 - Mutaciones relacionadas deben ser transaccionales o exponerse como etapas
   explícitas con IDs. No fingir atomicidad en el servidor MCP.
 - El borrado respeta referencias y cascadas de la spec. No convertir archivo,
@@ -345,8 +352,15 @@ solo del lenguaje del modelo.
 
 ### Operación
 
-- Rate limits por grant, usuario, IP y tool; límites de página, intervalo,
-  caracteres, frecuencia y coste IA.
+- Límite fijo por minuto: 300 solicitudes MCP por IP antes de autenticar y 300
+  por grant después de autenticar, 120 llamadas de lectura por grant/tool, 30
+  llamadas que mutan por grant/tool, 20 registros DCR por IP y 60 solicitudes
+  por IP en cada ruta OAuth. Las direcciones se
+  toman del elemento final de `X-Forwarded-For`, que CloudFront agrega al llegar
+  a InsForge; solo se persiste un HMAC con la clave server-side. Si falta una
+  dirección válida, las solicitudes sin autenticación comparten el bucket
+  `unknown-client` para esa ruta.
+- Mantener los límites de página, intervalo, caracteres, frecuencia y coste IA.
 - Propagar timeout/cancelación. Si una función larga supera límite de runtime,
   usar jobs asíncronos ya soportados por InsForge y un ID consultable.
 - Reintentar solo fallos transitorios idempotentes. Nunca repetir create/delete
@@ -430,7 +444,8 @@ Están planificados y requieren evidencia al implementar.
 - **RF-MCP-19 [consistencia]:** Versión obsoleta devuelve conflicto sin
   sobrescribir.
 - **RF-MCP-20 [consistencia]:** Reintento con misma clave idempotente no crea
-  duplicados.
+  duplicados; argumentos diferentes con esa clave fallan y una operación en
+  curso no se ejecuta por segunda vez. La respuesta se conserva 30 días.
 - **RF-MCP-21 [estado]:** Token vencido/revocado impide tools y refresh.
 - **RF-MCP-22 [evento]:** Revocar en web bloquea el acceso MCP dentro de la
   ventana comprometida y actualiza la lista.

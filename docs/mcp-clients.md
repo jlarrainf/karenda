@@ -1,37 +1,35 @@
 # Conectar Karenda MCP a un harness
 
-## Estado del endpoint
+## Staging
 
-El endpoint de staging de la rama InsForge karenda-mcp es:
-
-~~~text
-https://5zz5dxgt-tkp.function2.insforge.app/karenda-mcp/mcp
-~~~
-
-La web de prueba para consentimiento está publicada en la misma rama aislada:
+El servidor MCP de pruebas está en la rama aislada `karenda-mcp-release` de
+InsForge. Su endpoint Streamable HTTP es:
 
 ~~~text
-https://5zz5dxgt-tkp.insforge.site
+https://5zz5dxgt-h6d.function2.insforge.app/karenda-mcp/mcp
 ~~~
 
-La ruta `/mcp/consent` sirve la aplicación y el servidor MCP permite ese origen. La rama es `schema-only`; no había registros de dominio cuando se revisó. Úsala solo para pruebas con una cuenta de staging. No agregues este endpoint a un harness que use los datos reales de Karenda.
-
-En producción se usará la misma ruta bajo el host de Edge Functions de la rama principal. La aplicación web toma la URL de VITE_KARENDA_MCP_URL; si se omite, la calcula desde VITE_INSFORGE_URL.
+La metadata OAuth y de recurso protegido responde, el endpoint MCP sin token
+responde `401`, el origen web configurado pasa CORS y los orígenes externos se
+bloquean. El registro dinámico de clientes responde `201`. El preview web para
+consentimiento aún debe publicarse; hasta entonces el flujo de login completo
+no está disponible. La rama no tiene datos de dominio y no debe usarse para
+validar datos de producción.
 
 ## Codex CLI y Codex IDE
 
-El CLI y el IDE comparten esta configuración. Una vez que el endpoint del entorno esté listo:
+Codex CLI y el IDE comparten configuración. Añade el endpoint del entorno que
+corresponda:
 
 ~~~powershell
 codex mcp add karenda --url https://<APP_KEY>.function2.insforge.app/karenda-mcp/mcp
 codex mcp list
+codex mcp login karenda
 ~~~
 
-Codex abrirá el navegador para iniciar sesión en Karenda y revisar los permisos.
-En esta carpeta, `.codex/config.toml` ya registra el endpoint de staging. Tras
-reiniciar Codex, comprueba `codex mcp list`; la autenticación OAuth se inicia
-con `codex mcp login karenda`. Este registro apunta a la rama aislada y no da
-acceso a los datos de producción.
+El comando de login abre el navegador para OAuth y consentimiento. Revisa los
+permisos antes de autorizar. Este worktree contiene una configuración local de
+Codex; no uses staging para consultar o modificar datos reales de Karenda.
 
 ## Claude Code
 
@@ -40,7 +38,7 @@ claude mcp add --transport http karenda https://<APP_KEY>.function2.insforge.app
 claude mcp list
 ~~~
 
-Después, ejecuta /mcp en Claude Code y completa el inicio de sesión OAuth en el navegador.
+Después, ejecuta `/mcp` y completa el login OAuth en el navegador.
 
 ## OpenCode
 
@@ -54,23 +52,41 @@ La autenticación remota usa OAuth y abre el navegador para consentir en Karenda
 
 ## Configuración del servidor por entorno
 
-Configura estos valores en los secretos/variables de la Edge Function de cada entorno, nunca en el harness ni en el bundle del navegador:
+Configura estos valores en los secretos/variables de la Edge Function de cada
+entorno, nunca en el harness ni en el bundle del navegador:
 
-- `MCP_INSFORGE_ACCESS_TOKEN_ENCRYPTION_KEY`: secreto aleatorio de 32 bytes, estable mientras existan concesiones OAuth cifradas. Si se rota, hay que volver a autorizar las conexiones existentes.
-- `KARENDA_WEB_ORIGIN`: origen exacto de la aplicación web que muestra el consentimiento, por ejemplo `https://karenda.example`.
-- `MCP_CONSENT_URL`: URL absoluta de la ruta protegida de consentimiento, por ejemplo `https://karenda.example/mcp/consent`.
+- `MCP_INSFORGE_ACCESS_TOKEN_ENCRYPTION_KEY`: secreto aleatorio de 32 bytes,
+  estable mientras existan concesiones OAuth cifradas. Si se rota, hay que
+  volver a autorizar las conexiones existentes.
+- `KARENDA_WEB_ORIGIN`: origen exacto de la aplicación web que muestra el
+  consentimiento, por ejemplo `https://karenda.example`.
+- `MCP_CONSENT_URL`: URL absoluta de la ruta protegida de consentimiento, por
+  ejemplo `https://karenda.example/mcp/consent`.
 
-`INSFORGE_BASE_URL` y `API_KEY` son secretos reservados que proporciona el entorno InsForge. La rama de staging ya tiene una clave de cifrado propia y las variables de origen/consentimiento apuntan al preview anterior. Si cambia el dominio del preview, actualiza esos dos valores en la función.
+`INSFORGE_BASE_URL` y `API_KEY` son secretos reservados que proporciona el
+entorno InsForge. La rama de staging tiene su propia clave de cifrado y sus
+valores de origen/consentimiento; el dominio debe coincidir con el preview web
+publicado en esa rama.
 
 ## Permisos y desconexión
 
-Elige solo los scopes que necesites. Los permisos de escritura empiezan desactivados en la pantalla de consentimiento. Karenda no comparte la contraseña ni el token de sesión web con el harness. Puedes revocar una conexión desde **Organización y conexiones → Conexiones MCP**; para quitar una conexión local, usa el comando de eliminación de servidor del harness.
+Elige solo los scopes que necesites. Los permisos de escritura empiezan
+desactivados en la pantalla de consentimiento. Karenda no comparte la
+contraseña ni el token de sesión web con el harness. Puedes revocar una
+conexión desde **Organización y conexiones → Conexiones MCP**; para quitar una
+conexión local, usa el comando de eliminación de servidor del harness.
 
-La implementación actual no ofrece clave idempotente en las herramientas de creación, ni prueba de login real para estos tres harnesses. No conectes el endpoint de staging a datos de producción.
+Cada herramienta que modifica datos requiere un UUID `idempotencyKey` nuevo
+para cada operación lógica. Karenda guarda el resultado hasta 30 días, devuelve
+la respuesta guardada cuando se repite la misma operación y rechaza reutilizar
+la clave con argumentos distintos. No reintentes una escritura cuya respuesta
+quedó en curso sin consultar antes su estado.
 
 ## Construir y desplegar la Edge Function
 
-InsForge necesita un único archivo de entrada. El empaquetador incluye el código local y conserva las dependencias npm con sus versiones fijadas; el artefacto temporal queda en functions/.deploy/ y no se guarda en Git.
+InsForge necesita un único archivo de entrada. El empaquetador incluye el
+código local y conserva las dependencias npm con sus versiones fijadas; el
+artefacto temporal queda en `functions/.deploy/` y no se guarda en Git.
 
 ~~~powershell
 npm run build:mcp:function

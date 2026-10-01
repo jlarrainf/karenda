@@ -26,7 +26,9 @@ import {
   recurringTaskScheduleVersionInputSchema,
 } from "../../src/services/habitValidation.ts";
 import { getNextScheduledDate } from "../../src/features/habits/utils/habitRecurrence.ts";
+import { calculateHabitStatistics, evaluateHabitRange } from "../../src/features/habits/utils/habitEvaluation.ts";
 import { shiftDateKey } from "../../src/lib/dates/dateUtils.ts";
+import type { Habit, HabitLog, HabitScheduleVersion } from "../../src/types/domain.ts";
 import type { McpPrincipal } from "./oauth.ts";
 
 export type KarendaClient = ReturnType<typeof createClient>;
@@ -420,6 +422,39 @@ export async function deleteNote(client: KarendaClient, principal: McpPrincipal,
 const HABIT_COLUMNS = "id, name, description, color, subject_id, personal_group_id, tracking_type, unit, goal_value, evaluation_mode, quota_period, miss_policy, schedule, start_date, end_date, lifecycle_status, stats_enabled, note_policy, calendar_enabled, calendar_schedule, created_at, updated_at";
 const HABIT_LOG_COLUMNS = "id, habit_id, local_date, value, status, source, external_id, created_at, updated_at";
 const HABIT_NOTE_COLUMNS = "id, habit_id, entry_date, title, content_markdown, created_at, updated_at";
+const HABIT_VERSION_COLUMNS = "id, habit_id, schedule, evaluation_mode, goal_value, quota_period, miss_policy, effective_from, effective_to, created_at, updated_at";
+
+function mapHabitLog(row: Row, ownerId: string): HabitLog {
+  return {
+    id: row.id,
+    ownerId,
+    habitId: row.habit_id,
+    localDate: row.local_date,
+    value: Number(row.value),
+    status: row.status,
+    source: row.source,
+    externalId: row.external_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function mapHabitScheduleVersion(row: Row, ownerId: string): HabitScheduleVersion {
+  return {
+    id: row.id,
+    ownerId,
+    habitId: row.habit_id,
+    schedule: row.schedule,
+    evaluationMode: row.evaluation_mode,
+    goalValue: Number(row.goal_value),
+    quotaPeriod: row.quota_period,
+    missPolicy: row.miss_policy,
+    effectiveFrom: row.effective_from,
+    effectiveTo: row.effective_to,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
 
 function mapHabit(row: Row): Row {
   return {
@@ -516,6 +551,103 @@ export async function listHabitLogs(client: KarendaClient, principal: McpPrincip
   return await queryData<Row[]>(ownerQuery(client, "habit_logs", principal.ownerId).select(HABIT_LOG_COLUMNS)
     .eq("habit_id", habitId).gte("local_date", range.startDate).lte("local_date", range.endDate)
     .order("local_date", { ascending: true }).order("updated_at", { ascending: true }).limit(2000), "No se pudieron cargar los registros del hábito.");
+}
+
+async function loadHabitScheduleVersions(client: KarendaClient, principal: McpPrincipal, habitId: string): Promise<HabitScheduleVersion[]> {
+  await getHabit(client, principal, habitId);
+  const rows = await queryData<Row[]>(ownerQuery(client, "habit_schedule_versions", principal.ownerId)
+    .select(HABIT_VERSION_COLUMNS)
+    .eq("habit_id", habitId)
+    .order("effective_from", { ascending: true })
+    .limit(2000), "No se pudieron cargar las reglas del hábito.");
+  return rows.map((row) => mapHabitScheduleVersion(row, principal.ownerId));
+}
+
+export async function listHabitScheduleVersions(client: KarendaClient, principal: McpPrincipal, habitId: string): Promise<Row[]> {
+  const versions = await loadHabitScheduleVersions(client, principal, habitId);
+  return versions.map(toPublicHabitScheduleVersion);
+}
+
+export function toPublicHabitScheduleVersion(version: HabitScheduleVersion): Row {
+  return {
+    id: version.id,
+    habitId: version.habitId,
+    schedule: version.schedule,
+    evaluationMode: version.evaluationMode,
+    goalValue: version.goalValue,
+    quotaPeriod: version.quotaPeriod,
+    missPolicy: version.missPolicy,
+    effectiveFrom: version.effectiveFrom,
+    effectiveTo: version.effectiveTo,
+    createdAt: version.createdAt,
+    updatedAt: version.updatedAt,
+  };
+}
+
+function getLocalDate(timeZone: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date());
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
+  } catch {
+    throw new DomainOperationError("invalid_argument", "La zona horaria indicada no es válida.");
+  }
+}
+
+export function validateHabitStatisticsRange(startDate: string, endDate: string): void {
+  const start = Date.parse(`${startDate}T00:00:00.000Z`);
+  const end = Date.parse(`${endDate}T00:00:00.000Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start || end - start > 365 * 24 * 60 * 60 * 1000) {
+    throw new DomainOperationError("invalid_argument", "El rango máximo para estadísticas es de 366 días.");
+  }
+}
+
+export async function getHabitStatistics(
+  client: KarendaClient,
+  principal: McpPrincipal,
+  habitId: string,
+  rangeInput: { startDate: string; endDate: string; timeZone?: string },
+): Promise<Record<string, unknown>> {
+  const range = validate<{ startDate: string; endDate: string }>(habitRangeSchema, {
+    startDate: rangeInput.startDate,
+    endDate: rangeInput.endDate,
+  });
+  validateHabitStatisticsRange(range.startDate, range.endDate);
+  const timeZone = rangeInput.timeZone ?? "America/Santiago";
+  const today = getLocalDate(timeZone);
+  const habit = { ...await getHabit(client, principal, habitId), ownerId: principal.ownerId } as unknown as Habit;
+  if (!habit.statsEnabled) {
+    throw new DomainOperationError("invalid_argument", "Las estadísticas de este hábito están desactivadas en Karenda.");
+  }
+
+  const [logRows, versions] = await Promise.all([
+    listHabitLogs(client, principal, habitId, range),
+    loadHabitScheduleVersions(client, principal, habitId),
+  ]);
+  const logs = logRows.map((row) => mapHabitLog(row, principal.ownerId));
+  return calculateMcpHabitStatistics(habit, versions, logs, range.startDate, range.endDate, today, timeZone);
+}
+
+export function calculateMcpHabitStatistics(
+  habit: Habit,
+  versions: HabitScheduleVersion[],
+  logs: HabitLog[],
+  startDate: string,
+  endDate: string,
+  today: string,
+  timeZone: string,
+): Record<string, unknown> {
+  const results = evaluateHabitRange(habit, versions, logs, startDate, endDate, today);
+  return {
+    ...calculateHabitStatistics(habit, results, logs, startDate, endDate, today),
+    timeZone,
+    today,
+  };
 }
 
 export async function saveHabitLog(client: KarendaClient, principal: McpPrincipal, input: Record<string, unknown>): Promise<Row> {

@@ -1,4 +1,5 @@
 import { createAdminClient, createClient } from "npm:@insforge/sdk@1.5.2";
+import { createPersistentMcpProtectionStore, forwardedClientAddress } from "./protections.ts";
 import {
   createOpaqueToken,
   decryptSecret,
@@ -1149,6 +1150,24 @@ export async function oauthRoute(
   try {
     if (!originAllowed(request, config)) {
       return jsonResponse({ error: "forbidden", message: "El origen de la solicitud no está permitido." }, 403);
+    }
+
+    const isRateLimitedRoute = path.startsWith("/oauth/");
+    if (isRateLimitedRoute && request.method !== "OPTIONS") {
+      const protections = createPersistentMcpProtectionStore(config.baseUrl, config.encryptionKey);
+      const address = forwardedClientAddress(request) ?? "unknown-client";
+      const isRegistration = path === "/oauth/register";
+      const allowed = await protections.consumeRateLimit(
+        `ip:${address}:oauth:${path}`,
+        60,
+        isRegistration ? 20 : 60,
+      );
+      if (!allowed) {
+        return jsonResponse({
+          error: "rate_limited",
+          error_description: "Karenda recibió demasiadas solicitudes de autorización. Espera un minuto y vuelve a intentar.",
+        }, 429, { "Retry-After": "60" });
+      }
     }
 
     if (request.method === "OPTIONS") {

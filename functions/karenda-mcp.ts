@@ -1,5 +1,6 @@
 import { createMcpHandler } from "npm:@modelcontextprotocol/server@2.0.0";
 import { createOAuthConfig, authenticateMcpRequest, oauthRoute, originAllowed, originHeaders } from "./mcp/oauth.ts";
+import { createPersistentMcpProtectionStore, forwardedClientAddress, McpProtectionError, type McpProtectionStore } from "./mcp/protections.ts";
 import { createKarendaMcpServer } from "./mcp/server.ts";
 
 const MAX_MCP_BODY_BYTES = 1024 * 1024;
@@ -82,6 +83,8 @@ export const toolScopes: Record<string, string> = {
   "habits.update": "habits:write",
   "habits.set_lifecycle": "habits:write",
   "habits.list_logs": "habits:read",
+  "habits.schedule_versions.list": "habits:read",
+  "habits.statistics.get": "habits:read",
   "habits.mark_log": "habits:write",
   "habits.clear_log": "habits:delete",
   "habits.list_notes": "habits:read",
@@ -222,11 +225,53 @@ export default async function handle(request: Request): Promise<Response> {
     return errorResponse(415, "El endpoint MCP requiere application/json.");
   }
 
+  let protections: McpProtectionStore;
+  try {
+    protections = createPersistentMcpProtectionStore(config.baseUrl, config.encryptionKey);
+    const allowedByIp = await protections.consumeRateLimit(
+      `ip:${forwardedClientAddress(request) ?? "unknown-client"}:mcp:transport`,
+      60,
+      300,
+    );
+    if (!allowedByIp) {
+      return corsResponse(request, new Response(JSON.stringify({
+        error: "rate_limited",
+        message: "Karenda recibió demasiadas solicitudes desde esta conexión. Espera un minuto y vuelve a intentar.",
+      }), {
+        status: 429,
+        headers: { "Cache-Control": "no-store", "Content-Type": "application/json", "Retry-After": "60" },
+      }), config);
+    }
+  } catch (error) {
+    if (error instanceof McpProtectionError) {
+      return corsResponse(request, errorResponse(503, error.message), config);
+    }
+    return corsResponse(request, errorResponse(503, "Los controles seguros de Karenda MCP no están disponibles."), config);
+  }
+
   const authenticated = await authenticateMcpRequest(request, config);
   if (authenticated instanceof Response) return corsResponse(request, authenticated, config);
+  try {
+    const allowedByGrant = await protections.consumeRateLimit(
+      `grant:${authenticated.principal.grantId}:transport`,
+      60,
+      300,
+    );
+    if (!allowedByGrant) {
+      return corsResponse(request, new Response(JSON.stringify({
+        error: "rate_limited",
+        message: "Karenda recibió demasiadas solicitudes para esta conexión. Espera un minuto y vuelve a intentar.",
+      }), {
+        status: 429,
+        headers: { "Cache-Control": "no-store", "Content-Type": "application/json", "Retry-After": "60" },
+      }), config);
+    }
+  } catch {
+    return corsResponse(request, errorResponse(503, "No se pudo comprobar el límite de solicitudes."), config);
+  }
 
   const handler = createMcpHandler(
-    () => createKarendaMcpServer(authenticated.userClient, authenticated.principal),
+    () => createKarendaMcpServer(authenticated.userClient, authenticated.principal, protections),
     { legacy: "stateless", responseMode: "auto", keepAliveMs: 15000 },
   );
   const authInfo = {

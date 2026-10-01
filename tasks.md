@@ -370,11 +370,12 @@ interoperabilidad.
   aislado, verificar runtime Deno, SDK MCP oficial, headers, streaming,
   cancelación, rutas, timeout y límites de Edge Functions. No desplegar en
   producción. Evidencia: spike reproducible y restricciones documentadas.
-  Evidencia parcial: `npm run test:mcp` (13 tests), bundle único en
-  `functions/.deploy/karenda-mcp.js`, función activa en staging, preview web
-  en la misma rama, metadata de autorización/recurso 200, desafío sin bearer
-  401, CORS de preview/loopback 204 y origen extranjero 403. Faltan límites de
-  tasa, cancelación bajo carga y flujo OAuth autenticado.
+  Evidencia parcial: `npm run test:mcp` (22 tests), bundle único en
+  `functions/.deploy/karenda-mcp.js`, función activa en la rama limpia
+  `karenda-mcp-release`, metadata OAuth/recurso 200, desafío sin bearer 401,
+  CORS permitido 204/origen extranjero 403 y registro DCR 201. Las migraciones
+  OAuth y de controles están aplicadas. Falta el preview web, cancelación bajo
+  carga y flujo OAuth autenticado.
 - [ ] **Tarea 132: Probar OAuth con los tres harnesses** (45-90 min). Validar
   descubrimiento de metadata, CIMD/DCR, redirects de escritorio, login, refresh
   y logout/revocación en Codex, Claude Code y OpenCode. Evidencia: tabla de
@@ -393,8 +394,8 @@ interoperabilidad.
 - [ ] **Tarea 135: Diseñar migración de grants** (30-45 min). Especificar
   clientes/grants, scopes, expiraciones, refresh token protegido, revocación,
   auditoría mínima, índices, constraints y RLS en InsForge. Evidencia parcial:
-  migración revisada y aplicada únicamente en `karenda-mcp` (InsForge branch id
-  `7663ead2-52b2-43b3-852d-684f378d7790`), enlazada con
+  migración revisada y aplicada únicamente en `karenda-mcp-release` (InsForge
+  branch id `0ffcef32-51b3-4d71-99d2-e4adc54c51b9`), enlazada con
   `feature/007-mcp-server`; faltan pruebas RLS y del ciclo de vida.
 - [ ] **Tarea 136: Implementar autorización con sesión InsForge** (45-75 min).
   Añadir metadata OAuth, PKCE S256, state, validación de redirect y sesión
@@ -419,21 +420,25 @@ interoperabilidad.
   Configurar protocolo/versión, initialize, metadata, respuesta de recurso
   protegido y manejo de Origin/Host/CORS según el spike. Evidencia: suite de
   contrato MCP. Parcial: endpoint activo en staging; metadata, challenge 401,
-  rutas SPA del preview y CORS permitido/rechazado verificados; `initialize`,
-  SSE autenticado y tools/list con grant válido aún deben probarse con un
-  cliente real.
+  CORS permitido/rechazado y DCR 201 verificados; `initialize`, SSE autenticado
+  y tools/list con grant válido aún deben probarse con un cliente real.
 - [ ] **Tarea 141: Añadir registro de tools y autorización central** (45-60
   min). Registrar schemas cerrados, validar bearer/audience/grant/scope antes
   de ejecutar y convertir errores al contrato común. Evidencia: tests
   insufficient scope, schema y token inválido.
 - [ ] **Tarea 142: Añadir límites y auditoría mínima** (30-45 min). Aplicar
-  límites por usuario/grant/IP, max body/rango/página y trazas sin datos
-  sensibles. Evidencia: tests de límites y revisión automatizada de logs.
+  límites por grant/tool, IP para OAuth y transporte, max body/rango/página y
+  trazas sin datos sensibles. Contadores atómicos y HMAC de IP están
+  implementados y desplegados a la rama InsForge limpia; RPCs de rate limit e
+  idempotencia aplicados. Evidencia: tests locales, registro DCR 201 y smoke;
+  faltan pruebas de abuso autenticadas y revisión automatizada de logs.
 - [ ] **Tarea 143: Añadir paginación, fecha, versión e idempotencia comunes**
   (45-60 min). Implementar utilidades compartidas; control de expected version,
-  idempotency key, zona horaria y cursor. Añadir RPC/migración solo si los
-  servicios existentes no pueden garantizar atomicidad. Evidencia: tests de
-  concurrencia y reintento.
+  `idempotencyKey`, zona horaria y cursor. Reclamos persistentes evitan
+  duplicados concurrentes y repiten la respuesta por 30 días. Implementación y
+  tests locales listos y RPCs aplicadas en staging; falta verificar replay,
+  conflictos y concurrencia con grant autenticado real.
+  Evidencia: tests de concurrencia y reintento.
 
 ### Fase 3: Herramientas De Lectura
 
@@ -446,7 +451,9 @@ interoperabilidad.
   explícito. Evidencia: tests de aislamiento, tamaño y relaciones.
 - [ ] **Tarea 146: Publicar lectura de hábitos y tareas recurrentes** (45-60
   min). Incluir definiciones, logs, notas, historial, estadísticas y ocurrencias
-  según la spec. Evidencia: comparaciones de resultado contra servicios web.
+  según la spec. Tools de estadísticas e historial de versiones implementadas
+  localmente con las funciones compartidas de evaluación; falta verificar la
+  lectura con datos de staging y RLS. Evidencia: comparación con servicios web.
 - [ ] **Tarea 147: Publicar estado y revisión de Canvas** (30-45 min). Exponer
   estado seguro, propuestas sanitizadas y candidatos requeridos por la web; no
   incluir token ni cuerpos remotos innecesarios. Evidencia: tests de secretos,
