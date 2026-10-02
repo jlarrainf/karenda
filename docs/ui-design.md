@@ -773,6 +773,15 @@ de datos.
   identifica el cliente solicitante, explica cada permiso en español y ofrece
   Autorizar y Cancelar con igual visibilidad. También indica hasta qué hora es
   válida la solicitud de consentimiento.
+- Sobre la lista de permisos se ofrece `Seleccionar todos los permisos`; la
+  acción selecciona exactamente los permisos que se muestran para esa solicitud,
+  incluidos los de escritura, borrado, Canvas e IA. Al quedar todos marcados,
+  la acción pasa a `Quitar selección`. Una selección parcial se completa al
+  seleccionar todos. Esta acción solo cambia las casillas: nunca concede el
+  acceso sin pulsar `Autorizar Karenda`.
+- El estado parcial o total de la selección se comunica en texto, no solo por
+  color. La acción masiva usa los mismos estilos de foco, altura táctil y
+  adaptación móvil que el resto de los controles.
 - Los permisos de lectura, escritura y borrado se distinguen en una lista
   legible. El alcance de borrado requiere una explicación directa y no se
   activa por defecto.

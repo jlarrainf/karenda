@@ -529,3 +529,7 @@ en `docs/traceability.md`.
   cada RF-MCP/CA-MCP, actualizar estado y documentar limitaciones conocidas.
   No marcar terminada una familia que carezca de tests, RLS o evidencia E2E
   requerida.
+- [ ] **Tarea 161: Añadir selección masiva de scopes MCP** (20-30 min).
+  Permitir seleccionar todos los scopes presentados y quitar la selección sin
+  conceder acceso hasta la acción explícita de autorización. Evidencia: prueba
+  de estados parcial/total, build web y smoke de consentimiento en producción.
