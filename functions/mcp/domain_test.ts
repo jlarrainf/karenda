@@ -1,10 +1,14 @@
 import {
   calculateMcpHabitStatistics,
+  createPersonalGroup,
   DomainOperationError,
   toPublicHabitScheduleVersion,
+  updatePersonalGroup,
   validateHabitStatisticsRange,
+  type KarendaClient,
 } from "./domain.ts";
 import type { Habit, HabitLog, HabitScheduleVersion } from "../../src/types/domain.ts";
+import type { McpPrincipal } from "./oauth.ts";
 
 const schedule: Habit["schedule"] = {
   unit: "day",
@@ -67,6 +71,108 @@ const log: HabitLog = {
   createdAt: "2026-06-01T12:00:00.000Z",
   updatedAt: "2026-06-01T12:00:00.000Z",
 };
+
+type MockDatabaseResult = {
+  data: Record<string, unknown> | null;
+  error: null;
+};
+
+type MockQuery = {
+  insert: (rows: Record<string, unknown>[]) => MockQuery;
+  update: (row: Record<string, unknown>) => MockQuery;
+  select: (columns: string) => MockQuery;
+  eq: (column: string, value: string) => MockQuery;
+  single: () => Promise<MockDatabaseResult>;
+  maybeSingle: () => Promise<MockDatabaseResult>;
+};
+
+function createMockCatalogClient(rows: Record<string, unknown>[]) {
+  const selectedColumns: string[] = [];
+  const insertedRows: Record<string, unknown>[] = [];
+  const updatedRows: Record<string, unknown>[] = [];
+  const responses = [...rows];
+  let query: MockQuery;
+  query = {
+    insert: (input) => {
+      insertedRows.push(...input);
+      return query;
+    },
+    update: (input) => {
+      updatedRows.push(input);
+      return query;
+    },
+    select: (columns) => {
+      selectedColumns.push(columns);
+      return query;
+    },
+    eq: () => query,
+    single: async () => ({ data: responses.shift() ?? null, error: null }),
+    maybeSingle: async () => ({ data: responses.shift() ?? null, error: null }),
+  };
+  const client = {
+    database: {
+      from: () => query,
+    },
+  } as unknown as KarendaClient;
+  return { client, selectedColumns, insertedRows, updatedRows };
+}
+
+const personalGroupColumns = "id, name, color, created_at, updated_at";
+const ownerId = "10000000-0000-4000-8000-000000000001";
+const personalGroupId = "20000000-0000-4000-8000-000000000002";
+const personalGroupPrincipal = { ownerId } as McpPrincipal;
+
+Deno.test("MCP personal group creation selects only columns available in its table", async () => {
+  const row = {
+    id: personalGroupId,
+    name: "Freestyle",
+    color: "#6D28D9",
+    created_at: "2026-10-02T12:00:00.000Z",
+    updated_at: "2026-10-02T12:00:00.000Z",
+  };
+  const mock = createMockCatalogClient([row]);
+
+  const result = await createPersonalGroup(mock.client, personalGroupPrincipal, {
+    name: row.name,
+    color: row.color,
+  });
+
+  if (mock.selectedColumns.at(-1) !== personalGroupColumns) {
+    throw new Error("Creating a personal group requested columns that the table does not have.");
+  }
+  if (result.id !== personalGroupId || mock.insertedRows[0]?.owner_id !== ownerId) {
+    throw new Error("Creating a personal group did not return the persisted owned row.");
+  }
+});
+
+Deno.test("MCP personal group updates select only columns available in its table", async () => {
+  const currentRow = {
+    id: personalGroupId,
+    updated_at: "2026-10-02T12:00:00.000Z",
+  };
+  const updatedRow = {
+    id: personalGroupId,
+    name: "Freestyle FMS",
+    color: null,
+    created_at: "2026-10-02T12:00:00.000Z",
+    updated_at: "2026-10-02T12:05:00.000Z",
+  };
+  const mock = createMockCatalogClient([currentRow, updatedRow]);
+
+  const result = await updatePersonalGroup(
+    mock.client,
+    personalGroupPrincipal,
+    personalGroupId,
+    { name: updatedRow.name },
+  );
+
+  if (mock.selectedColumns.at(-1) !== personalGroupColumns) {
+    throw new Error("Updating a personal group requested columns that the table does not have.");
+  }
+  if (result.name !== updatedRow.name || mock.updatedRows.length !== 1) {
+    throw new Error("Updating a personal group did not return the persisted row.");
+  }
+});
 
 Deno.test("MCP habit statistics reuse Karenda's schedule, completion, and miss calculations", () => {
   const result = calculateMcpHabitStatistics(

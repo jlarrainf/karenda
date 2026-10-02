@@ -334,13 +334,16 @@ async function saveCatalog(
   const payload = isSubject
     ? { name: parsed.name, code: parsed.code, abbreviation: parsed.abbreviation, color: parsed.color }
     : { name: parsed.name, color: parsed.color };
+  const returnColumns = isSubject
+    ? "id, name, code, abbreviation, color, created_at, updated_at"
+    : "id, name, color, created_at, updated_at";
   if (!id) {
     return await queryData<Row>(database(client, table).insert([{ owner_id: principal.ownerId, ...payload }])
-      .select("id, name, code, abbreviation, color, created_at, updated_at").single(), "No se pudo crear el registro.");
+      .select(returnColumns).single(), "No se pudo crear el registro.");
   }
   let query = ownerQuery(client, table, principal.ownerId).update(payload).eq("id", id);
   if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
-  const row = await queryOptional<Row>(query.select("id, name, code, abbreviation, color, created_at, updated_at").maybeSingle(), "No se pudo actualizar el registro.");
+  const row = await queryOptional<Row>(query.select(returnColumns).maybeSingle(), "No se pudo actualizar el registro.");
   if (!row) throw new DomainOperationError("conflict", "El registro cambió antes de guardarse. Vuelve a leerlo.");
   return row;
 }
