@@ -204,7 +204,7 @@ trazada así:
 | --- | --- | --- | --- |
 | RF-SH-01 métricas diarias | `statistics_collector.lua`, `anki_stats_adapter.lua` | Specs Lua con runtime KOReader | Local |
 | RF-SH-02 vínculos y creación explícita | Migración, RPC `setup_koreader_habit_links`, `KoreaderStatsSetupPanel` y validación de fecha local en `karenda-koreader-habit-links` | `karendaKoreaderHabitLinksValidation.test.ts`, typecheck y tests UI; prueba autenticada pendiente | Local/parcial |
-| RF-SH-03 ingesta protegida e idempotente | `karenda-koreader-habit-sync.ts`, scope `write:habit_logs`, `koreader_link_id` | Revisión SQL, integración autenticada pendiente | Local/parcial |
+| RF-SH-03 ingesta protegida e idempotente | `karenda-koreader-habit-sync.ts`, scope `write:habit_logs`, `koreader_link_id`; `20260922032151_qualify-device-pairing-code-update.sql` califica `device_pairing_codes.id` en la RPC de canje | Migración registrada como aplicada en el proyecto padre y versionada aquí; no se reaplicó; integración autenticada pendiente | Local/parcial |
 | RF-SH-04 día/mes/año y precedencia | `koreaderStats.ts`, `habitEvaluation.ts`, `HabitsPage.tsx` | Vitest | Automatizado |
 | RF-SH-05 backfill, corrección y offline | `stats_sync_service.lua`, `stats_sync_store.lua` | Specs Lua y Kindle real pendiente | Local/parcial |
 | RNF-SH-01 privacidad y no modificación de snapshot | Token solo en Authorization; archivos aislados del snapshot/SimpleUI | Revisión estática | Automatizado + estático |
