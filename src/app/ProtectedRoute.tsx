@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useSessionStore } from '../stores/sessionStore.ts'
 
 export function ProtectedRoute() {
   const location = useLocation()
-  const { user, isInitialized, isLoading, error, initialize, retry } = useSessionStore()
+  const navigate = useNavigate()
+  const { user, isInitialized, isLoading, error, initialize, retry, startLogin } = useSessionStore()
 
   useEffect(() => {
     void initialize()
@@ -32,13 +33,26 @@ export function ProtectedRoute() {
       >
         <h1 className="text-2xl font-bold text-ink">No pudimos comprobar tu sesión</h1>
         <p className="text-ink-muted">{error}</p>
-        <button
-          className="min-h-11 rounded-control bg-brand px-5 text-sm font-semibold text-surface transition-colors duration-state hover:bg-brand-strong focus-visible:ring-4 focus-visible:ring-brand-soft"
-          onClick={() => void retry()}
-          type="button"
-        >
-          Intentar nuevamente
-        </button>
+        <div className="flex w-full max-w-sm flex-col gap-3 sm:flex-row sm:justify-center">
+          <button
+            className="min-h-11 flex-1 rounded-control bg-brand px-5 text-sm font-semibold text-surface transition-colors duration-state hover:bg-brand-strong focus-visible:ring-4 focus-visible:ring-brand-soft"
+            onClick={() => {
+              const from = `${location.pathname}${location.search}`
+              startLogin()
+              navigate('/login', { replace: true, state: { from } })
+            }}
+            type="button"
+          >
+            Iniciar sesión nuevamente
+          </button>
+          <button
+            className="min-h-11 flex-1 rounded-control border border-border bg-surface px-5 text-sm font-semibold text-ink transition-colors duration-state hover:border-border-strong hover:bg-surface-subtle focus-visible:ring-4 focus-visible:ring-brand-soft"
+            onClick={() => void retry()}
+            type="button"
+          >
+            Intentar nuevamente
+          </button>
+        </div>
       </section>
     )
   }

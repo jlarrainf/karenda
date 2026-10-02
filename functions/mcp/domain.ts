@@ -423,11 +423,11 @@ export async function deleteNote(client: KarendaClient, principal: McpPrincipal,
 }
 
 const HABIT_COLUMNS = "id, name, description, color, subject_id, personal_group_id, tracking_type, unit, goal_value, evaluation_mode, quota_period, miss_policy, schedule, start_date, end_date, lifecycle_status, stats_enabled, note_policy, calendar_enabled, calendar_schedule, created_at, updated_at";
-const HABIT_LOG_COLUMNS = "id, habit_id, local_date, value, status, source, external_id, created_at, updated_at";
+const HABIT_LOG_COLUMNS = "id, habit_id, local_date, value, status, source, external_id, koreader_link_id, created_at, updated_at";
 const HABIT_NOTE_COLUMNS = "id, habit_id, entry_date, title, content_markdown, created_at, updated_at";
 const HABIT_VERSION_COLUMNS = "id, habit_id, schedule, evaluation_mode, goal_value, quota_period, miss_policy, effective_from, effective_to, created_at, updated_at";
 
-function mapHabitLog(row: Row, ownerId: string): HabitLog {
+export function mapHabitLog(row: Row, ownerId: string): HabitLog {
   return {
     id: row.id,
     ownerId,
@@ -437,6 +437,7 @@ function mapHabitLog(row: Row, ownerId: string): HabitLog {
     status: row.status,
     source: row.source,
     externalId: row.external_id,
+    koreaderLinkId: row.koreader_link_id ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

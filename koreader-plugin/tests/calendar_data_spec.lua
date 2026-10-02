@@ -150,6 +150,21 @@ describe("calendar_data", function()
         )
     end)
 
+    it("muestra solo eventos pendientes en Agenda y conserva completados en Día", function()
+        local values = snapshot()
+        values.events[1].status = "pending"
+        values.events[2].status = "pending"
+        values.events[3].status = "completed"
+
+        local agenda = CalendarData.eventsForPeriod(values, "agenda", "2026-09-04")
+        assert.are.equal(1, #agenda.events)
+        assert.are.equal("timed", agenda.events[1].id)
+
+        local day = CalendarData.eventsForPeriod(values, "day", "2026-09-08")
+        assert.are.equal(1, #day.events)
+        assert.are.equal("later", day.events[1].id)
+    end)
+
     it("trata la medianoche final de un evento con hora como límite exclusivo", function()
         local event = {
             id = "midnight",

@@ -130,6 +130,13 @@ export function appendUniqueCanvasText(existing: string | null, addition: string
   return current.includes(next) ? current : `${current}\n\n${next}`
 }
 
+export function isCanvasOnlyDescription(eventDescription: string | null, sourceExcerpt: string | null): boolean {
+  const eventText = eventDescription?.replace(/\s+/g, ' ').trim() ?? ''
+  const sourceText = sourceExcerpt?.replace(/\s+/g, ' ').trim() ?? ''
+  if (!eventText || !sourceText) return false
+  return eventText === sourceText || sourceText.startsWith(eventText)
+}
+
 export function parseCanvasNextLink(header: string | null): string | null {
   if (!header) return null
   for (const part of header.split(',')) {

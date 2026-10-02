@@ -1,4 +1,4 @@
-local pluginPath = assert(arg[1], "Se requiere la ruta de karenda.koplugin.")
+local pluginPath = assert(arg[1], "Se requiere la ruta de karenda-screensaver.koplugin.")
 package.path = pluginPath .. "/?.lua;" .. package.path
 
 require("setupkoenv")
@@ -11,7 +11,7 @@ require("document/canvascontext"):init(Device)
 require("ui/bidi").setup(G_reader_settings:readSetting("language"))
 
 local RenderImage = require("ui/renderimage")
-local Runtime = require("runtime")
+local Context = require("karenda_screensaver_context")
 local Screensaver = require("ui/screensaver")
 local Integration = require("screensaver_integration")
 local cover = RenderImage:renderImageFile("resources/koreader.png", false, nil, nil)
@@ -49,7 +49,7 @@ local previous_enabled = G_reader_settings:readSetting("karenda_screensaver_enab
 local previous_delay = G_reader_settings:readSetting("screensaver_delay")
 G_reader_settings:saveSetting("karenda_screensaver_enabled", true)
 G_reader_settings:saveSetting("screensaver_delay", "disable")
-Runtime.clearContext()
+Context.resetContext()
 Screensaver.ui = ui
 Screensaver.screensaver_type = "cover"
 Screensaver.show_message = false

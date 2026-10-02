@@ -352,6 +352,16 @@ function CalendarData.filterEvents(events, period)
     return copyAndSort(result)
 end
 
+local function filterPendingEvents(events)
+    local result = {}
+    for _, event in ipairs(events or {}) do
+        if event.status == "pending" then
+            result[#result + 1] = event
+        end
+    end
+    return result
+end
+
 function CalendarData.groupEvents(events, period, includeEmpty)
     if not period then
         return {}
@@ -515,10 +525,14 @@ end
 function CalendarData.eventsForPeriod(snapshot, mode, cursor)
     local period = CalendarData.period(mode, cursor, snapshot.window.to)
     local visible = CalendarData.clipPeriod(period, snapshot.window)
+    local events = CalendarData.filterEvents(snapshot.events, visible)
+    if mode == "agenda" then
+        events = filterPendingEvents(events)
+    end
     return {
         period = period,
         visiblePeriod = visible,
-        events = CalendarData.filterEvents(snapshot.events, visible),
+        events = events,
     }
 end
 

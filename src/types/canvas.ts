@@ -21,11 +21,18 @@ export interface CanvasConnection {
   authMode: 'personal_access_token' | 'oauth'
   status: CanvasConnectionStatus
   timeZone: string
+  lookbackDays: number
   tokenExpiresAt: IsoDateTime
   lastSyncAt: IsoDateTime | null
   nextSyncAt: IsoDateTime | null
   lastErrorCode: string | null
   lastErrorMessage: string | null
+}
+
+export interface CanvasSyncCounts {
+  [key: string]: number | string[] | undefined
+  warnings?: number
+  warningMessages?: string[]
 }
 
 export interface CanvasCourseLink {
@@ -57,7 +64,8 @@ export interface CanvasSyncRun {
   id: EntityId
   triggerType: 'manual' | 'scheduled'
   status: 'running' | 'completed' | 'partial' | 'failed'
-  counts: Record<string, number>
+  counts: CanvasSyncCounts
+  warningMessages: string[]
   errorMessage: string | null
   startedAt: IsoDateTime
   finishedAt: IsoDateTime | null

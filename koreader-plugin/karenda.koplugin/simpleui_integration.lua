@@ -20,6 +20,12 @@ local ACTIONS = {
         method = "openNotes",
         icon = "notes.svg",
     },
+    {
+        id = "karenda",
+        label = "Karenda",
+        method = "openKarenda",
+        icon = "karenda.svg",
+    },
 }
 
 local ACTION_ID_BY_KIND = {
@@ -99,8 +105,8 @@ function Integration.resolveSimpleUIPlugin(fm, fallback)
     return resolveSimpleUIPlugin(fm, fallback)
 end
 
-function Integration.trackIndicator(simpleui_plugin, kind, view)
-    local action_id = ACTION_ID_BY_KIND[kind]
+function Integration.trackIndicator(simpleui_plugin, kind, view, action_id_override)
+    local action_id = action_id_override or ACTION_ID_BY_KIND[kind]
     if not simpleui_plugin or not action_id or not view then
         return view
     end

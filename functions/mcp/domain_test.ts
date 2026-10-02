@@ -1,6 +1,7 @@
 import {
   calculateMcpHabitStatistics,
   createPersonalGroup,
+  mapHabitLog,
   DomainOperationError,
   toPublicHabitScheduleVersion,
   updatePersonalGroup,
@@ -68,6 +69,7 @@ const log: HabitLog = {
   status: "completed",
   source: "manual",
   externalId: null,
+  koreaderLinkId: null,
   createdAt: "2026-06-01T12:00:00.000Z",
   updatedAt: "2026-06-01T12:00:00.000Z",
 };
@@ -173,6 +175,27 @@ Deno.test("MCP personal group updates select only columns available in its table
   }
 });
 
+Deno.test("MCP habit log mapping preserves KOReader provenance", () => {
+  const linkedLog = mapHabitLog({
+    id: "log-a",
+    habit_id: "habit-a",
+    local_date: "2026-06-01",
+    value: 12,
+    status: "completed",
+    source: "koreader",
+    external_id: "link-a:2026-06-01",
+    koreader_link_id: "link-a",
+    created_at: "2026-06-01T12:00:00.000Z",
+    updated_at: "2026-06-01T12:00:00.000Z",
+  }, ownerId);
+
+  if (linkedLog.koreaderLinkId !== "link-a") {
+    throw new Error("MCP mapping dropped the KOReader habit link.");
+  }
+  if (mapHabitLog({ koreader_link_id: null }, ownerId).koreaderLinkId !== null) {
+    throw new Error("Manual habit logs should have no KOReader link.");
+  }
+});
 Deno.test("MCP habit statistics reuse Karenda's schedule, completion, and miss calculations", () => {
   const result = calculateMcpHabitStatistics(
     habit,

@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "npm:@insforge/sdk@*": "1.5.2",
     "npm:@insforge/sdk@1.5.2": "1.5.2",
     "npm:@modelcontextprotocol/server@2.0.0": "2.0.0",
     "npm:zod@4.5.4": "4.5.4"

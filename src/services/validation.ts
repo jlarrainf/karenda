@@ -289,6 +289,7 @@ export const eventInputSchema = eventInputBaseSchema.superRefine((value, context
 
 export const eventPatchSchema = eventInputBaseSchema
   .extend({
+    // Patches must not apply the create-event defaults to omitted fields.
     isAllDay: z.boolean().optional(),
     status: eventStatusSchema.optional(),
     lateSubmissionDays: lateSubmissionDaysSchema.optional(),

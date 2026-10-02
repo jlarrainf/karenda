@@ -56,19 +56,28 @@ su refresh. Se ejecuta con la misma invocación, cambiando el nombre del script.
 `sync_service_spec.lua` cubre la persistencia y el ETag del servicio con un
 transporte en memoria y requiere el runner Busted del entorno de KOReader.
 
+`statistics_collector_spec.lua`, `anki_stats_adapter_spec.lua`,
+`stats_api_client_spec.lua` y `stats_sync_service_spec.lua` cubren la lectura
+diaria de páginas/tiempo/libros, el proveedor opcional de Anki, el token solo en
+Bearer y el backfill/cola de estadísticas. Requieren el mismo runtime de
+KOReader.
+
 `markdown_smoke.lua` verifica texto plano, HTML enriquecido, fórmulas inline y de
 bloque sin depender de Busted. Se ejecuta pasando la ruta del paquete como único
 argumento.
 
-`simpleui_overlay_smoke.lua` verifica que Calendario y Notas se registren como
-overlays in-place asíncronos y que el indicador temporal se active/restaure sin
-pisar una pestaña seleccionada durante la propagación. La restauración del Home,
-Library o Reader queda para la prueba con SimpleUI y KOReader reales.
+`simpleui_overlay_smoke.lua` verifica que Calendario, Notas y Karenda se
+registren como overlays in-place asíncronos y que el indicador temporal se
+active/restaure sin pisar una pestaña seleccionada durante la propagación. La
+restauración del Home, Library o Reader queda para la prueba con SimpleUI y
+KOReader reales.
 
-`screensaver_policy_spec.lua` comprueba la prioridad entre contexto de Karenda,
-libro y delegación. `screensaver_config_spec.lua` verifica el interruptor dentro
-de `Wallpaper`, la personalización y que no se duplique al reconstruir el menú.
-`book_screensaver_smoke.lua` construye la composición real de portada/tarjetas,
+`screensaver_policy_spec.lua` comprueba la prioridad entre contexto, libro,
+`Leave screen as-is` y delegación. `screensaver_context_smoke.lua` comprueba el
+puente opcional y la tolerancia a la ausencia del núcleo. `screensaver_config_spec.lua`
+verifica el interruptor dentro de `Wallpaper`, las políticas, la personalización
+y que no se duplique al reconstruir el menú. `book_screensaver_smoke.lua`
+construye la composición real de portada/panel,
 comprueba páginas/tiempos restantes y ritmo medio, e incluye el caso sin datos
 visibles, con widgets de KOReader.
 `screensaver_runtime_smoke.lua` prueba además la composición dentro del
@@ -84,17 +93,21 @@ Kindle real. Se ejecutan desde la raíz de KOReader:
 
 ```sh
 ./luajit <karenda>/koreader-plugin/tests/screensaver_config_spec.lua \
+  <karenda>/koreader-plugin/karenda-screensaver.koplugin
+
+./luajit <karenda>/koreader-plugin/tests/screensaver_context_smoke.lua \
+  <karenda>/koreader-plugin/karenda-screensaver.koplugin \
   <karenda>/koreader-plugin/karenda.koplugin
 
 ./luajit <karenda>/koreader-plugin/tests/screensaver_integration_smoke.lua \
-  <karenda>/koreader-plugin/karenda.koplugin
+  <karenda>/koreader-plugin/karenda-screensaver.koplugin
 
 ./luajit <karenda>/koreader-plugin/tests/book_screensaver_smoke.lua \
-  <karenda>/koreader-plugin/karenda.koplugin
+  <karenda>/koreader-plugin/karenda-screensaver.koplugin
 
 ./luajit <karenda>/koreader-plugin/tests/screensaver_runtime_smoke.lua \
-  <karenda>/koreader-plugin/karenda.koplugin
+  <karenda>/koreader-plugin/karenda-screensaver.koplugin
 
 ./luajit <karenda>/koreader-plugin/tests/screensaver_preview_smoke.lua \
-  <karenda>/koreader-plugin/karenda.koplugin
+  <karenda>/koreader-plugin/karenda-screensaver.koplugin
 ```

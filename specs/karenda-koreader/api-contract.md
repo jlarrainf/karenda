@@ -142,6 +142,12 @@ GET  <functions_base_url>/karenda-koreader-device-tokens
 POST <functions_base_url>/karenda-koreader-device-tokens
 ```
 
+La función responde el preflight `OPTIONS` con `204` y permite los orígenes de
+las superficies publicadas mediante `Access-Control-Allow-Origin`: la web
+`https://karenda.insforge.site` y la aplicación Android de Capacitor
+`https://localhost`. También conserva los orígenes locales de desarrollo; no
+usa `*` porque las operaciones requieren el Bearer de la sesión.
+
 El POST recibe un body con `action` igual a `create`, `revoke` o `regenerate`.
 `create` recibe `label` y `scopes`; `create_pairing` recibe `label`; `pair` recibe
 el código de seis dígitos sin sesión web; las otras operaciones reciben
@@ -369,3 +375,59 @@ La inspección de InsForge y la implementación desplegada confirman:
 
 Este contrato no declara sincronización funcional hasta probar la ruta real con
 un token válido, 200/304/401/403/413 y aislamiento entre propietarios.
+
+## 8. Coordinación De Estadísticas Con Hábitos
+
+La función `karenda-koreader-habit-sync` usa el mismo token de dispositivo, pero
+requiere además `write:habit_logs`. Su `GET` devuelve vínculos activos con
+`id`, `metric_key`, `source_unit`, `target_unit`, `conversion_factor`,
+`timezone`, `habit_id`, `start_date` y `end_date`. Su `POST` recibe un lote con
+`schema_version`, `timezone` y observaciones diarias (`link_id`, `local_date`,
+`value`, `external_id`).
+
+Las métricas soportadas son `reading_pages`, `reading_minutes`,
+`books_completed` y `anki_cards_reviewed`. La escritura resuelve el hábito y el
+propietario desde el vínculo, guarda `source = koreader` y aplica la conversión
+de unidades. La unicidad operativa es vínculo más fecha civil; el identificador
+externo esperado es `<link_id>:<local_date>`. Reintentos del mismo contenido son
+idempotentes y un valor cero elimina la fila importada de ese día.
+
+La configuración web usa `karenda-koreader-habit-links` y el RPC
+`setup_koreader_habit_links`. Permite vincular un hábito cuantitativo compatible
+o crear uno diario nuevo con meta explícita. El snapshot v1 y las superficies de
+SimpleUI no cambian.
+
+## Extensión InkDesk: cambio del estado del evento
+
+InkDesk puede alternar el estado de un evento si el dueño habilitó
+`write:event_status` para su token. El permiso está desactivado por defecto y se
+concede después de vincular el dispositivo, desde `Karenda > Dispositivos`. La
+concesión agrega solo ese scope y conserva el token y el resto de permisos.
+
+```http
+POST <functions_base_url>/karenda-koreader-event-status
+Authorization: Bearer <device_token>
+Content-Type: application/json
+
+{"event_id":"<uuid>","status":"completed"}
+```
+
+`status` admite exclusivamente `pending` o `completed`. La función filtra por
+`event_id` y por `owner_id` obtenido del token, y responde `200` con el
+identificador, el nuevo estado y `updated_at`. Solo cambia `events.status`;
+requiere una acción explícita desde el popup de InkDesk y no se ejecuta al abrir
+o cerrar detalles ni al sincronizar el snapshot. `OPTIONS` sin credenciales ni
+body debe responder `204` para CORS.
+
+Errores: `400 INVALID_REQUEST` para UUID, body o estado inválidos;
+`401 UNAUTHORIZED` para token inválido, revocado o vencido;
+`403 INSUFFICIENT_SCOPE` si falta `write:event_status`;
+`404 EVENT_NOT_FOUND` para evento inexistente o ajeno al dueño; y
+`503 BACKEND_UNAVAILABLE` si InsForge no puede completar la operación. Un
+evento ajeno no revela datos.
+
+Las acciones web `enable_event_status` y `disable_event_status` requieren una
+sesión web y el `token_id` de un dispositivo activo propio. Habilitar es
+idempotente y agrega solo el scope; retirar elimina solo ese scope. Ambas
+conservan lectura, otros permisos y token, no muestran secretos y devuelven la
+metadata actualizada.

@@ -3,6 +3,7 @@ import {
   classifyAssessment,
   extractAssessmentCode,
   extractCanvasAssessment,
+  hasExplicitDateReference,
 } from './canvasAssessment.ts'
 
 describe('Canvas assessment extraction', () => {
@@ -18,6 +19,7 @@ describe('Canvas assessment extraction', () => {
     expect(result.startAt).toBe('2026-09-04T21:30:00.000Z')
     expect(result.endAt).toBe('2026-09-04T23:30:00.000Z')
     expect(result.durationMinutes).toBe(120)
+    expect(result.hasExplicitDate).toBe(true)
   })
 
   it('recognizes zero-padded activity codes and canonical categories', () => {
@@ -30,7 +32,7 @@ describe('Canvas assessment extraction', () => {
     expect(classifyAssessment('Prueba 1')).toBe('test')
   })
 
-  it('uses the announcement day when the message gives a time but no date', () => {
+  it('flags time-only announcements as lacking an explicit date', () => {
     const result = extractCanvasAssessment(
       'Interrogación 2',
       'Nos vemos a las 09:15 en Sala 12.',
@@ -39,5 +41,7 @@ describe('Canvas assessment extraction', () => {
 
     expect(result.startAt).toBe('2026-09-04T13:15:00.000Z')
     expect(result.location).toBe('Sala 12')
+    expect(result.hasExplicitDate).toBe(false)
+    expect(hasExplicitDateReference('La prueba será el lunes 7 de septiembre a las 10:00')).toBe(true)
   })
 })

@@ -201,6 +201,16 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
 - [x] **Tarea 98: Normalizar hábitos cuantitativos** (20-30 min). Corregir
   combinaciones contradictorias de tipo, unidad y meta antes de validar.
 
+- [ ] **Tarea 99: Añadir modo guiado a eventos asistidos** (20-30 min). Definir
+  el contrato de preguntas y respuestas, resolver relaciones ambiguas y permitir
+  propuestas confirmables de asignaturas y grupos personales.
+- [ ] **Tarea 100: Corregir robustez de extracción de eventos IA** (20-30 min).
+  Aceptar respuestas JSON equivalentes, conservar relaciones desconocidas para
+  revisión y verificar los fallbacks del proveedor.
+- [ ] **Tarea 101: Verificar creación guiada de eventos** (20-30 min). Cubrir
+  servicio, panel, creación deduplicada de catálogo, guardado parcial,
+  typecheck, lint y build.
+
 - [ ] **Tarea 89: Probar flujos críticos en navegador** (20-30 min).
   Verificar creación, registro, historial, estadísticas, notas, tareas y
   proyección de calendario.
@@ -536,3 +546,109 @@ en `docs/traceability.md`.
   pasaron; el deployment `aa3902df-7dde-481d-bd56-a12d39cfcf5b` quedó listo en
   producción. Las rutas de consentimiento en ambos dominios responden 200 y el
   bundle publicado contiene las acciones de seleccionar y quitar selección.
+
+## Tareas De Integración Canvas Y KOReader De PR #15
+
+Los IDs 162–181 reasignan las tareas 125–144 de la rama de release, para conservar su trazabilidad sin duplicar los IDs 125–161 de main.
+
+- [x] **Tarea 162: Hacer renovable la sesión de Canvas en Android** (20-30 min).
+  Usar el flujo móvil de InsForge, restaurar el refresh token desde almacenamiento
+  seguro y renovar el access token antes de consultar rutas autenticadas.
+- [x] **Tarea 163: Configurar ventana histórica y avisos de sincronización**
+  (20-30 min). Permitir 7–365 días por conexión, reiniciar el cursor al cambiar
+  el periodo y mostrar avisos parciales en el historial aunque la bandeja esté vacía.
+- [ ] **Tarea 164: Validar APK y sesión en dispositivo** (20-30 min). Instalar la
+  APK unificada, iniciar sesión con la cuenta Karenda y confirmar que Canvas se
+  mantiene disponible tras expirar/renovar la sesión.
+- [x] **Tarea 165: Permitir Canvas desde el WebView Android** (20-30 min).
+  Añadir `https://localhost` a la allowlist CORS de conexión, sincronización y
+  revisión; desplegar las tres funciones y cubrir la regresión en la
+  verificación del empaquetado.
+- [x] **Tarea 166: Detallar avisos de colecciones Canvas bloqueadas** (20-30 min).
+  Identificar permisos, recursos inexistentes y respuestas temporales sin
+  exponer detalles remotos, y normalizar nombres de cursos mal formados.
+- [x] **Tarea 167: Tratar colecciones Canvas ausentes como opcionales** (15-20 min).
+  No marcar como parcial una ejecución cuando Canvas responde `404` para un
+  endpoint secundario no habilitado en el curso.
+- [x] **Tarea 168: Limitar Canvas a fuentes autorizadas** (20-30 min). No
+  consultar endpoints de quizzes que la cuenta piloto no puede leer; extraer
+  fechas e indicaciones desde tareas, discusiones, eventos, anuncios y páginas,
+  y reconocer un quiz cuando Canvas lo incluye dentro de una tarea.
+- [x] **Tarea 169: Permitir iniciar sesión nuevamente desde Android** (20-30 min).
+  Limpiar tokens inválidos en memoria y almacenamiento seguro, ofrecer una
+  acción accesible desde el error de sesión y conservar la ruta de retorno.
+- [x] **Tarea 170: Usar el planificador como respaldo de evaluaciones** (20-30
+  min). Extraer tipo, título y fecha de tareas o quizzes visibles en
+  `/api/v1/planner/items`, deduplicando los elementos ya recibidos por sus
+  colecciones autorizadas y sin consultar APIs de quizzes.
+- [x] **Tarea 171: Enriquecer eventos desde anuncios con IA** (20-30 min).
+  Pasar contenido HTML sanitizado a un esquema estricto, resolver fechas
+  relativas con la fecha de publicación, conservar un resumen de indicaciones
+  y usar el título/categoría propuestos al revisar el evento.
+- [x] **Tarea 172: Evitar fechas inferidas y filtrar ruido de anuncios** (20-30
+  min). No aplicar al evento una fecha derivada solo del día de publicación,
+  permitir candidatos sin fecha por título/código y conservar únicamente
+  indicaciones académicas relevantes en la descripción.
+- [x] **Tarea 173: Limpiar descripciones Canvas previas** (15-20 min). Detectar
+  cuando el evento contiene únicamente el extracto anterior de Canvas y
+  reemplazarlo, al confirmar la revisión, por el resumen académico filtrado.
+### Estadísticas KOReader–Hábitos
+
+- [x] **Tarea 174: Definir el contrato de métricas y vínculos** (20-30 min).
+  Documentar páginas, minutos, libros terminados, cartas revisadas, unidades,
+  precedencia diaria y backfill en la spec 005.
+- [x] **Tarea 175: Implementar persistencia y seguridad de estadísticas**
+  (20-30 min). Añadir vínculos, `koreader_link_id`, scope de escritura, RPC,
+  RLS y funciones Edge idempotentes.
+- [x] **Tarea 176: Integrar configuración web** (20-30 min). Permitir
+  seleccionar dispositivo, reutilizar hábitos compatibles o crear hábitos con
+  meta explícita, y pausar vínculos.
+- [x] **Tarea 177: Integrar estadísticas en Hábitos** (20-30 min). Mostrar
+  datos diarios y totales día/mes/año con precedencia de KOReader y estado de
+  última sincronización.
+- [x] **Tarea 178: Implementar sincronización del plugin** (20-30 min). Leer
+  SQLite, adaptar Anki opcionalmente, enviar lotes, guardar cola offline y
+  sincronizar al reanudar sin tocar SimpleUI ni el snapshot.
+- [x] **Tarea 179: Añadir pruebas unitarias y trazabilidad** (20-30 min).
+  Cubrir precedencia, suma, formato, documentación y checks web.
+- [ ] **Tarea 180: Verificar backend en InsForge** (20-30 min). Aplicar la
+  migración en una rama, validar políticas, desplegar funciones y ejecutar
+  pruebas autenticadas de scope, RLS, idempotencia y aislamiento.
+- [ ] **Tarea 181: Verificar KOReader real** (20-30 min). Ejecutar specs Lua
+  con el runtime de KOReader y probar backfill, red ausente, Anki disponible y
+  dispositivo real.
+
+## Fase 20: Calendario Local Del Teléfono
+
+La especificación de esta integración está en
+`specs/008-phone-calendar-sync.md`. El destino es la rama de integración
+`codex/release-all-changes`; no requiere cambios en InsForge.
+
+- [x] **Tarea 182: Definir la integración nativa y la UI** (20–30 min).
+  Registrar en spec, UI y trazabilidad el uso de Calendar Provider local,
+  categorías separadas, permisos y límites de sincronización.
+- [x] **Tarea 183: Implementar el plugin de calendario Android** (45–60 min).
+  Pedir permisos al conectar, crear un calendario local por categoría,
+  conservar IDs estables y actualizar/eliminar solo copias de Karenda; cubrir
+  la planificación de upsert y deduplicación con pruebas JUnit.
+- [x] **Tarea 184: Mapear y cargar eventos de Karenda** (30–45 min).
+  Añadir lectura paginada, conversiones de fechas/all-day, color y título
+  original seguido por la categoría (por ejemplo, `Control 1 · ALG`),
+  manteniendo la consulta bajo RLS del usuario.
+- [x] **Tarea 185: Añadir sincronización automática y panel** (30–45 min).
+  Sincronizar al conectar, al guardar, al reanudar, cada quince minutos en
+  primer plano y con una acción manual; explicar permisos y límites.
+- [x] **Tarea 186: Añadir pruebas y verificar builds** (30–45 min).
+  Probar mapeo, refrescos en curso, deduplicación, borrados, permiso denegado,
+  estado UI e intervalo. En la rama combinada pasaron `npm run lint`,
+  `npm run typecheck`, `npm test` (60 archivos, 223 pruebas),
+  `npm run test:mcp` (25 pruebas), el typecheck Deno de Edge Functions,
+  `:app:testDebugUnitTest --rerun-tasks` y `npm run android:build`, el 2 de
+  octubre de 2026.
+- [ ] **Tarea 187: Validar POCO Calendar y Watch Fit 5 Pro** (20–30 min).
+  Instalar APK en POCO F6, conectar, comprobar calendarios por grupo, cambios,
+  eliminación, Huawei Health y agenda del reloj; registrar cualquier límite de
+  ROM/versión. `adb install -r` se completó y la app abrió en el POCO F6, pero
+  quedó en el formulario de inicio de sesión mostrando «Iniciando sesión…».
+  No se concedieron permisos de calendario ni se tocaron eventos; la prueba del
+  proveedor local, Huawei Health y el reloj sigue pendiente.

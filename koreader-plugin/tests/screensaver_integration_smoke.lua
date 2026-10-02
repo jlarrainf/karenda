@@ -1,4 +1,4 @@
-local pluginPath = assert(arg[1], "Se requiere la ruta de karenda.koplugin.")
+local pluginPath = assert(arg[1], "Se requiere la ruta de karenda-screensaver.koplugin.")
 package.path = pluginPath .. "/?.lua;" .. package.path
 
 local function stub(name, value)
@@ -127,8 +127,8 @@ G_reader_settings = {
     end,
 }
 
-local Runtime = require("runtime")
-Runtime.clearContext()
+local Context = require("karenda_screensaver_context")
+Context.resetContext()
 local Integration = require("screensaver_integration")
 
 local firstWrapper = assert(Integration.ensureInstalled())
@@ -148,7 +148,7 @@ local delegated = Screensaver.show(instance)
 assert(delegated == "delegated")
 assert(originalCalls == 1)
 
-Runtime.setContext("calendar")
+Context.setContext("calendar")
 instance.expect_as_is = nil
 instance.screensaver_type = "kobo_style"
 instance.show_message = true
@@ -171,7 +171,7 @@ assert(instance.show_message == true)
 assert(instance.overlay_message == "evento")
 assert((Device.screen.refresh_count or 0) == refreshesBeforeAsIs)
 
-Runtime.clearContext()
+Context.resetContext()
 instance.ui.document = { file = "book.epub" }
 instance.expect_as_is = nil
 local beforeBook = originalCalls
@@ -198,7 +198,7 @@ end
 local coexistWrapper = Integration.ensureInstalled()
 assert(coexistWrapper ~= firstWrapper)
 
-Runtime.setContext("note")
+Context.setContext("note")
 instance.expect_as_is = nil
 instance.screensaver_type = "custom"
 local coexistResult = Screensaver.show(instance)
@@ -206,7 +206,7 @@ assert(coexistResult == "external_fallback")
 assert(externalCalls == 1)
 assert(instance.screensaver_type == "custom")
 
-Runtime.clearContext()
+Context.resetContext()
 local shownBeforeCoexistBook = #shown
 Screensaver.show(instance)
 assert(externalCalls == 1)

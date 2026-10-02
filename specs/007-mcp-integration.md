@@ -257,6 +257,8 @@ de hábitos se exponen bajo sus herramientas de hábito.
 | habits.create / habits.update | Crear/editar definición y asociación | habits:write | Frecuencia/meta válidas |
 | habits.set_lifecycle | Pausar, reanudar, archivar/restaurar si se admite | habits:write | Conserva historial |
 | habits.logs.list / habits.logs.get | Consultar registros | habits:read | Fecha local y paginación |
+
+La lectura de registros conserva koreader_link_id como koreaderLinkId nullable para identificar la procedencia de las importaciones. Las escrituras MCP solo crean registros manuales y no aceptan ni modifican el vínculo de KOReader.
 | habits.logs.upsert | Crear/corregir registro | habits:write | Estado/valor validados contra hábito |
 | habits.logs.delete | Borrar registro | habits:delete | Resumen de fecha/estado/valor actual |
 | habits.notes.list / habits.notes.get | Leer nota general o diaria | habits:read | Respeta modelo actual |

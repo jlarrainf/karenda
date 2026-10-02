@@ -7,12 +7,11 @@ import type {
   LocalDate,
 } from '../../../types/domain.ts'
 import { getHabitOccurrences, getPeriodEnd, getPeriodKey } from './habitRecurrence.ts'
+import { selectCanonicalHabitLogs } from './koreaderStats.ts'
 
 function getLatestLog(logs: HabitLog[], localDate: LocalDate): HabitLog | null {
   return (
-    logs
-      .filter((log) => log.localDate === localDate)
-      .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0] ?? null
+    selectCanonicalHabitLogs(logs).find((log) => log.localDate === localDate) ?? null
   )
 }
 
@@ -127,7 +126,7 @@ export function calculateHabitStatistics(
   today: LocalDate,
 ): HabitStatistics {
   const statistics = getEmptyStatistics(habit.id, rangeStart, rangeEnd)
-  const relevantLogs = logs.filter(
+  const relevantLogs = selectCanonicalHabitLogs(logs).filter(
     (log) => log.localDate >= rangeStart && log.localDate <= rangeEnd,
   )
 
@@ -208,9 +207,10 @@ function calculatePeriodStreaks(
     return { currentStreak: 0, bestStreak: 0 }
   }
 
+  const canonicalLogs = selectCanonicalHabitLogs(logs)
   const statuses = periods.map((periodStart) => {
     const periodEnd = getPeriodEnd(periodStart, habit.quotaPeriod!)
-    const value = logs
+    const value = canonicalLogs
       .filter((log) => log.localDate >= periodStart && log.localDate <= periodEnd)
       .reduce((total, log) => total + log.value, 0)
 

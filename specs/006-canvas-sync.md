@@ -18,8 +18,9 @@ apertura multiusuario exigirá OAuth y una Developer Key institucional.
 ## 2. Alcance
 
 - Cursos activos del periodo vigente.
-- Tareas, quizzes, discusiones evaluadas y eventos de calendario asociados a
-  esos cursos.
+- Tareas y evaluaciones publicadas (incluidos quizzes cuando Canvas los expone
+  dentro de una tarea), discusiones evaluadas y eventos de calendario
+  asociados a esos cursos.
 - Anuncios y páginas recientes que mencionen explícitamente una actividad,
   fecha, sala o temario.
 - Extracción determinista de fechas relativas (`hoy`, `mañana`), fechas
@@ -30,6 +31,10 @@ apertura multiusuario exigirá OAuth y una Developer Key institucional.
   anterior a hoy.
 - Ventana inicial de treinta días para anuncios y páginas; después se usa una
   marca incremental con cuarenta y ocho horas de solapamiento.
+- La persona puede elegir una ventana de lectura histórica entre 7 y 365 días
+  para anuncios, páginas, actividades y eventos de curso. Cambiarla reinicia
+  el cursor incremental para que la próxima sincronización vuelva a revisar
+  la ventana elegida.
 - Sincronización diaria a las 06:00 de `America/Santiago` y sincronización
   manual.
 
@@ -65,7 +70,8 @@ para seminario. Se aceptan espacios, ceros a la izquierda y el nombre largo.
 
 Una conexión contiene `owner_id`, `canvas_base_url`, `auth_mode`, `status`,
 `time_zone`, `token_expires_at`, `last_sync_at`, `next_sync_at`,
-`content_cursor_at` y metadatos de error no sensibles. Para el piloto:
+`content_cursor_at`, `content_lookback_days` y metadatos de error no sensibles.
+Para el piloto:
 
 - `canvas_base_url` es siempre `https://cursos.canvas.uc.cl`;
 - `auth_mode` es `personal_access_token`;
@@ -116,7 +122,12 @@ personales de Canvas quedan fuera del alcance.
   llamar a Canvas ni almacenar credenciales.
 - **RF-C-03 [EARS: evento]:** Cuando se ejecute una sincronización, el sistema
   deberá cargar cursos activos, colores, planificador, eventos, anuncios y
-  páginas mediante solicitudes GET paginadas a Canvas UC.
+  páginas mediante solicitudes GET paginadas a Canvas UC. Las evaluaciones se
+  obtendrán desde tareas, discusiones y eventos publicados; si Canvas incluye
+  un quiz dentro de una tarea, se normalizará desde esa respuesta sin consultar
+  endpoints adicionales de quizzes. Cuando una evaluación no esté disponible en
+  esas colecciones, el planificador podrá aportar únicamente su tipo, título y
+  fecha, sin leer preguntas ni configuración del quiz.
 - **RF-C-04 [EARS: estado]:** Mientras un curso no esté vinculado, sus
   elementos deberán permanecer en revisión y no podrán crear eventos.
 - **RF-C-05 [EARS: evento]:** Cuando aparezca un curso nuevo, Karenda deberá
@@ -124,7 +135,10 @@ personales de Canvas quedan fuera del alcance.
   código, abreviación y color editables.
 - **RF-C-06 [EARS: evento]:** Cuando aparezca un elemento nuevo, Karenda deberá
   mostrar antes los eventos propios candidatos de la misma asignatura dentro
-  de siete días a cada lado y permitir vincular, crear o ignorar.
+  de siete días a cada lado cuando exista una fecha explícita; si no existe,
+  podrá priorizar por título, código y categoría sin asumir una fecha. En ambos
+  casos deberá permitir vincular, crear o ignorar sin aplicar coincidencias
+  ambiguas automáticamente.
 - **RF-C-07 [EARS: condición no deseada]:** Si una decisión intenta vincular un
   curso, asignatura, elemento o evento ajeno, el servidor deberá rechazarla y
   no modificar ningún registro.
@@ -142,10 +156,16 @@ personales de Canvas quedan fuera del alcance.
   deberá devolverlo a `pending`.
 - **RF-C-12 [EARS: evento]:** Cuando un anuncio o página mencione explícitamente
   una actividad, fecha, sala o temario, la IA deberá devolver una propuesta
-  estructurada que la persona confirme antes de modificar un evento.
+  estructurada de título, categoría, fecha, hora, duración, lugar y resumen de
+  indicaciones que la persona confirme antes de modificar un evento.
 - **RF-C-13 [EARS: evento]:** Al confirmar información de un anuncio, Karenda
-  deberá agregar texto no duplicado a la descripción y reemplazar el lugar si
-  existe una sala nueva confirmada.
+  deberá agregar texto académico no duplicado a la descripción y reemplazar el
+  lugar si existe una sala nueva confirmada. Una fecha u hora solo podrá
+  reemplazar las del evento cuando el anuncio las indique explícitamente;
+  información temporal inferida desde el día de publicación no modificará el
+  evento existente. Si la descripción actual coincide únicamente con el
+  extracto Canvas anterior, podrá sustituirse por el resumen académico
+  filtrado sin arrastrar contenido irrelevante.
 - **RF-C-14 [EARS: privacidad]:** De anuncios y páginas solo deberá persistirse
   título, fecha, enlace, hash y un extracto sanitizado de hasta 2000 caracteres;
   el cuerpo completo enviado a la IA será transitorio.
@@ -179,20 +199,38 @@ personales de Canvas quedan fuera del alcance.
   visibles al terminar.
 - **RF-C-24 [EARS: condición no deseada]:** Si Canvas rechaza o no entrega una
   colección secundaria de un curso, la ejecución deberá continuar con los
-  recursos disponibles, registrar un aviso sanitizado y finalizar como
-  `partial`; los fallos de autenticación, credenciales, base de datos o cursos
-  deberán seguir siendo recuperables y explícitos.
+  recursos disponibles. Un `403`, límite `429` o error temporal deberá registrar
+  un aviso sanitizado que distinga el motivo cuando sea posible y finalizar como
+  `partial`; un `404` que indique que la colección no existe o no está
+  habilitada se tratará como colección vacía, sin aviso. Los fallos de
+  autenticación, credenciales, base de datos o cursos deberán seguir siendo
+  recuperables y explícitos.
 - **RF-C-25 [EARS: condición no deseada]:** Si Canvas entrega texto HTML con
   unidades Unicode malformadas, Karenda deberá reemplazar las unidades aisladas
   antes de persistirlas o enviarlas a la IA, sin abortar la sincronización.
 - **RF-C-26 [EARS: evento]:** Cuando un anuncio o página mencione una actividad,
   Karenda deberá resolver la asignatura desde el curso Canvas vinculado y
   combinar extracción determinista de abreviación, fecha, hora y duración con
-  la propuesta de IA; la información confirmada deberá quedar disponible para
-  crear o actualizar el evento.
+  la propuesta de IA. La propuesta deberá filtrar saludos, anécdotas, PS,
+  enlaces y contenido no académico del resumen; la información confirmada
+  deberá quedar disponible para crear o actualizar el evento.
 - **RF-C-27 [EARS: estado]:** La bandeja deberá mostrar la categoría canónica,
   la abreviación detectada, inicio/término y el color de la asignatura asociada
   antes de permitir crear o vincular.
+- **RF-C-28 [EARS: estado]:** Cuando una ejecución termine como `partial`, el
+  historial y el resultado manual deberán mostrar los avisos sanitizados,
+  aunque no se haya creado una propuesta en la bandeja.
+- **RF-C-29 [EARS: evento]:** Cuando la persona cambie la ventana histórica,
+  la función deberá validar un valor entre 7 y 365 días, guardarlo sin exponer
+  credenciales y reiniciar el cursor de contenido.
+- **RF-C-30 [EARS: estado]:** En Android, la sesión de Karenda deberá usar el
+  flujo móvil de InsForge y conservar el refresh token en almacenamiento
+  persistente del dispositivo; la aplicación deberá restaurarla antes de
+  cargar Canvas.
+- **RF-C-31 [EARS: compatibilidad]:** Cuando Android invoque las funciones de
+  Canvas desde los assets locales de Capacitor, las respuestas deberán incluir
+  CORS para el origen fijo `https://localhost`, manteniendo la allowlist sin
+  aceptar orígenes arbitrarios.
 
 ## 6. Contratos HTTP
 
@@ -202,6 +240,8 @@ personales de Canvas quedan fuera del alcance.
 - `POST { "action": "connect", "token": "...", "tokenExpiresAt": "ISO" }`.
 - `POST { "action": "replace_token", "token": "...", "tokenExpiresAt": "ISO" }`.
 - `POST { "action": "disconnect" }`.
+- `POST { "action": "set_lookback", "lookbackDays": 30 }` actualiza la
+  ventana histórica y devuelve la conexión segura.
 
 ### `karenda-canvas-sync`
 
@@ -278,6 +318,16 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
   IA tienen estados españoles, recuperables y sin éxito falso.
 - **CA-C-10:** La ruta Canvas funciona en web y en el frontend empaquetado de
   Android, con teclado, foco visible, objetivos táctiles y layout responsive.
+- **CA-C-18:** Los avisos de una ejecución parcial son visibles en el resultado
+  y en el historial aun cuando la bandeja de revisión esté vacía.
+- **CA-C-19:** La persona puede seleccionar la ventana histórica, ejecutar una
+  sincronización y comprobar que el valor queda reflejado en la conexión.
+- **CA-C-20:** Tras cerrar y volver a abrir Android, una sesión móvil válida
+  permite cargar Canvas sin depender de una cookie de otro origen.
+- **CA-C-21:** Desde Android, las funciones de conexión, sincronización y
+  revisión responden a las solicitudes autenticadas del WebView sin bloqueo
+  CORS y las pruebas de empaquetado detectan si se retira `https://localhost`
+  de la allowlist.
 - **CA-C-11:** La edición de una asignatura identifica sus cursos Canvas
   vinculados, permite desvincularlos con confirmación y conserva sus eventos.
 - **CA-C-12:** El calendario ofrece `Sincronizar Canvas` solo cuando la
@@ -296,3 +346,7 @@ públicos en español y sin token, cuerpo remoto o detalle interno.
 - **CA-C-17:** La bandeja presenta el color y nombre del ramo, y las categorías
   confirmables son exactamente Control, Tarea, Actividad, Proyecto, Entrega,
   Prueba, Examen y Seminario, conservando compatibilidad de lectura histórica.
+- **CA-C-22:** Un anuncio que solo aporte sala o indicaciones, sin fecha
+  explícita, puede proponerse para el evento de la misma asignatura sin alterar
+  su fecha; la descripción confirmada conserva únicamente instrucciones
+  académicas relevantes y descarta saludos, anécdotas y PS.

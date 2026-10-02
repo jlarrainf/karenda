@@ -1,4 +1,4 @@
-local pluginPath = assert(arg[1], "Se requiere la ruta de karenda.koplugin.")
+local pluginPath = assert(arg[1], "Se requiere la ruta de karenda-screensaver.koplugin.")
 package.path = pluginPath .. "/?.lua;" .. package.path
 
 require("setupkoenv")

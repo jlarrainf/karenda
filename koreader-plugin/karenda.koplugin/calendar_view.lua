@@ -23,6 +23,7 @@ local VerticalSpan = require("ui/widget/verticalspan")
 
 local CalendarData = require("calendar_data")
 local DateUtils = require("date_utils")
+local KarendaToggle = require("karenda_toggle")
 local SurfaceNavigation = require("surface_navigation")
 
 local Screen = Device.screen
@@ -417,6 +418,10 @@ end
 local CalendarScreen = InputContainer:extend{
     plugin = nil,
     snapshot = nil,
+    combined = false,
+    navbarActionId = nil,
+    simpleuiPlugin = nil,
+    fm = nil,
     mode = "agenda",
     cursor = nil,
     today = nil,
@@ -428,6 +433,7 @@ local CalendarScreen = InputContainer:extend{
     titleBar = nil,
     refreshButton = nil,
     modeControl = nil,
+    toggleControl = nil,
     navbarHeight = 0,
     cropping_widget = nil,
     dayChangeAction = nil,
@@ -749,6 +755,22 @@ function CalendarScreen:_footer(width)
     }
 end
 
+function CalendarScreen:_surfaceToggle(width)
+    return KarendaToggle.new(width, "calendar", self, function(kind)
+        self.plugin:switchKarendaView(self, kind == "calendar" and "calendar" or "note", self.simpleuiPlugin, self.fm)
+    end)
+end
+
+function CalendarScreen:getViewOptions()
+    if not self.combined then
+        return nil
+    end
+    return {
+        combined = true,
+        navbar_action_id = self.navbarActionId,
+    }
+end
+
 function CalendarScreen:_scheduleTodayCheck()
     if self.dayChangeAction then
         UIManager:unschedule(self.dayChangeAction)
@@ -849,11 +871,17 @@ function CalendarScreen:_build()
             self.plugin:refreshView(self, CalendarView, "calendario y notas")
         end,
     })
+    local toggleControl
+    if self.combined then
+        toggleControl = self:_surfaceToggle(screen_width)
+    end
+    self.toggleControl = toggleControl
     local modeControl = self:_modeControl(screen_width)
     self.modeControl = modeControl
     local footer = self:_footer(screen_width)
     local body_height = available_height
         - titleBar:getSize().h
+        - (toggleControl and toggleControl:getSize().h or 0)
         - modeControl:getSize().h
         - footer:getSize().h
     if body_height < Size.item.height_large then
@@ -871,16 +899,21 @@ function CalendarScreen:_build()
         show_parent = self,
         paddedBody,
     }
+    local content_widgets = {
+        titleBar,
+    }
+    if toggleControl then
+        content_widgets[#content_widgets + 1] = toggleControl
+    end
+    content_widgets[#content_widgets + 1] = modeControl
+    content_widgets[#content_widgets + 1] = self.cropping_widget
+    content_widgets[#content_widgets + 1] = footer
+
     self[1] = FrameContainer:new{
         background = Blitbuffer.COLOR_WHITE,
         bordersize = 0,
         padding = 0,
-        VerticalGroup:new{
-            titleBar,
-            modeControl,
-            self.cropping_widget,
-            footer,
-        },
+        VerticalGroup:new(content_widgets),
     }
 end
 
@@ -944,17 +977,32 @@ function CalendarScreen:onScreenResize()
     return false
 end
 
-function CalendarView.show(plugin, snapshot, simpleui_plugin, fm)
+function CalendarView.show(plugin, snapshot, simpleui_plugin, fm, options)
+    options = options or {}
+    local navbar_action_id = options.navbar_action_id
+    if options.combined and not navbar_action_id then
+        navbar_action_id = "karenda"
+    end
     local today = DateUtils.todayKey()
     local screen = CalendarScreen:new{
         plugin = plugin,
         snapshot = snapshot,
+        combined = options.combined == true,
+        navbarActionId = navbar_action_id,
+        simpleuiPlugin = simpleui_plugin,
+        fm = fm,
         mode = "agenda",
         cursor = today,
         today = today,
         cursorFollowsToday = true,
     }
-    plugin:showKarendaView(screen, "calendar", simpleui_plugin, fm)
+    plugin:showKarendaView(
+        screen,
+        "calendar",
+        simpleui_plugin,
+        fm,
+        navbar_action_id
+    )
     UIManager:show(screen)
     return screen
 end

@@ -88,7 +88,7 @@ const HABIT_COLUMNS =
 const HABIT_VERSION_COLUMNS =
   'id, owner_id, habit_id, schedule, evaluation_mode, goal_value, quota_period, miss_policy, effective_from, effective_to, created_at, updated_at'
 const HABIT_LOG_COLUMNS =
-  'id, owner_id, habit_id, local_date, value, status, source, external_id, created_at, updated_at'
+  'id, owner_id, habit_id, local_date, value, status, source, external_id, koreader_link_id, created_at, updated_at'
 const HABIT_NOTE_COLUMNS =
   'id, owner_id, habit_id, entry_date, title, content_markdown, created_at, updated_at'
 const RECURRING_TASK_COLUMNS =
@@ -160,6 +160,7 @@ function mapHabitLog(row: HabitLogRow): HabitLog {
     id: row.id,
     localDate: row.local_date,
     ownerId: row.owner_id,
+    koreaderLinkId: row.koreader_link_id,
     source: row.source,
     status: row.status,
     updatedAt: row.updated_at,
@@ -530,6 +531,12 @@ export async function updateHabitScheduleVersion(
 export async function saveHabitLog(input: HabitLogInput): Promise<HabitLog> {
   const ownerId = await requireCurrentUserId()
   const parsed = parseInput(habitLogInputSchema, input)
+  if (parsed.source === 'koreader') {
+    throw new AppError(
+      'forbidden',
+      'Los registros de KOReader solo pueden llegar desde un dispositivo autorizado.',
+    )
+  }
   await getHabitOrThrow(parsed.habitId)
   const existing = await runInsForgeOptional<HabitLogRow>(
     () =>

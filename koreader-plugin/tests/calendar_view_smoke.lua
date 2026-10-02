@@ -118,6 +118,7 @@ local closed = false
 local navigation = {
     calendar = 0,
     notes = 0,
+    karenda = 0,
     refresh = 0,
 }
 local plugin = {
@@ -128,6 +129,11 @@ local plugin = {
     end,
     openNotes = function()
         navigation.notes = navigation.notes + 1
+    end,
+    switchKarendaView = function(_, view, kind)
+        navigation.karenda = navigation.karenda + 1
+        assert(view)
+        assert(kind == "calendar" or kind == "note")
     end,
     refreshView = function(self, view, viewModule, refresh_scope)
         navigation.refresh = navigation.refresh + 1
@@ -179,6 +185,25 @@ assert(
 )
 assert(screen.dayChangeAction)
 assert(screen.cropping_widget._max_scroll_offset_x == 0)
+
+local combined_screen = CalendarView._CalendarScreen:new{
+    plugin = plugin,
+    snapshot = snapshot,
+    combined = true,
+    navbarActionId = "karenda",
+    simpleuiPlugin = {},
+    cursor = "2026-08-31",
+    today = "2026-08-31",
+    cursorFollowsToday = true,
+}
+assert(combined_screen.toggleControl)
+assert(combined_screen.toggleControl.buttons[1][1].text == "Calendario")
+assert(combined_screen.toggleControl.buttons[1][2].text == "Notas")
+assert(combined_screen.toggleControl.buttons[1][1].background)
+assert(not combined_screen.toggleControl.buttons[1][2].background)
+combined_screen.toggleControl.buttons[1][2].callback()
+assert(navigation.karenda == 1)
+assert(combined_screen:getViewOptions().combined)
 
 Device.screen:setRotationMode(1)
 screen:onScreenResize()
@@ -315,6 +340,21 @@ assert(notesScreen.selectedFilter.targetType == "personal_group")
 assert(notesScreen.items[1].text == "Grupo: Familia")
 assert(notesScreen.items[2].text == "Lista familiar")
 assert(notesScreen.filterControl:getButtonById("notes-filter-group-group-1").background)
+local combined_notes_screen = NotesView._NotesScreen:new{
+    plugin = plugin,
+    snapshot = snapshot,
+    combined = true,
+    navbarActionId = "karenda",
+    simpleuiPlugin = {},
+}
+assert(combined_notes_screen.toggleControl)
+assert(combined_notes_screen.toggleControl.buttons[1][1].text == "Calendario")
+assert(combined_notes_screen.toggleControl.buttons[1][2].text == "Notas")
+assert(not combined_notes_screen.toggleControl.buttons[1][1].background)
+assert(combined_notes_screen.toggleControl.buttons[1][2].background)
+combined_notes_screen.toggleControl.buttons[1][1].callback()
+assert(navigation.karenda == 2)
+assert(combined_notes_screen:getViewOptions().combined)
 UIManager:show(notesScreen)
 UIManager:forceRePaint()
 notesScreen.filterControl:getButtonById("notes-filter-subject-subject-1").callback()

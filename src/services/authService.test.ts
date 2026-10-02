@@ -14,19 +14,24 @@ const mocks = vi.hoisted(() => ({
     signInWithPassword: vi.fn(),
     signUp: vi.fn(),
     verifyEmail: vi.fn(),
+    refreshSession: vi.fn(),
   },
   clearPersistedAuthSession: vi.fn(),
   persistAuthSession: vi.fn(),
   persistCurrentAccessToken: vi.fn(),
+  refreshMobileSessionIfNeeded: vi.fn(),
+  setAccessToken: vi.fn(),
 }))
 
 vi.mock('../lib/insforge/client.ts', () => ({
   insforge: {
     auth: mocks.auth,
+    setAccessToken: mocks.setAccessToken,
   },
   clearPersistedAuthSession: mocks.clearPersistedAuthSession,
   persistAuthSession: mocks.persistAuthSession,
   persistCurrentAccessToken: mocks.persistCurrentAccessToken,
+  refreshMobileSessionIfNeeded: mocks.refreshMobileSessionIfNeeded,
 }))
 
 const mockedGetCurrentUser = vi.mocked(insforge.auth.getCurrentUser)

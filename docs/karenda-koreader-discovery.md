@@ -372,17 +372,20 @@ Riesgos comprobados:
    `G_reader_settings["screensaver_type"]`, mientras el wrapper consulta
    `self.screensaver_type`; esa relación requiere validación en runtime.
 
-El plugin de Karenda no copia esos defectos. La implementación integrada usa
-`util.wrapMethod`, conserva `raw_call`, respeta el modo de gesto y mantiene una
-guarda de instalación idempotente. La función es opt-in desde
-`Settings > Sleep screen > Wallpaper`; en calendario y notas delega
-temporalmente al retorno nativo de `screensaver_type == "disable"`, que es el
-mecanismo de `Leave screen as-is`; en lectura usa una composición propia con
-portada completa, tarjeta de libro y tarjetas tipo post-it de estadísticas. La
-misma sección ofrece `Personalizar pantalla de bloqueo` para elegir cada dato de
-lectura —incluidos páginas y tiempos restantes de capítulo/libro—, posición,
-alineación, distribución y ajuste de portada, además de `Vista previa de
-Karenda`, que se cierra por toque o tecla sin activar el ciclo real de bloqueo.
+El plugin de Karenda no copia esos defectos. La implementación usa dos paquetes:
+el núcleo publica contexto mediante un puente opcional y
+`karenda-screensaver.koplugin` usa `util.wrapMethod`, conserva `raw_call`,
+respeta el modo de gesto y mantiene una guarda de instalación idempotente. La
+función es opt-in desde `Settings > Sleep screen > Wallpaper`; en calendario y
+notas delega temporalmente al retorno nativo de `screensaver_type == "disable"`,
+que es el mecanismo de `Leave screen as-is`; en lectura usa una composición
+propia cover-first con un único panel compacto, una barra de progreso con su
+porcentaje adyacente y métricas ordenables. La misma sección ofrece
+`Personalizar pantalla de bloqueo` para elegir cada dato de lectura —incluidos
+páginas y tiempos restantes de capítulo/libro—, posición, alineación, estilo y
+ajuste de portada, además de `Vista previa de pantalla de lectura`, que se
+cierra por toque o tecla sin activar el ciclo real de bloqueo. El wallpaper no
+requiere instalar el núcleo ni hace red desde `Screensaver.show`.
 En las superficies de calendario y notas, un toque en otra acción de la navbar
 se propaga primero al widget de SimpleUI y el cierre posterior omite el
 repintado intermedio y la restauración del indicador temporal, evitando mostrar
@@ -432,7 +435,7 @@ y conservará la atribución exigida por las licencias aplicables.
 | Eliminaciones | Borrado físico | Mantener snapshots completos; paginación/tombstones quedan fuera del MVP |
 | Zona horaria | `America/Santiago` predeterminada y configurable; la proyección devuelve el offset civil del snapshot | Validar el horario presentado en KOReader/Kindle real |
 | Registro SimpleUI | API confirmada, caché sensible al momento | Registrar temprano y probar invalidación pública |
-| Salvapantallas | Interruptor y personalización en `Wallpaper`, preview cerrable, wrapper integrado, `Leave screen as-is` y portada con tarjetas de estadísticas especificados e implementados | Probar coexistencia sin modificar el parche |
+| Salvapantallas | Dos paquetes independientes, interruptor y personalización en `Wallpaper`, preview cerrable, wrapper integrado, políticas `Leave screen as-is`, panel minimalista y métricas ordenables especificados e implementados localmente | Probar instalación aislada, coexistencia sin modificar el parche y hardware real |
 | Markdown en e-ink | Subconjunto seguro con `TextViewer` HTML nativo implementado | Validar contraste y ghosting en KOReader/Kindle real |
 | Licencia del parche | No confirmada | No reutilizar código hasta resolverla |
 | Validación en dispositivo | No disponible en esta fase | Probar en KOReader/Kindle real antes de publicar |
@@ -440,11 +443,12 @@ y conservará la atribución exigida por las licencias aplicables.
 ## 9. Siguiente Fase
 
 Los smokes del plugin ya se ejecutan con el runtime fijado de KOReader; la
-siguiente acción es validar el ciclo completo en el Kindle objetivo. La
-integración del salvapantallas y el renderer Markdown enriquecido ya están dentro
-de `karenda.koplugin/`: no requiere instalar el patch de Pedro, no hace red desde
-`Screensaver.show` y deja pendiente solo la verificación de refresco, gesto,
-tipografía, SimpleUI y coexistencia en hardware real.
+siguiente acción es validar el ciclo completo en el Kindle objetivo. El
+calendario/notas permanecen en `karenda.koplugin/` y el salvapantallas en
+`karenda-screensaver.koplugin/`: este último no requiere instalar el patch de
+Pedro, no hace red desde `Screensaver.show` y deja pendiente solo la
+verificación de refresco, gesto, tipografía, SimpleUI y coexistencia en hardware
+real.
 
 ## 10. Evidencia Y Comandos
 

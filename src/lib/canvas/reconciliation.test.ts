@@ -3,6 +3,7 @@ import {
   appendUniqueCanvasText,
   canvasResponseAction,
   classifyAcademicActivity,
+  isCanvasOnlyDescription,
   monotonicCompletion,
   normalizeCanvasInterval,
   nextSantiagoSix,
@@ -63,6 +64,11 @@ describe('Canvas reconciliation rules', () => {
       .toBe('Leer capítulos 1 y 2\n\nTemario: capítulos 3 y 4')
     expect(appendUniqueCanvasText('Temario: capítulos 3 y 4', 'Temario: capítulos 3 y 4'))
       .toBe('Temario: capítulos 3 y 4')
+  })
+
+  it('recognizes descriptions that contain only the previous Canvas excerpt', () => {
+    expect(isCanvasOnlyDescription('Saludos. La prueba cubre capítulos 4 y 5.', 'Saludos. La prueba cubre capítulos 4 y 5.')).toBe(true)
+    expect(isCanvasOnlyDescription('Nota personal. La prueba cubre capítulos 4 y 5.', 'La prueba cubre capítulos 4 y 5.')).toBe(false)
   })
 
   it('accepts only opaque pagination links that stay on Canvas UC', () => {

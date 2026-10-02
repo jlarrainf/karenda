@@ -3,13 +3,21 @@ import { createAdminClient, createClient } from 'npm:@insforge/sdk'
 const BASE_URL = Deno.env.get('INSFORGE_BASE_URL') ?? ''
 const ADMIN_API_KEY = Deno.env.get('API_KEY') ?? ''
 const DEFAULT_SCOPES = ['read:snapshot']
-const ALLOWED_SCOPES = new Set(['read:snapshot', 'write:events'])
+const ALLOWED_SCOPES = new Set([
+  'read:snapshot',
+  'write:events',
+  'write:habit_logs',
+  'write:event_status',
+])
 const PAIRING_CODE_TTL_MS = 10 * 60 * 1000
 const PAIRING_RATE_LIMIT = 12
 const PAIRING_RATE_WINDOW_SECONDS = 60
 
 const ALLOWED_ORIGINS = new Set([
   'https://5zz5dxgt.insforge.site',
+  'https://5zz5dxgt-tkp.insforge.site',
+  'https://karenda.insforge.site',
+  'https://localhost',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
 ])
@@ -252,6 +260,18 @@ function normalizeScopes(value: unknown): string[] {
   return uniqueScopes
 }
 
+function normalizeNewDeviceScopes(value: unknown): string[] {
+  const scopes = normalizeScopes(value)
+  if (scopes.includes('write:event_status')) {
+    throw new RequestError(
+      400,
+      'INVALID_REQUEST',
+      'El permiso para cambiar estados se habilita después de vincular el dispositivo.',
+    )
+  }
+  return scopes
+}
+
 function normalizePairingCode(value: unknown): string {
   if (typeof value !== 'string' || !/^\d{6}$/.test(value.trim())) {
     throw new RequestError(
@@ -338,7 +358,7 @@ async function createToken(
 ): Promise<Response> {
   const admin = getAdminClient()
   const label = normalizeLabel(body.label)
-  const scopes = normalizeScopes(body.scopes)
+  const scopes = normalizeNewDeviceScopes(body.scopes)
   const result = await insertToken(admin, ownerId, label, scopes)
 
   return jsonResponse(
@@ -359,6 +379,7 @@ async function createPairing(
 ): Promise<Response> {
   const admin = getAdminClient()
   const label = normalizeLabel(body.label)
+  const scopes = normalizeNewDeviceScopes(body.scopes)
   const expiresAt = new Date(Date.now() + PAIRING_CODE_TTL_MS).toISOString()
   const cleanupResult = await admin.database
     .from('device_pairing_codes')
@@ -383,6 +404,7 @@ async function createPairing(
         owner_id: ownerId,
         code_hash: codeHash,
         label,
+        scopes,
         expires_at: expiresAt,
       },
     ])
@@ -599,6 +621,68 @@ async function revokeToken(
   )
 }
 
+async function setEventStatusPermission(
+  request: Request,
+  ownerId: string,
+  body: Record<string, unknown>,
+  enabled: boolean,
+): Promise<Response> {
+  const tokenId = body.token_id
+  if (typeof tokenId !== 'string') {
+    throw new RequestError(
+      400,
+      'INVALID_REQUEST',
+      'El identificador del dispositivo es obligatorio.',
+    )
+  }
+
+  const admin = getAdminClient()
+  const previous = await getOwnedToken(admin, ownerId, tokenId)
+  if (previous.revoked_at) {
+    throw new RequestError(409, 'DEVICE_INACTIVE', 'El dispositivo está revocado.')
+  }
+  if (typeof previous.expires_at === 'string') {
+    const expiresAt = Date.parse(previous.expires_at)
+    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      throw new RequestError(409, 'DEVICE_INACTIVE', 'El dispositivo está vencido.')
+    }
+  }
+
+  const existingScopes = Array.isArray(previous.scopes) ? previous.scopes : []
+  const scopes = enabled
+    ? normalizeScopes([...existingScopes, 'write:event_status'])
+    : normalizeScopes(existingScopes.filter((scope) => scope !== 'write:event_status'))
+  const { data, error } = await admin.database
+    .from('device_tokens')
+    .update({ scopes })
+    .eq('id', tokenId)
+    .eq('owner_id', ownerId)
+    .is('revoked_at', null)
+    .select(TOKEN_COLUMNS)
+    .maybeSingle()
+
+  if (error || !data) {
+    throw new RequestError(
+      503,
+      'BACKEND_UNAVAILABLE',
+      enabled
+        ? 'No se pudo actualizar el permiso del dispositivo.'
+        : 'No se pudo retirar el permiso del dispositivo.',
+    )
+  }
+
+  return jsonResponse(
+    request,
+    {
+      token_metadata: data,
+      message: enabled
+        ? 'El dispositivo ahora puede cambiar estados de eventos propios.'
+        : 'Se retiró el permiso para cambiar estados de eventos.',
+    },
+    200,
+  )
+}
+
 async function regenerateToken(
   request: Request,
   ownerId: string,
@@ -699,6 +783,14 @@ async function handleRequest(request: Request): Promise<Response> {
 
   if (action === 'revoke') {
     return revokeToken(request, ownerId, body!)
+  }
+
+  if (action === 'enable_event_status') {
+    return setEventStatusPermission(request, ownerId, body!, true)
+  }
+
+  if (action === 'disable_event_status') {
+    return setEventStatusPermission(request, ownerId, body!, false)
   }
 
   if (action === 'regenerate') {

@@ -366,7 +366,13 @@ async function fetchCatalogRows(
       )
     }
 
-    const page = (data ?? []) as Record<string, unknown>[]
+    const pageData: unknown = data
+    const page = Array.isArray(pageData)
+      ? pageData.filter(
+          (row): row is Record<string, unknown> =>
+            row !== null && typeof row === 'object' && !Array.isArray(row),
+        )
+      : []
     rows.push(...page)
 
     if (page.length < PAGE_SIZE) {
@@ -409,7 +415,13 @@ async function fetchEvents(
       )
     }
 
-    const page = (data ?? []) as Record<string, unknown>[]
+    const pageData: unknown = data
+    const page = Array.isArray(pageData)
+      ? pageData.filter(
+          (row): row is Record<string, unknown> =>
+            row !== null && typeof row === 'object' && !Array.isArray(row),
+        )
+      : []
     rows.push(...page)
 
     if (page.length < PAGE_SIZE) {
@@ -444,7 +456,13 @@ async function fetchNotes(
       )
     }
 
-    const page = (data ?? []) as Record<string, unknown>[]
+    const pageData: unknown = data
+    const page = Array.isArray(pageData)
+      ? pageData.filter(
+          (row): row is Record<string, unknown> =>
+            row !== null && typeof row === 'object' && !Array.isArray(row),
+        )
+      : []
     rows.push(...page)
 
     if (page.length < PAGE_SIZE) {

@@ -8,6 +8,7 @@ import {
   insforge,
   persistAuthSession,
   persistCurrentAccessToken,
+  refreshMobileSessionIfNeeded,
 } from '../lib/insforge/client.ts'
 import {
   AppError,
@@ -88,6 +89,7 @@ export async function register(input: RegisterInput): Promise<SignUpResult> {
   }
 
   if (result.user && result.accessToken && !result.requiresEmailVerification) {
+    insforge.setAccessToken(result.accessToken)
     persistAuthSession(result.accessToken, result.refreshToken)
   }
 
@@ -112,12 +114,14 @@ export async function signIn(input: SignInInput): Promise<SignInResult> {
   }
 
   persistAuthSession(result.accessToken, result.refreshToken)
+  insforge.setAccessToken(result.accessToken)
 
   return result
 }
 
 export async function getCurrentUser(): Promise<UserSchema | null> {
   try {
+    await refreshMobileSessionIfNeeded()
     const { data, error } = await insforge.auth.getCurrentUser()
 
     if (error) {
@@ -217,6 +221,7 @@ export async function verifyEmail(
   }
 
   persistAuthSession(result.accessToken, result.refreshToken)
+  insforge.setAccessToken(result.accessToken)
 
   return result
 }

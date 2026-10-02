@@ -133,3 +133,14 @@ Antes de implementar este contrato deberán existir pruebas unitarias de
 validación e idempotencia, pruebas RLS con dos cuentas, pruebas de integración
 de la función y una prueba controlada desde KOReader. Esta spec no autoriza
 ninguna de esas escrituras todavía.
+
+## 10. Evolución Del Contrato
+
+La coordinación concreta de estadísticas descrita en esta especificación fue
+aprobada y se implementa en
+`specs/005-koreader-stats-habit-coordination.md`. Esa spec supersede las
+frases de este documento que indicaban que la ingesta no estaba implementada o
+que no podía crear hábitos: la creación ahora es explícita desde la web, exige
+una meta configurada y solo ocurre al activar un vínculo nuevo. Los requisitos
+de seguridad, scope, zona horaria, idempotencia, no modificación del snapshot y
+conservación del historial siguen siendo la base del contrato anterior.

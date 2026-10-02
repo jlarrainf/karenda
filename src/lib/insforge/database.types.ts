@@ -20,7 +20,17 @@ export type AcademicActivityType =
   | 'oral_assessment'
   | 'other'
 export type NoteTargetType = 'subject' | 'personal_group'
-export type DeviceTokenScope = 'read:snapshot' | 'write:events'
+export type DeviceTokenScope =
+  | 'read:snapshot'
+  | 'write:events'
+  | 'write:habit_logs'
+  | 'write:event_status'
+export type KoreaderMetricKey =
+  | 'reading_pages'
+  | 'reading_minutes'
+  | 'books_completed'
+  | 'anki_cards_reviewed'
+export type KoreaderLinkStatus = 'active' | 'paused' | 'revoked'
 export type HabitTrackingType = 'boolean' | 'count' | 'duration'
 export type HabitEvaluationMode = 'scheduled_occurrence' | 'period_quota'
 export type HabitMissPolicy = 'mark_missed' | 'keep_pending'
@@ -286,6 +296,7 @@ export type Database = {
           owner_id: string
           code_hash: string
           label: string
+          scopes: DeviceTokenScope[]
           created_at: string
           expires_at: string
           consumed_at: string | null
@@ -295,6 +306,7 @@ export type Database = {
           owner_id: string
           code_hash: string
           label?: string
+          scopes?: DeviceTokenScope[]
           created_at?: string
           expires_at: string
           consumed_at?: string | null
@@ -304,6 +316,7 @@ export type Database = {
           owner_id?: string
           code_hash?: string
           label?: string
+          scopes?: DeviceTokenScope[]
           created_at?: string
           expires_at?: string
           consumed_at?: string | null
@@ -317,6 +330,60 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      koreader_habit_links: {
+        Row: {
+          id: string
+          owner_id: string
+          habit_id: string
+          device_token_id: string
+          metric_key: KoreaderMetricKey
+          source_unit: 'pages' | 'minutes' | 'books' | 'cards'
+          target_unit: string
+          conversion_factor: number
+          timezone: string
+          status: KoreaderLinkStatus
+          auto_created: boolean
+          last_synced_at: string | null
+          revoked_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          habit_id: string
+          device_token_id: string
+          metric_key: KoreaderMetricKey
+          source_unit: 'pages' | 'minutes' | 'books' | 'cards'
+          target_unit: string
+          conversion_factor?: number
+          timezone: string
+          status?: KoreaderLinkStatus
+          auto_created?: boolean
+          last_synced_at?: string | null
+          revoked_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          habit_id?: string
+          device_token_id?: string
+          metric_key?: KoreaderMetricKey
+          source_unit?: 'pages' | 'minutes' | 'books' | 'cards'
+          target_unit?: string
+          conversion_factor?: number
+          timezone?: string
+          status?: KoreaderLinkStatus
+          auto_created?: boolean
+          last_synced_at?: string | null
+          revoked_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       device_pairing_rate_limits: {
         Row: {
@@ -472,6 +539,7 @@ export type Database = {
           status: HabitLogStatus
           source: HabitLogSource
           external_id: string | null
+          koreader_link_id: string | null
           created_at: string
           updated_at: string
         }
@@ -484,6 +552,7 @@ export type Database = {
           status: HabitLogStatus
           source?: HabitLogSource
           external_id?: string | null
+          koreader_link_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -496,6 +565,7 @@ export type Database = {
           status?: HabitLogStatus
           source?: HabitLogSource
           external_id?: string | null
+          koreader_link_id?: string | null
           created_at?: string
           updated_at?: string
         }

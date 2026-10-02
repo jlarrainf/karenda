@@ -191,9 +191,26 @@ credenciales de prueba.
   paso `20260902130000` activa RLS en la tabla de versiones de tareas que quedó
   fuera del primer paso.
 
-- La ingesta futura de KOReader quedó especificada en
-  specs/004-koreader-habit-log-ingestion.md; no se implementó ni se modificó el
-  plugin o el snapshot v1.
+- La ingesta inicial quedó especificada en
+  specs/004-koreader-habit-log-ingestion.md; su evolución implementada para
+  estadísticas y hábitos está en la spec 005. El snapshot v1 no se modifica.
+
+## Coordinación De Estadísticas KOReader–Hábitos
+
+La implementación de `specs/005-koreader-stats-habit-coordination.md` queda
+trazada así:
+
+| Requisito | Implementación | Verificación | Estado |
+| --- | --- | --- | --- |
+| RF-SH-01 métricas diarias | `statistics_collector.lua`, `anki_stats_adapter.lua` | Specs Lua con runtime KOReader | Local |
+| RF-SH-02 vínculos y creación explícita | Migración, RPC `setup_koreader_habit_links`, `KoreaderStatsSetupPanel` y validación de fecha local en `karenda-koreader-habit-links` | `karendaKoreaderHabitLinksValidation.test.ts`, typecheck y tests UI; prueba autenticada pendiente | Local/parcial |
+| RF-SH-03 ingesta protegida e idempotente | `karenda-koreader-habit-sync.ts`, scope `write:habit_logs`, `koreader_link_id`; `20260922032151_qualify-device-pairing-code-update.sql` califica `device_pairing_codes.id` en la RPC de canje | Migración registrada como aplicada en el proyecto padre y versionada aquí; no se reaplicó; integración autenticada pendiente | Local/parcial |
+| RF-SH-04 día/mes/año y precedencia | `koreaderStats.ts`, `habitEvaluation.ts`, `HabitsPage.tsx` | Vitest | Automatizado |
+| RF-SH-05 backfill, corrección y offline | `stats_sync_service.lua`, `stats_sync_store.lua` | Specs Lua y Kindle real pendiente | Local/parcial |
+| RNF-SH-01 privacidad y no modificación de snapshot | Token solo en Authorization; archivos aislados del snapshot/SimpleUI | Revisión estática | Automatizado + estático |
+
+La migración y las nuevas funciones Edge no se declaran desplegadas hasta que
+InsForge confirme la aplicación en una rama y la prueba autenticada.
 
 ## Gaps De Cierre
 
@@ -219,11 +236,12 @@ credenciales de prueba.
 | RF-A-04 | Estado de conectividad y feedback de mutaciones | Test de componente; dispositivo sin red pendiente | Parcial |
 | RF-A-05 a RF-A-06 | Adaptador de botón Atrás y apertura externa | Smoke de navegación Android | Planificado |
 | RF-A-07 | Configuración pública y secretos fuera del código | Revisión estática del bundle; auditoría final pendiente | Parcial |
-| RF-A-08 | Persistencia web temporal documentada; puente seguro pendiente | Revisión de sesión en dispositivo | Planificado |
+| RF-A-08 | Sesión nativa persistida mediante `capacitor-secure-storage-plugin` (Android Keystore/SharedPreferences cifradas) | Typecheck, build Android y revisión de plugin | Automatizado + estático |
 | RF-A-09 | Encabezado compacto con ocultación al desplazarse y cubierta sólida de barra de estado | Test de visibilidad del layout; smoke Android pendiente | Parcial |
 | RF-A-10 | Cajón móvil bajo el área segura, cubierta sólida y solo rutas secundarias | Test del cajón; smoke Android pendiente | Parcial |
 | RF-A-11 | Flujo IA de eventos rápido/guiado, preguntas, `Otro` y propuestas de catálogo | `AiEventPromptPanel.test.tsx`, `aiEventService.test.ts`, typecheck y build Android | Automatizado + estático |
 | RF-A-12 | Ruta Canvas, bandeja de revisión y sincronización manual del calendario dentro de los assets Capacitor | `CanvasPage.test.tsx`, `CalendarPage.test.tsx`, `verify-android-canvas.mjs`, `npm run android:build` y APK debug | Automatizado + build Android |
+| RF-A-13 | Recuperación explícita de sesión no comprobable y retorno a la ruta protegida | `ProtectedRoute.test.tsx`, `sessionStore.test.ts`, typecheck y build Android | Automatizado + build Android |
 | RNF-A-01 a RNF-A-03 | `capacitor.config.ts`, `webDir` local y `android/` | Lint, typecheck, build y `cap doctor` | Automatizado |
 | RNF-A-04 a RNF-A-06 | HTTPS, `SystemBars` con variables CSS de insets, `applicationId` provisional y firma fuera del repositorio | Lint, build Android y auditoría de release pendiente | Parcial |
 | CA-A-01 | Shell Android con assets locales | APK debug generado; instalación pendiente | Parcial |
@@ -233,24 +251,58 @@ credenciales de prueba.
 | CA-A-09 | Cajón móvil respeta la barra de estado y evita repetir navegación principal | Test del layout; smoke físico pendiente | Parcial |
 | CA-A-10 | Preparación y confirmación de eventos asistidos desde Android | Tests de servicio/panel, build web y sincronización de Capacitor | Automatizado + parcial |
 | CA-A-11 | Paridad Canvas en APK local, incluyendo revisión, color de ramo y acción manual del calendario | `CanvasPage.test.tsx`, `CalendarPage.test.tsx`, `verify-android-canvas.mjs` y build Gradle | Automatizado + build Android |
+| CA-A-12 | Botón de inicio de sesión nuevamente, limpieza de sesión local y retorno al destino protegido | `ProtectedRoute.test.tsx`, `sessionStore.test.tsx` y build Android | Automatizado + build Android |
+
+## Estado De Eventos Desde InkDesk
+
+**Relación de ramas y despliegue:** el cambio Git `273911f` de
+`fix/karenda-koreader-event-status`, basado en
+`origin/codex/release-all-changes` (`1b796b4232bc6401b2ec37a3e08a9c3f622456ef`),
+se integró mediante `b8e763a` en `codex/release-all-changes`. La política de
+integración de worktrees se incorporó desde `docs/worktree-integration-policy`
+mediante `9e56680`. Se reutilizó la rama InsForge existente `karenda-mcp`
+(`schema-only`); no se creó, reinició ni fusionó una rama InsForge ni se desplegó
+a producción. La migración `20260926120000_add-event-status-device-scope.sql`
+se aplicó explícitamente en esa rama. `karenda-koreader-device-tokens` se
+actualizó y `karenda-koreader-event-status` se creó; ambas aparecen activas.
+Karenda Web quedó en estado `READY` en `https://5zz5dxgt-tkp.insforge.site`
+(despliegue `b2216141-8cea-4cea-9519-3f77da494e4c`).
+
+El merge de `karenda-mcp` no se reutiliza para producción: el dry-run actual
+detecta conflictos en `system.secrets`, `edge_function.karenda-mcp` y el
+historial de migraciones, que avanzó después del T0 de la rama. Para mantener
+esas configuraciones y las migraciones recientes, se creó la migración
+forward-only `20261002232503_add-device-event-status-scope.sql` a partir del
+cambio ya validado en staging. La aplicación en el proyecto padre queda
+pendiente de esta publicación.
+
+Comprobaciones ejecutadas en la tarea: Deno 2.9.6 typecheck de ambas funciones, npm run lint, npm run typecheck, build Vite y cinco pruebas de DeviceTokensPage pasan. Sobre la rama combinada `9e56680` vuelven a pasar lint, typecheck, build, Deno y la suite completa (55 archivos, 195 pruebas). GitHub CI terminó en verde para push y pull_request del PR #15 con HEAD `ffd33b4`. El preview web staging responde 200; la función de `karenda-mcp` responde OPTIONS 204 y POST sin autenticación 401. El endpoint del proyecto principal `https://5zz5dxgt.function2.insforge.app/karenda-koreader-event-status` responde 404 sin credenciales y permanece sin despliegue, tal como exige el límite de producción. La migración está aplicada y ambas funciones están activas en `karenda-mcp`; la web staging está READY en https://5zz5dxgt-tkp.insforge.site. Durante la E2E previa, token sin permiso dio 403; bearer inválido 401; cuerpo/estado/UUID inválidos 400; evento ajeno o inexistente 404. El popup físico cambió un evento sintético propio pending → completed → pending y Karenda Web mostró cada estado. El evento de otro dueño siguió pending. Se retiró write:event_status al terminar: el token físico quedó activo con read:snapshot, y el token auxiliar fue revocado. ADB confirma NUHD220386 conectado y los paquetes debug/staging instalados; no se leyeron tokens. La consulta actual de snapshot omite eventos de día completo con end_at IS NULL; el evento E2E se configuró como horario para validar este cambio, sin ampliar el alcance a esa regla. Producción permanece sin cambios.
+
+| Requisito | Implementación | Verificación | Estado |
+| --- | --- | --- | --- |
+| KR-REQ-042 | Scope opcional, acciones web para dispositivos activos, función Edge con estado allowlist y filtro de propietario, actualización confirmada en InkDesk | Suite Dispositivos, suite combinada (55 archivos/195 pruebas), lint/typecheck/build, Deno, migración/despliegue staging, rechazos 401/403/400/404, popup físico pending → completed → pending y confirmación de ambos estados en Karenda Web | E2E en `karenda-mcp`; integrado en `codex/release-all-changes` (`b8e763a`) y verificado en `9e56680`; migración de producción versionada, pendiente de aplicar |
 
 ## Sincronización Canvas UC
 
 | Requisito | Implementación | Verificación | Estado |
 | --- | --- | --- | --- |
 | RF-C-01 a RF-C-02 | `karenda-canvas-connection`, AES-GCM, secretos server-side y allowlist por UUID | Funciones activas en producción, llamadas anónimas `401`, cero credenciales iniciales y tabla privada | Desplegado |
-| RF-C-03 a RF-C-08 | `karenda-canvas-sync`, tablas de vínculos, candidatos ±7 días y `CanvasPage` | `reconciliation.test.ts`, `CanvasPage.test.tsx`, migraciones aplicadas en producción | Desplegado + automatizado |
+| RF-C-03 a RF-C-08 | `karenda-canvas-sync`, tareas/discusiones/eventos, planificador resumido y contenido Canvas, tablas de vínculos, candidatos ±7 días y `CanvasPage` | `reconciliation.test.ts`, `CanvasPage.test.tsx`, migraciones aplicadas en producción | Desplegado + automatizado; smoke real pendiente |
 | RF-C-09 a RF-C-11 | Comparación base/local/remoto, conflictos y completitud monotónica | Tests unitarios de reconciliación y estado; piloto real pendiente | Automatizado + parcial |
-| RF-C-12 a RF-C-15 | Sanitización, esquema IA estricto, hashes, propuestas y avisos de retiro | Tests de HTML malicioso, salida IA inválida y deduplicación | Automatizado + estático |
+| RF-C-12 a RF-C-15 | Sanitización, filtro de indicaciones académicas, esquema IA estricto, hashes, propuestas y avisos de retiro | `canvasContent.test.ts`, tests de HTML malicioso, salida IA inválida y deduplicación | Automatizado + estático |
 | RF-C-16 a RF-C-20 | Ejecuciones idempotentes, `429`, vencimiento, desconexión y programador horario | Índice exclusivo, funciones activas y schedule `0 * * * *` en producción | Desplegado |
 | RF-C-21 | Categoría editable, procedencia y enlace Canvas en `EventDetail` | `EventDetail.test.tsx`, typecheck y build | Automatizado |
 | RF-C-22 | Estado de cursos Canvas en asignaturas, desvinculación reversible y confirmación | `SubjectsPage.test.tsx`, `SubjectForm.test.tsx`, migración/RPC RLS | Desplegado + automatizado |
 | RF-C-23 | Acción de sincronización Canvas en el encabezado del calendario | `CalendarPage.test.tsx`, build y E2E público | Desplegado + automatizado |
-| RF-C-24 | Recursos secundarios bloqueados producen ejecución parcial | `karenda-canvas-sync`, despliegue de función y tests de regresión del frontend | Desplegado + función compilada; smoke real pendiente |
+| RF-C-24 | Recursos secundarios bloqueados producen ejecución parcial; colecciones ausentes no generan avisos | `karenda-canvas-sync`, `canvasWarnings.test.ts`, despliegue de función y tests de regresión del frontend | Automatizado + desplegado; smoke real pendiente |
 | RF-C-25 | Texto HTML remoto se normaliza a Unicode bien formado antes de JSON/IA | `canvasText.test.ts`, función Canvas | Desplegado + automatizado; smoke real pendiente |
-| RF-C-26 | Anuncios resuelven ramo por curso y extraen ramo, fecha, hora, duración y abreviación | `canvasAssessment.test.ts`, `karenda-canvas-sync`, migración `20260905100000` | Desplegado en producción; piloto real pendiente |
+| RF-C-26 | Anuncios resuelven ramo por curso, filtran indicaciones académicas y extraen fecha, hora, duración, sala y abreviación | `canvasAssessment.test.ts`, `canvasContent.test.ts`, `karenda-canvas-sync`, migración `20260905100000` | Desplegado en producción; piloto real pendiente |
 | RF-C-27 | Bandeja muestra categoría, código, rango temporal y color del ramo | `CanvasPage.test.tsx`, `CanvasPage` | Desplegado en producción; piloto real pendiente |
-| CA-C-01 a CA-C-17 | Flujo del piloto integrado mediante PR #2 y desplegado en InsForge | 172 tests, lint, typecheck, build, E2E público de producción, migración/RLS y smoke anónimo de función; E2E autenticado y piloto real pendientes | Parcial |
+| RF-C-28 | Ventana histórica configurable por conexión entre 7 y 365 días, con cursor incremental reiniciado al cambiarla | `CanvasPage.test.tsx`, migración y función `set_lookback` | Automatizado + desplegado |
+| RF-C-29 | Avisos sanitizados de recursos bloqueados visibles en el historial aunque la bandeja no tenga propuestas | `CanvasPage.test.tsx`, conteos de `karenda-canvas-sync` | Automatizado + desplegado |
+| RF-C-30 | Sesión móvil renovable antes de consultar Canvas y mensaje diferenciado de sesión frente a red | `authService.test.ts`, cliente InsForge y build Android | Automatizado + build Android |
+| RF-C-31 | Allowlist CORS de las funciones Canvas incluye el origen fijo `https://localhost` de Capacitor | `verify-android-canvas.mjs`, preflight HTTP de las tres funciones y despliegue | Automatizado + desplegado |
+| CA-C-01 a CA-C-21 | Flujo Canvas desplegado, ventana histórica, avisos parciales, sesión Android y CORS para WebView | Suite local y CI, lint, typecheck, build web/Android, migraciones y RLS desplegadas, preflight y smoke público/anónimo; E2E autenticado y piloto real pendientes | Parcial |
 
 ## Integración MCP Multiharness
 
@@ -265,7 +317,7 @@ por separado; las verificaciones incompletas mantienen sus gates abiertos.
 | RF-MCP-02 a RF-MCP-04 | Validación de audiencia/grant/scope, token MCP opaco, cliente InsForge por usuario y filtros owner_id | Pruebas unitarias de PKCE/scopes/cifrado; RLS multiusuario e IDs cruzados pendientes | Parcial |
 | RF-MCP-05 a RF-MCP-08 | Tools CRUD/status de eventos, confirmación de delete y rango/página acotados | Schemas registrados y ownership explícito; pruebas DB y concurrencia pendientes | Parcial |
 | RF-MCP-09 a RF-MCP-10 | CRUD de asignaturas, grupos y notas con relaciones propias | Pruebas Deno locales cubren las columnas de creación/edición de grupos; integración con filas reales pendiente de desplegar la corrección | Parcial |
-| RF-MCP-11 a RF-MCP-13 | CRUD de hábitos, registros, notas, versiones de frecuencia e historial estadístico | Funciones compartidas de evaluación y tests MCP locales; lecturas con filas de staging y RLS pendientes | Parcial |
+| RF-MCP-11 a RF-MCP-13 | CRUD de hábitos, registros, notas, versiones de frecuencia e historial estadístico; registros conservan el vínculo nullable de KOReader | functions/mcp/domain_test.ts, funciones compartidas de evaluación; lecturas con filas de staging y RLS pendientes | Parcial |
 | RF-MCP-14 a RF-MCP-15 | Recurrencias, lifecycle, reglas y ocurrencias; se archiva, no se ofrece delete físico | Implementado localmente; pruebas de repetición e historial pendientes | Parcial |
 | RF-MCP-16 a RF-MCP-17 | IA draft/save separadas y tools Canvas de lectura/sync/revisión | Implementado con confirmación; comportamiento de funciones upstream y cuentas piloto pendiente | Parcial |
 | RF-MCP-18 | IDs y relaciones filtrados por propietario con cliente InsForge de usuario | Revisión estática; pruebas A/B pendientes | Parcial |
@@ -326,3 +378,24 @@ repositorio a
 `C:\\Users\\juani\\Desktop\\Programacion\\karenda-mcp-backups-20260923\\karenda-parent-schema.sql`
 (SHA-256 `28040BD02CDDA3090F2A66C9120D8A19AB319DD7C593A0D89CE14651C0739B7B`).
 Se conservaron sin staging tres migraciones untracked ajenas a esta rama.
+
+## Sincronización Con El Calendario Android
+
+La especificación `specs/008-phone-calendar-sync.md` define una copia local de
+solo lectura mediante Android Calendar Provider. No requiere migración ni
+función InsForge. Las tareas de esta fase se renumeraron como 182–187 para no
+colisionar con la fase MCP ya integrada en `tasks.md`.
+
+| Requisito | Implementación | Verificación | Estado |
+| --- | --- | --- | --- |
+| RF-PCS-01, RF-PCS-08 | Plugin Capacitor y permiso solicitado tras acción explícita | Tests del panel, lint y build Android; permiso físico pendiente | Automatizado + build |
+| RF-PCS-02 | Calendarios por categoría y títulos con etiqueta | Mapper, JUnit y APK instalado; visualización POCO pendiente | Automatizado + build |
+| RF-PCS-03 a RF-PCS-05 | Lectura paginada, upsert, deduplicación y limpieza de copias administradas | Vitest y JUnit; proveedor Android no probado porque la sesión quedó en «Iniciando sesión…» | Automatizado; físico pendiente |
+| RF-PCS-06 a RF-PCS-07 | Sincronización manual, tras cambios, al reanudar y cada quince minutos en primer plano | Tests de panel, servicio y store | Automatizado |
+| RF-PCS-09 a RF-PCS-10 | Explicación de límites en español | Tests del panel | Automatizado |
+| CA-PCS-01 a CA-PCS-10 | Contrato completo de la integración | Lint, typecheck, 60 archivos/223 pruebas Vitest en la rama combinada, JUnit y build Android | Automatizado + build; POCO/Watch Fit 5 Pro pendientes |
+
+En el POCO F6, `adb install -r` se completó el 2 de octubre de 2026 y la
+interfaz llegó al formulario de inicio de sesión, que quedó en carga. No se
+concedieron `READ_CALENDAR` ni `WRITE_CALENDAR`; no se escribieron eventos ni
+calendarios.

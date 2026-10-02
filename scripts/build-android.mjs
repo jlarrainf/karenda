@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 
@@ -17,7 +17,17 @@ function javaHomeCandidates() {
   if (process.env.JAVA_HOME?.trim()) return [process.env.JAVA_HOME.trim()]
 
   if (isWindows) {
+    const userJdksRoot = process.env.USERPROFILE
+      ? resolve(process.env.USERPROFILE, '.jdks')
+      : null
+    const userJdkCandidates = userJdksRoot && existsSync(userJdksRoot)
+      ? readdirSync(userJdksRoot, { withFileTypes: true })
+          .filter((entry) => entry.isDirectory() && /(?:^|[-_.])21(?:[.-]|$)/.test(entry.name))
+          .map((entry) => resolve(userJdksRoot, entry.name))
+      : []
+
     return [
+      ...userJdkCandidates,
       process.env.ANDROID_STUDIO_JAVA_HOME,
       'C:\\Program Files\\Android\\Android Studio\\jbr',
     ].filter(Boolean)
@@ -37,11 +47,23 @@ function javaHomeCandidates() {
   ].filter(Boolean)
 }
 
+function isCompatibleJavaHome(candidate) {
+  const executable = resolve(candidate, 'bin', isWindows ? 'java.exe' : 'java')
+  if (!existsSync(executable)) return false
+
+  const result = spawnSync(executable, ['-version'], {
+    encoding: 'utf8',
+    windowsHide: true,
+  })
+  const version = `${result.stdout ?? ''}${result.stderr ?? ''}`.match(/version "(\d+)/)?.[1]
+  const major = version ? Number(version) : NaN
+  return Number.isInteger(major) && major >= 21 && major < 25
+}
+
 const environment = { ...process.env }
 if (!environment.JAVA_HOME) {
   const javaHome = javaHomeCandidates().find((candidate) => {
-    const executable = resolve(candidate, 'bin', isWindows ? 'java.exe' : 'java')
-    return existsSync(executable)
+    return isCompatibleJavaHome(candidate)
   })
 
   if (javaHome) environment.JAVA_HOME = javaHome
