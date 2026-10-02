@@ -126,7 +126,10 @@ export function McpConsentPage() {
         const consent = result as ConsentRequest
         if (isActive) {
           setRequest(consent)
-          setSelectedScopes(consent.requested_scopes.filter((scope) => !scopeDefinitions.find((item) => item.scope === scope)?.elevated))
+          setSelectedScopes(consent.requested_scopes.filter((scope) => {
+            const definition = scopeDefinitions.find((item) => item.scope === scope)
+            return definition !== undefined && !definition.elevated
+          }))
         }
       } catch (loadError) {
         if (isActive) setError(loadError instanceof Error ? loadError.message : 'No se pudo cargar la solicitud de conexión.')
@@ -140,12 +143,18 @@ export function McpConsentPage() {
 
   const requestedScopes = request?.requested_scopes ?? []
   const visibleScopes = scopeDefinitions.filter((definition) => requestedScopes.includes(definition.scope))
-  const hasSelectedScope = selectedScopes.length > 0
+  const selectedVisibleScopeCount = visibleScopes.filter((definition) => selectedScopes.includes(definition.scope)).length
+  const allVisibleScopesSelected = visibleScopes.length > 0 && selectedVisibleScopeCount === visibleScopes.length
+  const hasSelectedScope = selectedVisibleScopeCount > 0
 
   const toggleScope = (scope: string) => {
     setSelectedScopes((current) => current.includes(scope)
       ? current.filter((item) => item !== scope)
       : [...current, scope])
+  }
+
+  const toggleAllScopes = () => {
+    setSelectedScopes(allVisibleScopesSelected ? [] : visibleScopes.map((definition) => definition.scope))
   }
 
   const decide = async (decision: 'approve' | 'deny') => {
@@ -226,7 +235,21 @@ export function McpConsentPage() {
 
               <fieldset className="mt-7" disabled={isSubmitting || redirecting}>
                 <legend className="text-lg font-semibold text-ink">Permisos solicitados</legend>
-                <p className="mt-1 text-sm text-ink-muted">Los permisos elevados empiezan desactivados. Selecciona solo los que quieras conceder.</p>
+                <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-ink-muted">Los permisos sensibles empiezan desactivados. Revisa las descripciones antes de concederlos.</p>
+                  <button
+                    aria-label={allVisibleScopesSelected ? 'Quitar selección de todos los permisos' : 'Seleccionar todos los permisos'}
+                    className="min-h-11 shrink-0 self-start rounded-control border border-border bg-surface px-4 text-sm font-semibold text-ink transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-soft disabled:cursor-not-allowed disabled:opacity-60 sm:self-auto"
+                    disabled={visibleScopes.length === 0}
+                    onClick={toggleAllScopes}
+                    type="button"
+                  >
+                    {allVisibleScopesSelected ? 'Quitar selección' : 'Seleccionar todos los permisos'}
+                  </button>
+                </div>
+                <p aria-live="polite" className="mt-3 text-sm text-ink-muted">
+                  {selectedVisibleScopeCount} de {visibleScopes.length} permisos seleccionados.
+                </p>
                 <div className="mt-4 divide-y divide-border border-y border-border">
                   {visibleScopes.map((definition) => {
                     const selected = selectedScopes.includes(definition.scope)
@@ -242,7 +265,7 @@ export function McpConsentPage() {
                         <span className="min-w-0 flex-1">
                           <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-ink">
                             {definition.label}
-                            {definition.elevated && <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning">Permiso de escritura</span>}
+                            {definition.elevated && <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning">Permiso sensible</span>}
                           </span>
                           <span className="mt-1 block max-w-[68ch] text-sm leading-5 text-ink-muted">{definition.description}</span>
                         </span>

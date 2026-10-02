@@ -464,6 +464,10 @@ Están planificados y requieren evidencia al implementar.
 - **RF-MCP-27 [transparencia]:** Cuando se solicite contexto de cuenta, Karenda
   devuelve únicamente idioma, zona horaria y hora actual necesarios para
   interpretar fechas conversacionales, sin identificadores internos ni correo.
+- **RF-MCP-28 [consentimiento]:** La persona puede seleccionar todos los scopes
+  solicitados que aparecen en la pantalla o quitar la selección completa. La
+  acción masiva incluye scopes sensibles y solo modifica la selección; el grant
+  requiere una acción separada de autorización.
 
 ### Criterios De Aceptación Del Proyecto
 
@@ -488,6 +492,10 @@ Están planificados y requieren evidencia al implementar.
 - **CA-MCP-10:** Runbook demuestra despliegue/rollback sin borrado inesperado.
 - **CA-MCP-11:** Consentimiento y revocación se entienden y usan en escritorio
   y móvil.
+- **CA-MCP-12:** En consentimiento, seleccionar todos marca exactamente los
+  permisos visibles solicitados, incluso los sensibles; una selección parcial
+  se completa y una selección total se puede quitar. La acción no autoriza por
+  sí sola; el grant requiere pulsar `Autorizar Karenda`.
 
 ## 12. Verificación De Implementación
 

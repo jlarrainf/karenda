@@ -274,12 +274,14 @@ por separado; las verificaciones incompletas mantienen sus gates abiertos.
 | RF-MCP-24 | Guía inicial en docs/mcp-clients.md, configuración local de Codex y servidor HTTP común | Codex OAuth, descubrimiento y lecturas autenticadas verificados; escritura de grupo corregida en la rama Git pero pendiente de integrar y desplegar; revocación y otros harnesses pendientes | Parcial |
 | RF-MCP-25 a RF-MCP-26 | Errores sanitizados, límites de body/rango/página, validación Origin y rate limits por IP/grant/tool | HMAC de IP, buckets y RPC aplicados; metadata/challenge/CORS/DCR pasan smoke en producción y staging; revisión adversarial pendiente | Parcial |
 | RF-MCP-27 | Contexto español, fecha local y zona indicada por el harness (por defecto America/Santiago) | Test de protocolo/scope pendiente | Parcial |
+| RF-MCP-28 | Selección masiva explícita de scopes solicitados en la pantalla de consentimiento; autorización final separada | `McpConsentPage.test.tsx` cubre selección parcial/total, scopes sensibles, retiro completo y ausencia de POST de autorización; lint y build pasan; smoke de producción pendiente | Parcial |
 | CA-MCP-01 | SDK MCP 2.0.0 en Deno 2.9.6; rama limpia `karenda-mcp-release` creada desde el esquema actual; release integrada en `main` | 24 tests MCP locales, incluidas regresiones de grupos; metadata 200, challenge 401, CORS allow/deny y DCR 201 en producción; OAuth y lecturas autenticadas verificadas; escritura real pendiente de desplegar la corrección | Parcial |
 | CA-MCP-02 | Configuración global y local de Codex hacia producción; guía de setup para los tres harnesses | Codex reconectó OAuth y las lecturas autenticadas respondieron; la escritura de grupo reveló una proyección inválida en producción. La corrección y el smoke de escritura aún están pendientes | Parcial |
 | CA-MCP-03 | Inventario parcial de familias del dominio y exclusiones de conexión Canvas | Falta auditar cada acción visible de las specs 001-006 | Parcial |
 | CA-MCP-04 a CA-MCP-05 | Migración OAuth aplicada y cobertura unitaria local | Usuarios A/B, emisión/rotación/revocación reales y RLS pendientes | Parcial |
 | CA-MCP-06 a CA-MCP-08 | Schemas cerrados, separaciones draft/save, idempotencia durable, rate limits y errores genéricos | 24 tests MCP; bundle, RPC y función desplegados en staging y producción; auditoría de logs y revisión adversarial pendientes | Parcial |
 | CA-MCP-09 a CA-MCP-11 | 179 pruebas web, 24 pruebas MCP, lint, typecheck y build; UI de consentimiento/revocación desplegada en staging y producción | Accesibilidad auditada, tres harnesses y rollback probado pendientes | Parcial |
+| CA-MCP-12 | Selección total/parcial de scopes solicitados y autorización explícita separada | Prueba de interacción, lint y build pasan; despliegue y smoke de la ruta web pendientes | Parcial |
 
 Seguridad de ramas/datos: el trabajo se realizó en el worktree
 `C:\\Users\\juani\\Desktop\\Programacion\\karenda-wt-mcp-plan` sobre
