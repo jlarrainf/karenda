@@ -61,7 +61,7 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
 - [x] **Tarea 32: Crear el formulario de evento académico** (20-30 min). Implementar título, asignatura, fechas, horas, estado, sala y descripción/temario opcionales.
 - [x] **Tarea 33: Crear el formulario de evento personal** (20-30 min). Implementar título, grupo opcional, fechas, horas, estado, lugar y descripción opcionales.
 - [x] **Tarea 34: Implementar eventos puntuales, de duración y multidiarios** (20-30 min). Añadir modo de todo el día, validación de término posterior al inicio y conservación de fechas locales.
-- [x] **Tarea 35: Implementar detalle y acciones de evento** (20-30 min). Añadir apertura por clic, edición, eliminación con confirmación y cambio manual entre `Pendiente` y `Completado`.
+- [x] **Tarea 35: Implementar detalle y acciones de evento** (20-30 min). Añadir apertura por clic, edición, eliminación con confirmación y cambio manual entre `Pendiente` y `Completado`, conservando el rango original al actualizar solo el estado.
 - [x] **Tarea 36: Conectar calendario con datos de InsForge** (20-30 min). Cargar el rango visible, refrescar tras mutaciones y mostrar estados de carga, vacío y error en español.
 
 ## Fase 6: Agenda, Búsqueda Y Filtros

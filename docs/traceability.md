@@ -27,7 +27,7 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | RF-13 | Validación de rangos inclusivos | `validation.test.ts`, `EventForm.test.tsx` | Automatizado |
 | RF-14 | Edición completa y validación combinada | `eventService.ts`, `domainServices.test.ts`, `EventForm.test.tsx` | Automatizado |
 | RF-15 | `EventDetail`, `ConfirmDialog`, `calendarStore` | Confirmación en `EventDetail.test.tsx`; prueba de servicio real pendiente | Parcial |
-| RF-16 | Estados explícitos, detalle y mapper | `calendarEventMapper.test.ts`, `EventDetail.test.tsx`, `calendarStore.test.ts` | Automatizado |
+| RF-16 | Estados explícitos y parches de estado que conservan fechas y modo all-day | `eventPatchSchema`, `eventService`, `validation.test.ts`, `domainServices.test.ts`, `calendarEventMapper.test.ts`, `EventDetail.test.tsx`, `calendarStore.test.ts` | Automatizado |
 | RF-17 | `CalendarPage` y navegación de Agenda | `CalendarPage.test.tsx`, `AgendaView.test.tsx`; navegación E2E autenticada pendiente | Parcial |
 | RF-17.1 | `CalendarPage` y fecha inicial de `AgendaView` | typecheck, build y revisión de UI | Automatizado + estático |
 | RF-18 | `AgendaView` y `listUpcomingEvents` | `AgendaView.test.tsx`, `domainServices.test.ts` | Automatizado |
@@ -118,7 +118,7 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | CA-04 | Formularios y detalle de eventos; flujo browser pendiente | Parcial |
 | CA-04.1 | Acción única y selector de tipo dentro del formulario; flujo browser pendiente | Parcial |
 | CA-05 | Validaciones, fechas locales y mapper | Automatizado |
-| CA-06 | Estados en detalle, Agenda y calendario | Automatizado |
+| CA-06 | Estados en detalle, Agenda y calendario; CA-21 conserva los datos temporales al completar eventos all-day o multidiarios | `validation.test.ts`, `domainServices.test.ts`, `EventDetail.test.tsx`, `calendarStore.test.ts` | Automatizado |
 | CA-07 | Componentes y Agenda; recorrido autenticado pendiente | Parcial |
 | CA-08 | Agrupación, orden y estados de Agenda | Automatizado |
 | CA-09 | Búsqueda, filtros y limpieza | Automatizado |

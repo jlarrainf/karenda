@@ -231,7 +231,9 @@ notas no se asocian directamente a eventos en este MVP.
   únicamente ese evento de InsForge.
 - **RF-16 [EARS: evento]:** Cuando el usuario cambie el estado de un evento, el
   sistema deberá persistir `pending` o `completed` y deberá mostrar una
-  diferencia visual y textual entre `Pendiente` y `Completado`.
+  diferencia visual y textual entre `Pendiente` y `Completado`. Una actualización
+  limitada al estado deberá conservar la fecha, hora, rango y condición de todo
+  el día existentes, sin volver a aplicar valores por defecto de creación.
 - **RF-17 [EARS: evento]:** Cuando el usuario abra o cambie la fecha de la
   pantalla de calendario, el sistema deberá ofrecer navegación anterior,
   siguiente y `Hoy`, además de cambiar entre las vistas Agenda, Mes, Semana y
@@ -452,3 +454,6 @@ los criterios siguientes:
 - **CA-20:** El snapshot de KOReader contiene ambos campos para cada evento,
   preserva su nulabilidad y mantiene compatibilidad con clientes que ignoran
   campos nuevos del contrato v1.
+- **CA-21:** Al completar un evento de todo el día o de varios días, el sistema
+  conserva sus fechas, horas y condición de todo el día, persiste el estado y no
+  muestra errores que exigen una hora de inicio para un evento sin hora.
