@@ -370,3 +370,24 @@ repositorio a
 `C:\\Users\\juani\\Desktop\\Programacion\\karenda-mcp-backups-20260923\\karenda-parent-schema.sql`
 (SHA-256 `28040BD02CDDA3090F2A66C9120D8A19AB319DD7C593A0D89CE14651C0739B7B`).
 Se conservaron sin staging tres migraciones untracked ajenas a esta rama.
+
+## Sincronización Con El Calendario Android
+
+La especificación `specs/008-phone-calendar-sync.md` define una copia local de
+solo lectura mediante Android Calendar Provider. No requiere migración ni
+función InsForge. Las tareas de esta fase se renumeraron como 182–187 para no
+colisionar con la fase MCP ya integrada en `tasks.md`.
+
+| Requisito | Implementación | Verificación | Estado |
+| --- | --- | --- | --- |
+| RF-PCS-01, RF-PCS-08 | Plugin Capacitor y permiso solicitado tras acción explícita | Tests del panel, lint y build Android; permiso físico pendiente | Automatizado + build |
+| RF-PCS-02 | Calendarios por categoría y títulos con etiqueta | Mapper, JUnit y APK instalado; visualización POCO pendiente | Automatizado + build |
+| RF-PCS-03 a RF-PCS-05 | Lectura paginada, upsert, deduplicación y limpieza de copias administradas | Vitest y JUnit; proveedor Android no probado porque la sesión quedó en «Iniciando sesión…» | Automatizado; físico pendiente |
+| RF-PCS-06 a RF-PCS-07 | Sincronización manual, tras cambios, al reanudar y cada quince minutos en primer plano | Tests de panel, servicio y store | Automatizado |
+| RF-PCS-09 a RF-PCS-10 | Explicación de límites en español | Tests del panel | Automatizado |
+| CA-PCS-01 a CA-PCS-10 | Contrato completo de la integración | Lint, typecheck, 60 archivos/223 pruebas Vitest en la rama combinada, JUnit y build Android | Automatizado + build; POCO/Watch Fit 5 Pro pendientes |
+
+En el POCO F6, `adb install -r` se completó el 2 de octubre de 2026 y la
+interfaz llegó al formulario de inicio de sesión, que quedó en carga. No se
+concedieron `READ_CALENDAR` ni `WRITE_CALENDAR`; no se escribieron eventos ni
+calendarios.

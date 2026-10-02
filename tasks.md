@@ -617,3 +617,38 @@ Los IDs 162–181 reasignan las tareas 125–144 de la rama de release, para con
 - [ ] **Tarea 181: Verificar KOReader real** (20-30 min). Ejecutar specs Lua
   con el runtime de KOReader y probar backfill, red ausente, Anki disponible y
   dispositivo real.
+
+## Fase 20: Calendario Local Del Teléfono
+
+La especificación de esta integración está en
+`specs/008-phone-calendar-sync.md`. El destino es la rama de integración
+`codex/release-all-changes`; no requiere cambios en InsForge.
+
+- [x] **Tarea 182: Definir la integración nativa y la UI** (20–30 min).
+  Registrar en spec, UI y trazabilidad el uso de Calendar Provider local,
+  categorías separadas, permisos y límites de sincronización.
+- [x] **Tarea 183: Implementar el plugin de calendario Android** (45–60 min).
+  Pedir permisos al conectar, crear un calendario local por categoría,
+  conservar IDs estables y actualizar/eliminar solo copias de Karenda; cubrir
+  la planificación de upsert y deduplicación con pruebas JUnit.
+- [x] **Tarea 184: Mapear y cargar eventos de Karenda** (30–45 min).
+  Añadir lectura paginada, conversiones de fechas/all-day, color y título
+  original seguido por la categoría (por ejemplo, `Control 1 · ALG`),
+  manteniendo la consulta bajo RLS del usuario.
+- [x] **Tarea 185: Añadir sincronización automática y panel** (30–45 min).
+  Sincronizar al conectar, al guardar, al reanudar, cada quince minutos en
+  primer plano y con una acción manual; explicar permisos y límites.
+- [x] **Tarea 186: Añadir pruebas y verificar builds** (30–45 min).
+  Probar mapeo, refrescos en curso, deduplicación, borrados, permiso denegado,
+  estado UI e intervalo. En la rama combinada pasaron `npm run lint`,
+  `npm run typecheck`, `npm test` (60 archivos, 223 pruebas),
+  `npm run test:mcp` (25 pruebas), el typecheck Deno de Edge Functions,
+  `:app:testDebugUnitTest --rerun-tasks` y `npm run android:build`, el 2 de
+  octubre de 2026.
+- [ ] **Tarea 187: Validar POCO Calendar y Watch Fit 5 Pro** (20–30 min).
+  Instalar APK en POCO F6, conectar, comprobar calendarios por grupo, cambios,
+  eliminación, Huawei Health y agenda del reloj; registrar cualquier límite de
+  ROM/versión. `adb install -r` se completó y la app abrió en el POCO F6, pero
+  quedó en el formulario de inicio de sesión mostrando «Iniciando sesión…».
+  No se concedieron permisos de calendario ni se tocaron eventos; la prueba del
+  proveedor local, Huawei Health y el reloj sigue pendiente.

@@ -603,3 +603,14 @@ tasks.md desglosa el trabajo. La implementación inicial y migración están en
 una rama InsForge aislada, con producción intacta. OAuth real, pruebas entre
 cuentas, límites de tasa, idempotencia y la matriz E2E de harnesses siguen
 abiertos; véase docs/mcp-clients.md antes de conectar un cliente.
+
+## 17. Calendario Local Del Teléfono Android
+
+La integración definida en `specs/008-phone-calendar-sync.md` escribe los
+registros Karenda al proveedor local Android con el plugin Capacitor. Mantiene
+una agenda por asignatura o grupo personal, actualiza las filas por ID estable
+y no sincroniza cambios del teléfono hacia Karenda. La app sincroniza al
+conectar, después de guardar, al reanudarse y cada quince minutos mientras
+permanece activa; no ejecuta tareas de red con Karenda cerrada. Los datos se
+leen mediante los servicios InsForge existentes y RLS, sin añadir un servidor,
+una migración ni credenciales externas.

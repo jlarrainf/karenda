@@ -29,6 +29,7 @@ interface CalendarState {
   isLoading: boolean
   isSaving: boolean
   error: string | null
+  eventMutationVersion: number
   loadedRangeKey: string | null
   loadingRangeKey: string | null
   load: (range: EventRange, force?: boolean) => Promise<void>
@@ -67,6 +68,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   isLoading: false,
   isSaving: false,
   error: null,
+  eventMutationVersion: 0,
   loadedRangeKey: null,
   loadingRangeKey: null,
 
@@ -179,6 +181,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
     try {
       const event = await createEvent(input)
       await get().refresh()
+      set((state) => ({ eventMutationVersion: state.eventMutationVersion + 1 }))
       return event
     } catch (error) {
       set({ error: getErrorMessage(error, 'No se pudo crear el evento.') })
@@ -194,6 +197,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
     try {
       const event = await updateEvent(id, input)
       await get().refresh()
+      set((state) => ({ eventMutationVersion: state.eventMutationVersion + 1 }))
       return event
     } catch (error) {
       set({ error: getErrorMessage(error, 'No se pudo actualizar el evento.') })
@@ -209,6 +213,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
     try {
       await deleteEvent(id)
       await get().refresh()
+      set((state) => ({ eventMutationVersion: state.eventMutationVersion + 1 }))
       return true
     } catch (error) {
       set({ error: getErrorMessage(error, 'No se pudo eliminar el evento.') })
@@ -224,6 +229,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
     try {
       const event = await updateEventStatus(id, status)
       await get().refresh()
+      set((state) => ({ eventMutationVersion: state.eventMutationVersion + 1 }))
       return event
     } catch (error) {
       set({ error: getErrorMessage(error, 'No se pudo actualizar el estado.') })
@@ -266,6 +272,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
       isLoading: false,
       isSaving: false,
       error: null,
+      eventMutationVersion: 0,
       loadedRangeKey: null,
       loadingRangeKey: null,
     })
