@@ -540,3 +540,14 @@ El trabajo se divide en: spec y UI; migración y RLS; cliente Canvas y funciones
 servicio y store; superficie `/canvas`; procedencia en detalle de evento;
 programador diario; tests de dominio, funciones, RLS, UI y E2E; despliegue
 limitado a la cuenta piloto.
+
+## 16. Calendario Local Del Teléfono Android
+
+La integración definida en `specs/008-phone-calendar-sync.md` escribe los
+registros Karenda al proveedor local Android con el plugin Capacitor. Mantiene
+una agenda por asignatura o grupo personal, actualiza las filas por ID estable
+y no sincroniza cambios del teléfono hacia Karenda. La app sincroniza al
+conectar, después de guardar, al reanudarse y cada quince minutos mientras
+permanece activa; no ejecuta tareas de red con Karenda cerrada. Los datos se
+leen mediante los servicios InsForge existentes y RLS, sin añadir un servidor,
+una migración ni credenciales externas.

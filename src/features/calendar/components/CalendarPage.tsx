@@ -43,6 +43,7 @@ import {
 } from '../utils/calendarEventMapper.ts'
 import { getCalendarDisplayItems } from '../utils/calendarDisplayProjection.ts'
 import { CalendarDisplayDetail } from './CalendarDisplayDetail.tsx'
+import { PhoneCalendarSyncPanel } from './PhoneCalendarSyncPanel.tsx'
 import { getLocalDateKey, shiftDateKey } from '../../../lib/dates/dateUtils.ts'
 import { getCanvasConnection, synchronizeCanvas } from '../../../services/canvasService.ts'
 import type { CanvasConnection } from '../../../types/canvas.ts'
@@ -726,6 +727,8 @@ export function CalendarPage({
           </Button>
         </div>
       </header>
+
+      <PhoneCalendarSyncPanel />
 
       {canvasSyncFeedback ? (
         <p

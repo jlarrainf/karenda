@@ -863,3 +863,46 @@ de autenticar y debe mantener objetivos táctiles de al menos 44 px.
   El panel no expondrá tokens ni hará sincronización de red implícita desde la
   pestaña de estadísticas; la sincronización diaria la inicia KOReader al
   reanudar con conexión.
+
+### Sincronización Con El Calendario Android
+
+- La configuración aparece dentro de `Tu calendario`, justo debajo del
+  encabezado existente. No añade una ruta ni altera el bloque de acciones
+  `Nuevo evento`, `Agregar con IA` y `Sincronizar Canvas`.
+- La superficie funciona como una franja operativa compacta: estado actual,
+  última sincronización y una acción principal. Al estar desconectada ofrece
+  `Conectar calendario del teléfono`; al reanudar una conexión pausada ofrece
+  `Reanudar sincronización`; al estar activa ofrece `Sincronizar ahora` y
+  `Pausar`.
+- La acción de conexión explica que Android pedirá acceso a calendarios. La
+  app solicita permiso solo después de pulsar conectar. Si se deniega, muestra
+  un mensaje recuperable con la ruta `Ajustes > Aplicaciones > Karenda >
+  Permisos > Calendario`.
+- Una sección de detalles enumera asignaturas y grupos personales sincronizados,
+  y aclara que la app crea un calendario separado por categoría en el teléfono.
+  El color siempre va acompañado del nombre de la categoría.
+- En cada calendario local, el título original del evento aparece primero y la
+  categoría se agrega al final, separada con `·`: `Control 1 · ALG` o
+  `Cita médica · Salud`. Para asignaturas se usa la abreviación, luego el código
+  y después el nombre como alternativa; para grupos personales se usa el nombre
+  del grupo.
+- La explicación principal deja claro que no hace falta Google Calendar, que
+  Android pedirá el permiso al conectar, cuál es el ritmo de sincronización y
+  que Huawei Health solo podrá mostrar calendarios locales que reconozca. Dice
+  expresamente que los cambios pendientes se copian al volver a abrir Karenda
+  y que la integración no crea alarmas.
+- La franja indica que Karenda manda los cambios, que no se importan ediciones
+  realizadas fuera de Karenda y que no se crean avisos automáticos. Aclara que
+  la app sincroniza al abrirse o reanudarse y cada quince minutos mientras
+  permanece activa; cerrada, la próxima sincronización ocurre al volver a
+  abrirla.
+- En navegador se conserva el punto de acceso, pero el estado explica que la
+  conexión directa requiere la app Android instalada. No sugiere Google
+  Calendar, CalDAV ni una cuenta externa.
+- Los estados `no disponible`, `sin permiso`, `sincronizando`, `sincronizado`,
+  `pausado` y `error` usan texto en español y una región `aria-live`. Las
+  acciones tienen foco visible, altura táctil mínima de 44 px y se deshabilitan
+  mientras una sincronización está en curso.
+- El diseño hereda los tokens de Karenda: superficie blanca, borde sutil,
+  texto oscuro, acento verde petróleo y colores de categoría. No usa tarjetas
+  anidadas, insignias solo de color ni nuevos estilos globales.

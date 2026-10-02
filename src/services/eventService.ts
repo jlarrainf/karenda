@@ -29,6 +29,7 @@ type EventPayload = Database['public']['Tables']['events']['Insert']
 const EVENT_COLUMNS =
   'id, owner_id, kind, title, subject_id, personal_group_id, start_at, end_at, is_all_day, status, location, description, academic_activity_type, created_at, updated_at'
 const MAX_EVENTS = 1000
+const PHONE_CALENDAR_PAGE_SIZE = 500
 
 function serializeEventDate(value: string, isAllDay: boolean): string {
   if (isAllDay) {
@@ -164,6 +165,28 @@ export async function listUpcomingEvents(startAt: string): Promise<CalendarEvent
   return data.map(mapEvent)
 }
 
+export async function listAllEvents(): Promise<CalendarEvent[]> {
+  const ownerId = await requireCurrentUserId()
+  const allRows: EventRow[] = []
+
+  for (let offset = 0; ; offset += PHONE_CALENDAR_PAGE_SIZE) {
+    const page = await runInsForge<EventRow[]>(
+      () =>
+        insforge.database
+          .from('events')
+          .select(EVENT_COLUMNS)
+          .eq('owner_id', ownerId)
+          .order('start_at', { ascending: true })
+          .order('id', { ascending: true })
+          .range(offset, offset + PHONE_CALENDAR_PAGE_SIZE - 1),
+      'No se pudieron cargar todos los eventos para el calendario del teléfono.',
+    )
+    allRows.push(...page)
+    if (page.length < PHONE_CALENDAR_PAGE_SIZE) break
+  }
+
+  return allRows.map(mapEvent)
+}
 export async function getEvent(id: string): Promise<CalendarEvent | null> {
   const ownerId = await requireCurrentUserId()
   const parsedId = parseInput(entityIdSchema, id)

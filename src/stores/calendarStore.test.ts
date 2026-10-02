@@ -119,6 +119,29 @@ describe('calendarStore', () => {
     expect(mockedListEvents).toHaveBeenCalledTimes(2)
   })
 
+  it('increments the phone sync version after each successful event mutation', async () => {
+    mockedListEvents.mockResolvedValue([event])
+    mockedCreateEvent.mockResolvedValue(event)
+    mockedUpdateEvent.mockResolvedValue({ ...event, title: 'Control actualizado' })
+    mockedUpdateEventStatus.mockResolvedValue({ ...event, status: 'completed' })
+    mockedDeleteEvent.mockResolvedValue(undefined)
+
+    await useCalendarStore.getState().load(range)
+    expect(useCalendarStore.getState().eventMutationVersion).toBe(0)
+
+    await useCalendarStore.getState().createEvent({
+      kind: 'academic',
+      startAt: event.startAt,
+      subjectId: event.subjectId,
+      title: event.title,
+    })
+    await useCalendarStore.getState().updateEvent(event.id, { title: 'Control actualizado' })
+    await useCalendarStore.getState().updateEventStatus(event.id, 'completed')
+    await useCalendarStore.getState().deleteEvent(event.id)
+
+    expect(useCalendarStore.getState().eventMutationVersion).toBe(4)
+  })
+
   it('loads upcoming events once and keeps the agenda start date', async () => {
     const startAt = '2026-08-30'
     mockedListUpcomingEvents.mockResolvedValue([event])

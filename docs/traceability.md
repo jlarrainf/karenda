@@ -292,3 +292,18 @@ Comprobaciones ejecutadas en la tarea: Deno 2.9.6 typecheck de ambas funciones, 
 | RF-C-30 | Sesión móvil renovable antes de consultar Canvas y mensaje diferenciado de sesión frente a red | `authService.test.ts`, cliente InsForge y build Android | Automatizado + build Android |
 | RF-C-31 | Allowlist CORS de las funciones Canvas incluye el origen fijo `https://localhost` de Capacitor | `verify-android-canvas.mjs`, preflight HTTP de las tres funciones y despliegue | Automatizado + desplegado |
 | CA-C-01 a CA-C-21 | Flujo del piloto integrado, con ventana histórica, avisos de ejecución, sesión móvil y CORS Android | Tests, lint, typecheck, build Android, preflight y smoke anónimo; E2E autenticado y piloto real pendientes | Parcial |
+
+## Sincronización Con El Calendario Android
+
+La especificación `specs/008-phone-calendar-sync.md` define una copia local de
+solo lectura mediante Android Calendar Provider. No requiere migración ni
+función InsForge.
+
+| Requisito | Implementación | Verificación | Estado |
+| --- | --- | --- | --- |
+| RF-PCS-01, RF-PCS-08 | Plugin Capacitor, permisos en acción explícita | `PhoneCalendarSyncPanel.test.tsx`, build Android; prueba del permiso en POCO pendiente | Automatizado + build; prueba física pendiente |
+| RF-PCS-02 | Calendarios locales por asignatura y grupo; título original seguido por la categoría | `phoneCalendarMapper.test.ts` actualizado; build Android; instalación/visualización POCO pendientes | Build verificado; test de mapper y prueba física pendientes |
+| RF-PCS-03 a RF-PCS-05 | Consulta paginada, upsert por ID, deduplicación y limpieza obsoleta | Tests Vitest, `PhoneCalendarEventPlanTest`; prueba de Calendar Provider pendiente | Automatizado + build; prueba física pendiente |
+| RF-PCS-06 a RF-PCS-07 | Panel, actualización tras cambios, reanudación y ciclo de quince minutos en primer plano | `PhoneCalendarSyncPanel.test.tsx`, `calendarStore.test.ts` | Automatizado |
+| RF-PCS-09 a RF-PCS-10 | Límites y estados explicados en español | `PhoneCalendarSyncPanel.test.tsx` | Automatizado |
+| CA-PCS-01 a CA-PCS-10 | Contrato completo de la integración | Lint, typecheck, Vitest, JUnit, build web, build Android; POCO y reloj pendientes | Automatizado + build; prueba física pendiente |

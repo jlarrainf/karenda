@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Database } from '../lib/insforge/database.types.ts'
-import { createEvent, deleteEvent, listEvents, updateEvent } from './eventService.ts'
+import { createEvent, deleteEvent, listAllEvents, listEvents, updateEvent } from './eventService.ts'
 import {
   createNote,
   listAllSubjectNotes,
@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => {
       maybeSingle: vi.fn(),
       order: vi.fn(),
       or: vi.fn(),
+      range: vi.fn(),
       select: vi.fn(),
       single: vi.fn(),
       update: vi.fn(),
@@ -36,6 +37,7 @@ const mocks = vi.hoisted(() => {
     query.maybeSingle.mockReturnValue(query)
     query.order.mockReturnValue(query)
     query.or.mockReturnValue(query)
+    query.range.mockReturnValue(query)
     query.select.mockReturnValue(query)
     query.single.mockReturnValue(query)
     query.update.mockReturnValue(query)
@@ -136,6 +138,7 @@ function resetMocks() {
     query.maybeSingle.mockReturnValue(query)
     query.order.mockReturnValue(query)
     query.or.mockReturnValue(query)
+    query.range.mockReturnValue(query)
     query.select.mockReturnValue(query)
     query.single.mockReturnValue(query)
     query.update.mockReturnValue(query)
@@ -323,6 +326,22 @@ describe('domain services', () => {
     )
   })
 
+  it('paginates every event for phone calendar sync under the authenticated owner', async () => {
+    const firstPage = Array.from({ length: 500 }, (_, index) => ({
+      ...eventRow,
+      id: `44444444-4444-4444-8444-${String(index).padStart(12, '0')}`,
+    }))
+    mocks.primaryQuery.range
+      .mockResolvedValueOnce({ data: firstPage, error: null })
+      .mockResolvedValueOnce({ data: [eventRow], error: null })
+
+    const events = await listAllEvents()
+
+    expect(events).toHaveLength(501)
+    expect(mocks.primaryQuery.eq).toHaveBeenCalledWith('owner_id', ownerId)
+    expect(mocks.primaryQuery.range).toHaveBeenNthCalledWith(1, 0, 499)
+    expect(mocks.primaryQuery.range).toHaveBeenNthCalledWith(2, 500, 999)
+  })
   it('scopes event deletion to the authenticated owner', async () => {
     mocks.secondaryQuery.maybeSingle.mockResolvedValue({ data: eventRow, error: null })
     mocks.databaseFrom
