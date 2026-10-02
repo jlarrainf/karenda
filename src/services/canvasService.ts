@@ -228,7 +228,7 @@ export async function listCandidateEvents(ids: string[]): Promise<CalendarEvent[
     () =>
       insforge.database
         .from('events')
-        .select('id, owner_id, kind, title, subject_id, personal_group_id, start_at, end_at, is_all_day, status, location, description, academic_activity_type, created_at, updated_at')
+        .select('id, owner_id, kind, title, subject_id, personal_group_id, start_at, end_at, is_all_day, status, location, description, late_submission_days, late_submission_penalty_description, academic_activity_type, created_at, updated_at')
         .eq('owner_id', ownerId)
         .in('id', ids)
         .limit(100),
@@ -242,6 +242,8 @@ export async function listCandidateEvents(ids: string[]): Promise<CalendarEvent[
     endAt: asNullableString(row.end_at), isAllDay: row.is_all_day === true,
     status: row.status === 'completed' ? 'completed' : 'pending',
     location: asNullableString(row.location), description: asNullableString(row.description),
+    lateSubmissionDays: typeof row.late_submission_days === 'number' ? row.late_submission_days : null,
+    lateSubmissionPenaltyDescription: asNullableString(row.late_submission_penalty_description),
     academicActivityType: asNullableString(row.academic_activity_type) as CalendarEvent['academicActivityType'],
     createdAt: asString(row.created_at), updatedAt: asString(row.updated_at),
   }))

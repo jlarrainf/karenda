@@ -603,6 +603,16 @@ identificadores estables, omitiendo sin huecos las que no estén disponibles.
 La alternativa de tarjetas clásicas será explícita y no cambiará la política
 de contexto.
 
+### KR-REQ-043: Metadatos de plazo de entrega atrasada
+
+Cada evento del snapshot incluirá `late_submission_days` y
+`late_submission_penalty_description`. Los días serán un entero positivo o
+`null`; la descripción será texto de hasta 1000 caracteres o `null`. Los eventos
+personales y los eventos académicos sin plazo mostrarán ambos valores como
+`null`. El mapper conservará ambos campos en el modelo local; clientes que
+ignoren las propiedades adicionales seguirán siendo compatibles con
+`schema_version: 1`.
+
 ## 3. Requisitos No Funcionales
 
 ### KR-NFR-001: Separación

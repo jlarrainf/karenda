@@ -1,4 +1,5 @@
 import { createAdminClient, createClient } from 'npm:@insforge/sdk'
+import { isLocalDate } from './karendaKoreaderHabitLinksValidation.ts'
 
 const BASE_URL = Deno.env.get('INSFORGE_BASE_URL') ?? ''
 const ADMIN_API_KEY = Deno.env.get('API_KEY') ?? ''
@@ -270,7 +271,7 @@ function validateSetupLinks(value: unknown): Record<string, unknown>[] {
         !Number.isFinite(entry.goal_value) ||
         entry.goal_value <= 0 ||
         typeof entry.start_date !== 'string' ||
-        !isDate(entry.start_date))
+        !isLocalDate(entry.start_date))
     ) {
       throw new RequestError(
         400,

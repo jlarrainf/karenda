@@ -99,6 +99,8 @@ const eventRow: EventRow = {
   created_at: timestamp,
   description: 'Repasar derivadas.',
   end_at: null,
+  late_submission_days: null,
+  late_submission_penalty_description: null,
   id: eventId,
   is_all_day: false,
   kind: 'academic',
@@ -227,13 +229,22 @@ describe('domain services', () => {
   })
 
   it('RF-10 and RF-14 serializes and maps event date contracts', async () => {
-    mocks.primaryQuery.single.mockResolvedValue({ data: eventRow, error: null })
+    mocks.primaryQuery.single.mockResolvedValue({
+      data: {
+        ...eventRow,
+        late_submission_days: 2,
+        late_submission_penalty_description: 'Se descuenta 10 %.',
+      },
+      error: null,
+    })
 
-    await createEvent({
+    const created = await createEvent({
       description: 'Repasar derivadas.',
       endAt: null,
       isAllDay: false,
       kind: 'academic',
+      lateSubmissionDays: 2,
+      lateSubmissionPenaltyDescription: 'Se descuenta 10 %.',
       location: 'Sala 12',
       personalGroupId: null,
       startAt: '2026-09-10T10:00',
@@ -242,9 +253,16 @@ describe('domain services', () => {
       title: 'Control 1',
     })
 
+    expect(created).toMatchObject({
+      lateSubmissionDays: 2,
+      lateSubmissionPenaltyDescription: 'Se descuenta 10 %.',
+    })
+
     expect(mocks.primaryQuery.insert).toHaveBeenCalledWith([
       expect.objectContaining({
         end_at: null,
+        late_submission_days: 2,
+        late_submission_penalty_description: 'Se descuenta 10 %.',
         owner_id: ownerId,
         start_at: new Date('2026-09-10T10:00').toISOString(),
       }),
@@ -266,39 +284,64 @@ describe('domain services', () => {
     )
   })
 
-  it('RF-16 updates an all-day event status without requiring a start time', async () => {
-    const allDayEventRow: EventRow = {
-      ...eventRow,
-      end_at: '2026-09-11T00:00:00.000Z',
-      is_all_day: true,
-      start_at: '2026-08-31T00:00:00.000Z',
-    }
-
-    mocks.secondaryQuery.maybeSingle.mockResolvedValue({
-      data: allDayEventRow,
-      error: null,
-    })
+  it.each([
+    {
+      label: 'all-day event',
+      row: {
+        ...eventRow,
+        end_at: '2026-09-11T00:00:00.000Z',
+        is_all_day: true,
+        late_submission_days: 2,
+        late_submission_penalty_description: 'Se descuenta 10 %.',
+        start_at: '2026-08-31T00:00:00.000Z',
+      },
+      expectedEndAt: '2026-09-11',
+      expectedStartAt: '2026-08-31',
+    },
+    {
+      label: 'timed multi-day event',
+      row: {
+        ...eventRow,
+        end_at: '2026-09-11T17:00:00.000Z',
+        late_submission_days: 2,
+        late_submission_penalty_description: 'Se descuenta 10 %.',
+        start_at: '2026-09-10T13:00:00.000Z',
+      },
+      expectedEndAt: '2026-09-11T17:00:00.000Z',
+      expectedStartAt: '2026-09-10T13:00:00.000Z',
+    },
+  ])('RF-16 changes status while preserving the schedule of a $label', async ({
+    row,
+    expectedEndAt,
+    expectedStartAt,
+  }) => {
+    mocks.secondaryQuery.maybeSingle.mockResolvedValue({ data: row, error: null })
     mocks.databaseFrom
       .mockReturnValueOnce(mocks.secondaryQuery)
       .mockReturnValueOnce(mocks.primaryQuery)
     mocks.primaryQuery.single.mockResolvedValue({
-      data: { ...allDayEventRow, status: 'completed' },
+      data: { ...row, status: 'completed' },
       error: null,
     })
 
     const updated = await updateEvent(eventId, { status: 'completed' })
 
     expect(updated).toMatchObject({
-      endAt: '2026-09-11',
-      isAllDay: true,
-      startAt: '2026-08-31',
+      endAt: expectedEndAt,
+      isAllDay: row.is_all_day,
+      lateSubmissionDays: 2,
+      lateSubmissionPenaltyDescription: 'Se descuenta 10 %.',
+      startAt: expectedStartAt,
       status: 'completed',
     })
     expect(mocks.primaryQuery.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        end_at: '2026-09-11T00:00:00.000Z',
-        is_all_day: true,
-        start_at: '2026-08-31T00:00:00.000Z',
+        end_at: row.end_at,
+        is_all_day: row.is_all_day,
+        late_submission_days: row.late_submission_days,
+        late_submission_penalty_description:
+          row.late_submission_penalty_description,
+        start_at: row.start_at,
         status: 'completed',
       }),
     )

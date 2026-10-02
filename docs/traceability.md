@@ -27,7 +27,7 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | RF-13 | Validación de rangos inclusivos | `validation.test.ts`, `EventForm.test.tsx` | Automatizado |
 | RF-14 | Edición completa y validación combinada | `eventService.ts`, `domainServices.test.ts`, `EventForm.test.tsx` | Automatizado |
 | RF-15 | `EventDetail`, `ConfirmDialog`, `calendarStore` | Confirmación en `EventDetail.test.tsx`; prueba de servicio real pendiente | Parcial |
-| RF-16 | Estados explícitos, detalle y mapper | `calendarEventMapper.test.ts`, `EventDetail.test.tsx`, `calendarStore.test.ts` | Automatizado |
+| RF-16 | Estados explícitos y parches de estado que conservan fechas y modo all-day | `eventPatchSchema`, `eventService`, `validation.test.ts`, `domainServices.test.ts`, `calendarEventMapper.test.ts`, `EventDetail.test.tsx`, `calendarStore.test.ts` | Automatizado |
 | RF-17 | `CalendarPage` y navegación de Agenda | `CalendarPage.test.tsx`, `AgendaView.test.tsx`; navegación E2E autenticada pendiente | Parcial |
 | RF-17.1 | `CalendarPage` y fecha inicial de `AgendaView` | typecheck, build y revisión de UI | Automatizado + estático |
 | RF-18 | `AgendaView` y `listUpcomingEvents` | `AgendaView.test.tsx`, `domainServices.test.ts` | Automatizado |
@@ -41,6 +41,9 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | RF-26 | `MarkdownRenderer` y vista previa | `MarkdownRenderer.test.tsx`, `NoteEditor.test.tsx` | Automatizado |
 | RF-27 | `rehype-sanitize` y enlaces seguros | `MarkdownRenderer.test.tsx` | Automatizado |
 | RF-28 | `AppError`, estados de stores y feedback de formularios | `errors.test.ts`, tests de stores y componentes | Automatizado |
+| RF-29 | `EventForm`, `eventService`, validación y migración de plazo/condición de atraso | `EventForm.test.tsx`, `validation.test.ts`, `domainServices.test.ts` | Automatizado |
+| RF-30 | Cálculo de fecha límite y `EventDetail` | `lateSubmission.test.ts`, `EventDetail.test.tsx` | Automatizado |
+| RF-31 | Proyección snapshot y mapeo Lua de metadatos opcionales | `snapshot_mapper_spec.lua`, verificación de función Edge | Pendiente: no hay runtime Deno/Lua disponible y la migración no está aplicada |
 
 ## Requisitos De Creación Asistida Con IA
 
@@ -115,7 +118,7 @@ que todavía no está disponible; `Planificado` todavía no tiene implementació
 | CA-04 | Formularios y detalle de eventos; flujo browser pendiente | Parcial |
 | CA-04.1 | Acción única y selector de tipo dentro del formulario; flujo browser pendiente | Parcial |
 | CA-05 | Validaciones, fechas locales y mapper | Automatizado |
-| CA-06 | Estados en detalle, Agenda y calendario | Automatizado |
+| CA-06 | Estados en detalle, Agenda y calendario; CA-21 conserva los datos temporales al completar eventos all-day o multidiarios | `validation.test.ts`, `domainServices.test.ts`, `EventDetail.test.tsx`, `calendarStore.test.ts` | Automatizado |
 | CA-07 | Componentes y Agenda; recorrido autenticado pendiente | Parcial |
 | CA-08 | Agrupación, orden y estados de Agenda | Automatizado |
 | CA-09 | Búsqueda, filtros y limpieza | Automatizado |
@@ -200,7 +203,7 @@ trazada así:
 | Requisito | Implementación | Verificación | Estado |
 | --- | --- | --- | --- |
 | RF-SH-01 métricas diarias | `statistics_collector.lua`, `anki_stats_adapter.lua` | Specs Lua con runtime KOReader | Local |
-| RF-SH-02 vínculos y creación explícita | Migración, RPC `setup_koreader_habit_links`, `KoreaderStatsSetupPanel` | Typecheck, tests UI y prueba autenticada pendiente | Local/parcial |
+| RF-SH-02 vínculos y creación explícita | Migración, RPC `setup_koreader_habit_links`, `KoreaderStatsSetupPanel` y validación de fecha local en `karenda-koreader-habit-links` | `karendaKoreaderHabitLinksValidation.test.ts`, typecheck y tests UI; prueba autenticada pendiente | Local/parcial |
 | RF-SH-03 ingesta protegida e idempotente | `karenda-koreader-habit-sync.ts`, scope `write:habit_logs`, `koreader_link_id` | Revisión SQL, integración autenticada pendiente | Local/parcial |
 | RF-SH-04 día/mes/año y precedencia | `koreaderStats.ts`, `habitEvaluation.ts`, `HabitsPage.tsx` | Vitest | Automatizado |
 | RF-SH-05 backfill, corrección y offline | `stats_sync_service.lua`, `stats_sync_store.lua` | Specs Lua y Kindle real pendiente | Local/parcial |
@@ -291,4 +294,79 @@ Comprobaciones ejecutadas en la tarea: Deno 2.9.6 typecheck de ambas funciones, 
 | RF-C-29 | Avisos sanitizados de recursos bloqueados visibles en el historial aunque la bandeja no tenga propuestas | `CanvasPage.test.tsx`, conteos de `karenda-canvas-sync` | Automatizado + desplegado |
 | RF-C-30 | Sesión móvil renovable antes de consultar Canvas y mensaje diferenciado de sesión frente a red | `authService.test.ts`, cliente InsForge y build Android | Automatizado + build Android |
 | RF-C-31 | Allowlist CORS de las funciones Canvas incluye el origen fijo `https://localhost` de Capacitor | `verify-android-canvas.mjs`, preflight HTTP de las tres funciones y despliegue | Automatizado + desplegado |
-| CA-C-01 a CA-C-21 | Flujo del piloto integrado, con ventana histórica, avisos de ejecución, sesión móvil y CORS Android | Tests, lint, typecheck, build Android, preflight y smoke anónimo; E2E autenticado y piloto real pendientes | Parcial |
+| CA-C-01 a CA-C-21 | Flujo Canvas desplegado, ventana histórica, avisos parciales, sesión Android y CORS para WebView | Suite local y CI, lint, typecheck, build web/Android, migraciones y RLS desplegadas, preflight y smoke público/anónimo; E2E autenticado y piloto real pendientes | Parcial |
+
+## Integración MCP Multiharness
+
+Spec rectora: specs/007-mcp-integration.md. La implementación de
+`feature/007-mcp-server` se integró mediante PR #17 y se desplegó en producción
+el 1 de octubre de 2026. El smoke de producción y el estado staging se registran
+por separado; las verificaciones incompletas mantienen sus gates abiertos.
+
+| Requisito | Implementación planificada | Verificación requerida | Estado |
+| --- | --- | --- | --- |
+| RF-MCP-01 | OAuth, PKCE, consentimiento web y grant vinculados a sesión InsForge | Metadata/challenge/CORS y consentimiento verificados en producción; Codex completó OAuth y verificó lecturas autenticadas de perfil, grupos, eventos y hábitos; escritura real pendiente de desplegar la corrección de grupos | Parcial |
+| RF-MCP-02 a RF-MCP-04 | Validación de audiencia/grant/scope, token MCP opaco, cliente InsForge por usuario y filtros owner_id | Pruebas unitarias de PKCE/scopes/cifrado; RLS multiusuario e IDs cruzados pendientes | Parcial |
+| RF-MCP-05 a RF-MCP-08 | Tools CRUD/status de eventos, confirmación de delete y rango/página acotados | Schemas registrados y ownership explícito; pruebas DB y concurrencia pendientes | Parcial |
+| RF-MCP-09 a RF-MCP-10 | CRUD de asignaturas, grupos y notas con relaciones propias | Pruebas Deno locales cubren las columnas de creación/edición de grupos; integración con filas reales pendiente de desplegar la corrección | Parcial |
+| RF-MCP-11 a RF-MCP-13 | CRUD de hábitos, registros, notas, versiones de frecuencia e historial estadístico; registros conservan el vínculo nullable de KOReader | functions/mcp/domain_test.ts, funciones compartidas de evaluación; lecturas con filas de staging y RLS pendientes | Parcial |
+| RF-MCP-14 a RF-MCP-15 | Recurrencias, lifecycle, reglas y ocurrencias; se archiva, no se ofrece delete físico | Implementado localmente; pruebas de repetición e historial pendientes | Parcial |
+| RF-MCP-16 a RF-MCP-17 | IA draft/save separadas y tools Canvas de lectura/sync/revisión | Implementado con confirmación; comportamiento de funciones upstream y cuentas piloto pendiente | Parcial |
+| RF-MCP-18 | IDs y relaciones filtrados por propietario con cliente InsForge de usuario | Revisión estática; pruebas A/B pendientes | Parcial |
+| RF-MCP-19 a RF-MCP-20 | Actualizaciones aceptan expectedUpdatedAt; las mutaciones exigen idempotencyKey y cachean respuesta por 30 días | Reintento, clave reutilizada con otra entrada y ejecución en curso cubiertos localmente; RPC aplicada a staging, E2E autenticado pendiente | Parcial |
+| RF-MCP-21 a RF-MCP-23 | Refresh rotativo, revocación individual/global y pantallas de conexiones/consentimiento | Suite de lifecycle, teclado/lector y navegador pendientes | Parcial |
+| RF-MCP-24 | Guía inicial en docs/mcp-clients.md, configuración local de Codex y servidor HTTP común | Codex OAuth, descubrimiento y lecturas autenticadas verificados; escritura de grupo corregida en la rama Git pero pendiente de integrar y desplegar; revocación y otros harnesses pendientes | Parcial |
+| RF-MCP-25 a RF-MCP-26 | Errores sanitizados, límites de body/rango/página, validación Origin y rate limits por IP/grant/tool | HMAC de IP, buckets y RPC aplicados; metadata/challenge/CORS/DCR pasan smoke en producción y staging; revisión adversarial pendiente | Parcial |
+| RF-MCP-27 | Contexto español, fecha local y zona indicada por el harness (por defecto America/Santiago) | Test de protocolo/scope pendiente | Parcial |
+| RF-MCP-28 | Selección masiva explícita de scopes solicitados en la pantalla de consentimiento; autorización final separada | `McpConsentPage.test.tsx`, lint y build pasan; despliegue `aa3902df-7dde-481d-bd56-a12d39cfcf5b`; ambas rutas de consentimiento responden 200 y el bundle contiene las acciones de selección y retiro | Desplegado |
+| CA-MCP-01 | SDK MCP 2.0.0 en Deno 2.9.6; rama limpia `karenda-mcp-release` creada desde el esquema actual; release integrada en `main` | 24 tests MCP locales, incluidas regresiones de grupos; metadata 200, challenge 401, CORS allow/deny y DCR 201 en producción; OAuth y lecturas autenticadas verificadas; escritura real pendiente de desplegar la corrección | Parcial |
+| CA-MCP-02 | Configuración global y local de Codex hacia producción; guía de setup para los tres harnesses | Codex reconectó OAuth y las lecturas autenticadas respondieron; la escritura de grupo reveló una proyección inválida en producción. La corrección y el smoke de escritura aún están pendientes | Parcial |
+| CA-MCP-03 | Inventario parcial de familias del dominio y exclusiones de conexión Canvas | Falta auditar cada acción visible de las specs 001-006 | Parcial |
+| CA-MCP-04 a CA-MCP-05 | Migración OAuth aplicada y cobertura unitaria local | Usuarios A/B, emisión/rotación/revocación reales y RLS pendientes | Parcial |
+| CA-MCP-06 a CA-MCP-08 | Schemas cerrados, separaciones draft/save, idempotencia durable, rate limits y errores genéricos | 24 tests MCP; bundle, RPC y función desplegados en staging y producción; auditoría de logs y revisión adversarial pendientes | Parcial |
+| CA-MCP-09 a CA-MCP-11 | 179 pruebas web, 24 pruebas MCP, lint, typecheck y build; UI de consentimiento/revocación desplegada en staging y producción | Accesibilidad auditada, tres harnesses y rollback probado pendientes | Parcial |
+| CA-MCP-12 | Selección total/parcial de scopes solicitados y autorización explícita separada | Prueba de interacción, lint y build pasan; deployment `aa3902df-7dde-481d-bd56-a12d39cfcf5b` en producción; `karenda.insforge.site/mcp/consent` y dominio InsForge responden 200 con ambas acciones en el bundle | Desplegado |
+
+Seguridad de ramas/datos: el trabajo se realizó en el worktree
+`C:\\Users\\juani\\Desktop\\Programacion\\karenda-wt-mcp-plan` sobre
+`feature/007-mcp-server`; la carpeta principal siguió en
+`fix/karenda-koreader-markdown-rendering` y conservó su WIP. InsForge conserva
+la rama antigua `karenda-mcp` (`7663ead2-52b2-43b3-852d-684f378d7790`), de tipo
+`schema-only`, con cero filas de dominio y el primer despliegue. Su dry-run
+contra producción detectó conflicto en
+`system.migrations`; no se fusionó. La rama nueva `karenda-mcp-release`
+(`0ffcef32-51b3-4d71-99d2-e4adc54c51b9`) parte del esquema actual de producción
+y está asociada a `feature/007-mcp-server`. Las migraciones
+`20261001000000_karenda-mcp-oauth.sql` y
+`20261001001000_karenda-mcp-safety-controls.sql` están aplicadas allí; la
+función `karenda-mcp` pasa el smoke anónimo, el preflight CORS allow/deny y el
+registro DCR. El preview web con deployment
+`756137ec-93ec-4e56-af1f-163636b306f6` responde 200 en `/` y `/mcp/consent`.
+El E2E se detuvo al recibir 401 al crear una cuenta sintética; no se crearon
+cuentas. La feature se integró en `main` mediante PR #17 (`9eab71bf`); las
+migraciones `20261001000000_karenda-mcp-oauth.sql` y
+`20261001001000_karenda-mcp-safety-controls.sql` se aplicaron también al
+proyecto principal. La función de producción
+`https://5zz5dxgt.function2.insforge.app/karenda-mcp/mcp` pasa metadata OAuth y
+recurso 200, challenge 401, CORS permitido 204/origen externo 403 y DCR 201.
+La web de consentimiento se publicó en el deployment
+`f54c0480-451e-4ba2-9351-f8e302b0896c`; `/` y `/mcp/consent` responden 200.
+Codex completó consentimiento y callback. Un refresh posterior devolvió
+`invalid_grant` porque venció la sesión; se reautorizó con `codex mcp login`
+y una sesión nueva descubrió el catálogo. Las lecturas autenticadas de perfil,
+grupos, eventos y hábitos respondieron. La creación del grupo personal falló
+porque el MCP solicitó `code` y `abbreviation`, columnas inexistentes en esa
+tabla; no se crearon filas. La corrección tiene pruebas locales y su despliegue
+en producción está pendiente. La rama antigua `karenda-mcp` se exportó fuera
+del repositorio antes de considerar su reutilización: dump completo de base de
+datos y código de las 12 funciones. Ocho funciones coinciden con producción;
+el MCP, snapshot y gestión de tokens difieren, y `karenda-koreader-event-status`
+solo aparece allí. Por esas diferencias no se reseteó ni borró la rama. La rama
+`karenda-mcp-release` y su worktree asociado permanecen intactos. No se requiere
+una rama InsForge nueva para este cambio de lógica cubierto por tests. Las
+pruebas RLS A/B, otros harnesses, revisión adversarial y rollback siguen
+pendientes. El esquema padre previo se exportó fuera del
+repositorio a
+`C:\\Users\\juani\\Desktop\\Programacion\\karenda-mcp-backups-20260923\\karenda-parent-schema.sql`
+(SHA-256 `28040BD02CDDA3090F2A66C9120D8A19AB319DD7C593A0D89CE14651C0739B7B`).
+Se conservaron sin staging tres migraciones untracked ajenas a esta rama.

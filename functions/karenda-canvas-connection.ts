@@ -90,6 +90,11 @@ function decodeKey(value: string): Uint8Array {
   }
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const buffer = new ArrayBuffer(bytes.byteLength)
+  new Uint8Array(buffer).set(bytes)
+  return buffer
+}
 function encode(bytes: Uint8Array): string {
   let binary = ''
   for (const byte of bytes) binary += String.fromCharCode(byte)
@@ -97,7 +102,7 @@ function encode(bytes: Uint8Array): string {
 }
 
 async function encryptToken(token: string): Promise<{ ciphertext: string; iv: string }> {
-  const key = await crypto.subtle.importKey('raw', decodeKey(ENCRYPTION_KEY), 'AES-GCM', false, ['encrypt'])
+  const key = await crypto.subtle.importKey('raw', toArrayBuffer(decodeKey(ENCRYPTION_KEY)), 'AES-GCM', false, ['encrypt'])
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const encrypted = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv, additionalData: new TextEncoder().encode('karenda-canvas-token:v1') },

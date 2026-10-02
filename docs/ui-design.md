@@ -337,7 +337,19 @@ de datos.
   del formulario mediante un selector visible `Académico`/`Personal`. La
   acción `Agregar con IA` permanece separada como flujo asistido.
 - El orden de captura es título, relación con asignatura o grupo, inicio, modo
-  de todo el día, término, estado, lugar y descripción.
+  de todo el día, término, plazo de atraso académico, estado, lugar y
+  descripción.
+- Solo en eventos académicos se ofrece `Permitir entrega atrasada`. Al
+  activarlo aparecen `Días corridos de atraso` (obligatorio, entero positivo) y
+  `Condición o descuento por atraso` (opcional). En eventos personales estos
+  valores no se muestran y se guardan como nulos.
+- El detalle conserva la fecha programada original y añade `Fecha límite con
+  atraso` calculada desde el término programado, junto con la descripción del
+  descuento cuando exista. La ayuda deja claro que son días corridos y que la
+  hora local del evento se conserva cuando tiene horario.
+- Los controles adicionales siguen la columna de lectura del formulario, se
+  apilan en móvil, tienen etiquetas visibles y muestran los errores junto al
+  campo correspondiente; la selección no depende solo del color.
 - La etiqueta de cada campo es visible. Los campos obligatorios se identifican
   con texto y no únicamente con color; los errores se muestran junto al campo
   que puede corregirse.
@@ -802,6 +814,39 @@ de datos.
 - Los objetivos táctiles mantienen 44 px, el foco es visible y el orden de
   teclado sigue conexión, cursos y revisiones. No se usan gradientes, tarjetas
   decorativas ni animaciones ajenas al cambio de estado.
+
+### Conexiones MCP
+
+- Las conexiones de agentes viven dentro de Organización y conexiones; no
+  aparecen como una ruta principal que compita con Calendario, Hábitos y Notas.
+- La autorización ocurre en el navegador dentro de Karenda. La pantalla
+  identifica el cliente solicitante, explica cada permiso en español y ofrece
+  Autorizar y Cancelar con igual visibilidad. También indica hasta qué hora es
+  válida la solicitud de consentimiento.
+- Sobre la lista de permisos se ofrece `Seleccionar todos los permisos`; la
+  acción selecciona exactamente los permisos que se muestran para esa solicitud,
+  incluidos los de escritura, borrado, Canvas e IA. Al quedar todos marcados,
+  la acción pasa a `Quitar selección`. Una selección parcial se completa al
+  seleccionar todos. Esta acción solo cambia las casillas: nunca concede el
+  acceso sin pulsar `Autorizar Karenda`.
+- El estado parcial o total de la selección se comunica en texto, no solo por
+  color. La acción masiva usa los mismos estilos de foco, altura táctil y
+  adaptación móvil que el resto de los controles.
+- Los permisos de lectura, escritura y borrado se distinguen en una lista
+  legible. El alcance de borrado requiere una explicación directa y no se
+  activa por defecto.
+- La lista de conexiones muestra cliente, fecha autorizada, último uso y
+  permisos; cada fila ofrece Revocar acceso. Una acción adicional revoca todos
+  los clientes. La confirmación explica el efecto antes de completarse.
+- Nunca se muestran tokens, códigos OAuth, refresh tokens ni secretos. Los
+  ejemplos de instalación guían al harness sin pedir copiar credenciales.
+- Estados explícitos: cargando, listo para autorizar, autorizado, cancelado,
+  vencido, revocado, reconexión requerida, límite y error. Los errores indican
+  una acción segura sin revelar detalles internos.
+- El consentimiento y la revocación se completan con teclado y lector de
+  pantalla, conservan foco visible, contraste y objetivo táctil mínimo de 44 px,
+  y se adaptan a móvil. Los scopes no se esconden en texto secundario ni se
+  comunican solo con color.
 
 Cada superficie interactiva debe definir default, hover, focus, active,
 disabled, loading, error y empty. La revisión aplica estas preguntas de

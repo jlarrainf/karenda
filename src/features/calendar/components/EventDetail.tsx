@@ -4,6 +4,7 @@ import { Button } from '../../../components/ui/Button.tsx'
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog.tsx'
 import { getCanvasEventSource } from '../../../services/canvasService.ts'
 import type { CanvasEventSource } from '../../../types/canvas.ts'
+import { getLateSubmissionDeadline } from '../utils/lateSubmission.ts'
 
 interface EventDetailProps {
   accentColor: string
@@ -100,6 +101,7 @@ export function EventDetail({
   )?.name
   const statusLabel = event.status === 'completed' ? 'Completado' : 'Pendiente'
   const nextStatusLabel = event.status === 'completed' ? 'Pendiente' : 'Completado'
+  const lateSubmissionDeadline = getLateSubmissionDeadline(event)
   const canvasSource = canvasSourceState?.eventId === event.id
     ? canvasSourceState.source
     : null
@@ -205,6 +207,32 @@ export function EventDetail({
             <dt className="font-semibold text-ink-muted">Cuándo</dt>
             <dd className="mt-1 text-ink">{formatSchedule(event)}</dd>
           </div>
+          {event.lateSubmissionDays !== null ? (
+            <div>
+              <dt className="font-semibold text-ink-muted">
+                Fecha límite con atraso
+              </dt>
+              <dd className="mt-1 text-ink">
+                {lateSubmissionDeadline
+                  ? `Hasta ${event.isAllDay
+                    ? formatLocalDate(lateSubmissionDeadline)
+                    : formatDateTime(lateSubmissionDeadline)}`
+                  : 'No se pudo calcular la fecha límite.'}
+                {' · '}
+                {event.lateSubmissionDays} días corridos
+              </dd>
+            </div>
+          ) : null}
+          {event.lateSubmissionPenaltyDescription ? (
+            <div>
+              <dt className="font-semibold text-ink-muted">
+                Condición o descuento por atraso
+              </dt>
+              <dd className="mt-1 whitespace-pre-wrap break-words leading-6 text-ink">
+                {event.lateSubmissionPenaltyDescription}
+              </dd>
+            </div>
+          ) : null}
           <div>
             <dt className="font-semibold text-ink-muted">Estado</dt>
             <dd className="mt-1">

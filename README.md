@@ -12,6 +12,9 @@ tareas pendientes permanecen explícitas en `tasks.md`.
 
 ## Desarrollo Local
 
+La integración MCP remota se especifica en `specs/007-mcp-integration.md`; su
+estado y pasos para Codex, Claude Code y OpenCode están en `docs/mcp-clients.md`.
+
 ```text
 npm ci
 npm run dev

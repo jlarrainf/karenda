@@ -27,7 +27,7 @@ type EventRow = Database['public']['Tables']['events']['Row']
 type EventPayload = Database['public']['Tables']['events']['Insert']
 
 const EVENT_COLUMNS =
-  'id, owner_id, kind, title, subject_id, personal_group_id, start_at, end_at, is_all_day, status, location, description, academic_activity_type, created_at, updated_at'
+  'id, owner_id, kind, title, subject_id, personal_group_id, start_at, end_at, is_all_day, status, location, description, late_submission_days, late_submission_penalty_description, academic_activity_type, created_at, updated_at'
 const MAX_EVENTS = 1000
 
 function serializeEventDate(value: string, isAllDay: boolean): string {
@@ -70,6 +70,8 @@ function mapEvent(row: EventRow): CalendarEvent {
     status: row.status,
     location: row.location,
     description: row.description,
+    lateSubmissionDays: row.late_submission_days,
+    lateSubmissionPenaltyDescription: row.late_submission_penalty_description,
     academicActivityType: row.academic_activity_type,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -89,6 +91,9 @@ function toEventPayload(ownerId: string, input: NormalizedEventInput): EventPayl
     status: input.status,
     location: input.location ?? null,
     description: input.description ?? null,
+    late_submission_days: input.lateSubmissionDays ?? null,
+    late_submission_penalty_description:
+      input.lateSubmissionPenaltyDescription ?? null,
     academic_activity_type: input.kind === 'academic'
       ? input.academicActivityType ?? null
       : null,
@@ -107,6 +112,8 @@ function eventToInput(event: CalendarEvent): NormalizedEventInput {
     status: event.status,
     location: event.location,
     description: event.description,
+    lateSubmissionDays: event.lateSubmissionDays,
+    lateSubmissionPenaltyDescription: event.lateSubmissionPenaltyDescription,
     academicActivityType: event.academicActivityType ?? null,
   }
 }

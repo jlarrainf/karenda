@@ -262,6 +262,8 @@ consumidor no dependerá de que el backend mantenga los nombres de tablas.
   "status": "pending",
   "location": "Sala 204",
   "description": "Temario del control",
+  "late_submission_days": 2,
+  "late_submission_penalty_description": "Se descontará según la pauta del curso.",
   "updated_at": "2026-08-30T20:00:00.000Z"
 }
 ```
@@ -279,6 +281,12 @@ Reglas:
 - Cuando `all_day` es `true`, `start_at` y `end_at` son fechas locales
   `YYYY-MM-DD`; `end_at` es inclusivo.
 - `location` y `description` pueden ser `null`.
+- `late_submission_days` es un entero positivo o `null`; `late_submission_penalty_description`
+  es texto opcional de hasta 1000 caracteres o `null`. Ambos valores son nulos
+  cuando el evento no permite entregas atrasadas; los eventos personales siempre
+  los exponen como `null`.
+- El snapshot conserva estos campos de dominio sin calcular otra fecha ni
+  modificar `start_at`/`end_at`; los clientes antiguos pueden ignorarlos.
 - Los eventos que atraviesan la ventana se incluyen aunque comiencen antes de
   `window.from`.
 

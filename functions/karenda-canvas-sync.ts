@@ -143,15 +143,20 @@ function decode(value: string): Uint8Array {
   }
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const buffer = new ArrayBuffer(bytes.byteLength)
+  new Uint8Array(buffer).set(bytes)
+  return buffer
+}
 async function decryptToken(ciphertext: string, iv: string): Promise<string> {
   try {
     const keyBytes = decode(ENCRYPTION_KEY)
     if (keyBytes.length !== 32) throw new Error('invalid key')
-    const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt'])
+    const key = await crypto.subtle.importKey('raw', toArrayBuffer(keyBytes), 'AES-GCM', false, ['decrypt'])
     const decrypted = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: decode(iv), additionalData: new TextEncoder().encode('karenda-canvas-token:v1') },
+      { name: 'AES-GCM', iv: toArrayBuffer(decode(iv)), additionalData: new TextEncoder().encode('karenda-canvas-token:v1') },
       key,
-      decode(ciphertext),
+      toArrayBuffer(decode(ciphertext)),
     )
     return new TextDecoder().decode(decrypted)
   } catch {

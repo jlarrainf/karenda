@@ -61,7 +61,7 @@ debe mantener la trazabilidad con `specs/001-web-mvp.md` y
 - [x] **Tarea 32: Crear el formulario de evento académico** (20-30 min). Implementar título, asignatura, fechas, horas, estado, sala y descripción/temario opcionales.
 - [x] **Tarea 33: Crear el formulario de evento personal** (20-30 min). Implementar título, grupo opcional, fechas, horas, estado, lugar y descripción opcionales.
 - [x] **Tarea 34: Implementar eventos puntuales, de duración y multidiarios** (20-30 min). Añadir modo de todo el día, validación de término posterior al inicio y conservación de fechas locales.
-- [x] **Tarea 35: Implementar detalle y acciones de evento** (20-30 min). Añadir apertura por clic, edición, eliminación con confirmación y cambio manual entre `Pendiente` y `Completado`.
+- [x] **Tarea 35: Implementar detalle y acciones de evento** (20-30 min). Añadir apertura por clic, edición, eliminación con confirmación y cambio manual entre `Pendiente` y `Completado`, conservando el rango original al actualizar solo el estado.
 - [x] **Tarea 36: Conectar calendario con datos de InsForge** (20-30 min). Cargar el rango visible, refrescar tras mutaciones y mostrar estados de carga, vacío y error en español.
 
 ## Fase 6: Agenda, Búsqueda Y Filtros
@@ -330,69 +330,290 @@ la paridad entre el build web y los assets empaquetados por Capacitor.
   despliegue real. El piloto autenticado queda como verificación manual del
   usuario porque requiere un token nuevo ingresado en la pantalla segura.
 
-- [x] **Tarea 125: Hacer renovable la sesión de Canvas en Android** (20-30 min).
+## Fase 19: Plazos De Entrega Atrasada
+
+Rama Git `feature/001-late-delivery-window`, worktree
+`C:\Users\juani\Desktop\Programacion\karenda-wt-late-delivery`, base
+`f0a2d54`, destino `origin/main`, dependencias ninguna, estado `activa`.
+Relación Git/InsForge: `feature/001-late-delivery-window` → proyecto `karenda`
+(contexto principal usado solo para consultar el historial y numerar la
+migración). Las ramas `karenda-mcp` y `karenda-canvas-fix` ya ocupan los dos
+espacios activos; la migración no se aplicará hasta disponer de una rama
+compatible y validar su estado.
+
+- [x] **Tarea 125: Definir el contrato y la dirección de interfaz**. Documentar
+  días corridos, descripción opcional del descuento, fecha límite derivada,
+  nulabilidad y compatibilidad del snapshot.
+- [x] **Tarea 126: Implementar configuración y detalle web**. Añadir columnas,
+  validación, carga/guardado, cálculo local de la fecha límite y presentación
+  accesible en el formulario y el detalle.
+- [ ] **Tarea 127: Propagar metadatos al snapshot KOReader**. Actualizar
+  proyección, contrato y mapper sin cambiar el número de versión mayor.
+- [ ] **Tarea 128: Cubrir criterios y verificar**. Añadir pruebas de validación,
+  persistencia, formulario, detalle, fecha local y mapeo Lua; ejecutar las
+  comprobaciones pertinentes.
+- [ ] **Tarea 129: Validar migración en InsForge**. Reutilizar una rama
+  compatible o esperar a que se audite y libere un espacio; aplicar y verificar
+  allí sin modificar el proyecto principal.
+
+Evidencia de la Tarea 126: `npm run typecheck`, `npm run lint`,
+`npm test -- --run` (179 pruebas aprobadas) y `npm run build` finalizaron con
+código 0. El build mostró advertencias de externalización de `crypto` y de
+tamaño del bundle.
+
+## Fase 20: Integración MCP Multiharness
+
+La spec rectora es specs/007-mcp-integration.md. La implementación de
+`feature/007-mcp-server` se integró mediante PR #17 y se desplegó en el proyecto
+principal de InsForge desde `main` (`9eab71b`). El servidor de producción está
+disponible y la web/consentimiento usa el deployment
+`f54c0480-451e-4ba2-9351-f8e302b0896c`. El despliegue no cierra los gates de
+seguridad ni de interoperabilidad; cada tarea conserva evidencia y pendientes
+en `docs/traceability.md`.
+
+### Fase 0: Factibilidad Y Contratos De Cobertura
+
+- [ ] **Tarea 130: Inventariar paridad del dominio** (30-45 min). Contrastar
+  cada acción visible en las specs 001/002/003/006 con servicios web y
+  clasificarla como tool MCP, flujo web requerido o exclusión justificada.
+  Reconciliar cualquier trabajo KOReader/estadísticas en curso. Evidencia:
+  matriz de cobertura revisada.
+- [ ] **Tarea 131: Probar InsForge Streamable HTTP** (45-90 min). En entorno
+  aislado, verificar runtime Deno, SDK MCP oficial, headers, streaming,
+  cancelación, rutas, timeout y límites de Edge Functions. El spike de esta
+  tarea se limita al entorno aislado; la publicación posterior a producción se
+  registra abajo y se autorizó después del merge PR #17. Evidencia: spike
+  reproducible y restricciones documentadas.
+  Evidencia parcial: `npm run test:mcp` (22 tests), bundle único en
+  `functions/.deploy/karenda-mcp.js`, función activa en la rama limpia
+  `karenda-mcp-release`, metadata OAuth/recurso 200, desafío sin bearer 401,
+  CORS permitido 204/origen extranjero 403 y registro DCR 201. Las migraciones
+  OAuth y de controles están aplicadas. El preview web también está desplegado
+  y sus rutas principal/consentimiento responden 200. Después del merge PR #17,
+  las migraciones MCP se aplicaron al proyecto principal, se publicó la función
+  y se hizo un smoke de producción: metadata/recurso 200, challenge 401, CORS
+  permitido 204/origen externo 403 y DCR 201. La web de consentimiento de
+  producción ya carga la solicitud OAuth. Falta validar una lectura autenticada
+  con la cuenta autorizada y probar cancelación bajo carga.
+  Codex completó OAuth y callback. Un primer refresh encontró la sesión vencida;
+  se reautorizó con `codex mcp login karenda` y una sesión nueva descubrió las
+  herramientas. No se invocaron herramientas que acceden a datos de cuenta.
+  El intento E2E de staging se detuvo al recibir 401 al crear una cuenta
+  sintética; no se creó ninguna cuenta.
+- [ ] **Tarea 132: Probar OAuth con los tres harnesses** (45-90 min). Validar
+  descubrimiento de metadata, CIMD/DCR, redirects de escritorio, login, refresh
+  y logout/revocación en Codex, Claude Code y OpenCode. Evidencia: tabla de
+  versiones/resultado con configuración sin secretos. Estado actual: Codex
+  apunta a producción, muestra `enabled OAuth` y descubre las herramientas tras
+  reautorizar; no se validó una lectura autenticada. Claude Code y OpenCode aún
+  no se configuraron.
+- [ ] **Tarea 133: Cerrar decisión de arquitectura** (20-30 min). Elegir SDK,
+  metadata de clientes, rutas OAuth, duraciones y límites solo desde evidencia
+  de 126-127. Si InsForge no alcanza los requisitos, detenerse y documentar
+  opciones dentro de InsForge antes de proponer excepción. Gate: CA-MCP-01.
+- [ ] **Tarea 134: Fijar schemas, scopes y errores** (45-60 min). Modelar
+  argumentos/respuestas de cada familia de tools, permisos read/write/delete,
+  mensajes y tamaños; anotar operaciones no disponibles. Actualizar specs y
+  trazabilidad junto con contratos tipados. Evidencia: schema review.
+
+### Fase 1: Datos OAuth Y Servicio De Autorización
+
+- [ ] **Tarea 135: Diseñar migración de grants** (30-45 min). Especificar
+  clientes/grants, scopes, expiraciones, refresh token protegido, revocación,
+  auditoría mínima, índices, constraints y RLS en InsForge. Evidencia parcial:
+  migración revisada y aplicada únicamente en `karenda-mcp-release` (InsForge
+  branch id `0ffcef32-51b3-4d71-99d2-e4adc54c51b9`), enlazada con
+  `feature/007-mcp-server`; faltan pruebas RLS y del ciclo de vida.
+- [ ] **Tarea 136: Implementar autorización con sesión InsForge** (45-75 min).
+  Añadir metadata OAuth, PKCE S256, state, validación de redirect y sesión
+  Karenda. No aceptar token InsForge como bearer del MCP. Evidencia:
+  pruebas OAuth negativas y positivas.
+- [ ] **Tarea 137: Implementar emisión y ciclo de tokens** (45-75 min). Emitir
+  access token de audiencia MCP, refresh rotativo/reutilización, expiración,
+  revocación individual/global y protección contra CSRF/replay. Evidencia:
+  suite de lifecycle y revisión de almacenamiento.
+- [ ] **Tarea 138: Crear consentimiento y conexiones** (45-75 min). Implementar
+  vistas en español para cliente, scopes, autorización parcial, cancelar,
+  conexiones activas y revocación. Actualizar primero docs/ui-design.md si el
+  alcance visual cambia. Evidencia: pruebas de estados, teclado, lector y móvil.
+- [ ] **Tarea 139: Verificar gestión de sesiones** (30-45 min). Confirmar
+  expiración/revocación, reautorización al cambiar scopes, login desde sesión
+  expirada y ausencia de tokens en URLs/DOM/logs. Gate: RF-MCP-01, 21-23 y
+  CA-MCP-05/11.
+
+### Fase 2: Transporte MCP Y Controles Comunes
+
+- [ ] **Tarea 140: Implementar endpoint Streamable HTTP** (45-75 min).
+  Configurar protocolo/versión, initialize, metadata, respuesta de recurso
+  protegido y manejo de Origin/Host/CORS según el spike. Evidencia: suite de
+  contrato MCP. Parcial: endpoint activo en staging; metadata, challenge 401,
+  CORS permitido/rechazado y DCR 201 verificados; `initialize`, SSE autenticado
+  y tools/list con grant válido aún deben probarse con un cliente real.
+- [ ] **Tarea 141: Añadir registro de tools y autorización central** (45-60
+  min). Registrar schemas cerrados, validar bearer/audience/grant/scope antes
+  de ejecutar y convertir errores al contrato común. Evidencia: tests
+  insufficient scope, schema y token inválido.
+- [ ] **Tarea 142: Añadir límites y auditoría mínima** (30-45 min). Aplicar
+  límites por grant/tool, IP para OAuth y transporte, max body/rango/página y
+  trazas sin datos sensibles. Contadores atómicos y HMAC de IP están
+  implementados y desplegados a la rama InsForge limpia; RPCs de rate limit e
+  idempotencia aplicados. Evidencia: tests locales, registro DCR 201 y smoke;
+  faltan pruebas de abuso autenticadas y revisión automatizada de logs.
+- [ ] **Tarea 143: Añadir paginación, fecha, versión e idempotencia comunes**
+  (45-60 min). Implementar utilidades compartidas; control de expected version,
+  `idempotencyKey`, zona horaria y cursor. Reclamos persistentes evitan
+  duplicados concurrentes y repiten la respuesta por 30 días. Implementación y
+  tests locales listos y RPCs aplicadas en staging; falta verificar replay,
+  conflictos y concurrencia con grant autenticado real.
+  Evidencia: tests de concurrencia y reintento.
+
+### Fase 3: Herramientas De Lectura
+
+- [ ] **Tarea 144: Publicar contexto de cuenta, eventos y catálogos** (30-45
+  min). Implementar el contexto mínimo de fecha/zona/idioma y list/get de
+  eventos, asignaturas y grupos con filtros, rangos, orden estable y ownership.
+  Evidencia: contrato, privacidad, paginación y prueba A/B RLS.
+- [ ] **Tarea 145: Publicar lectura de notas** (30-45 min). Exponer lista y
+  detalle Markdown con targets permitidos, paginación, límites y truncamiento
+  explícito. Evidencia: tests de aislamiento, tamaño y relaciones.
+- [ ] **Tarea 146: Publicar lectura de hábitos y tareas recurrentes** (45-60
+  min). Incluir definiciones, logs, notas, historial, estadísticas y ocurrencias
+  según la spec. Tools de estadísticas e historial de versiones implementadas
+  localmente con las funciones compartidas de evaluación; falta verificar la
+  lectura con datos de staging y RLS. Evidencia: comparación con servicios web.
+- [ ] **Tarea 147: Publicar estado y revisión de Canvas** (30-45 min). Exponer
+  estado seguro, propuestas sanitizadas y candidatos requeridos por la web; no
+  incluir token ni cuerpos remotos innecesarios. Evidencia: tests de secretos,
+  sanitización y ownership.
+- [ ] **Tarea 148: Revisar paridad de lectura** (30-45 min). Comparar toda la
+  matriz aprobada con tools disponibles, scopes, errores y respuestas. Gate:
+  lectura del usuario solo bajo demanda y CA-MCP-03.
+
+### Fase 4: Escrituras De Dominio
+
+- [ ] **Tarea 149: Implementar escritura de eventos** (45-60 min). Crear,
+  editar y cambiar estado con validación web, fecha inequívoca, versión
+  optimista e idempotencia. Evidencia: tests CRUD/status/fechas y regresiones
+  de contrato.
+- [ ] **Tarea 150: Implementar escritura de notas y catálogos** (45-60 min).
+  Crear/editar/eliminar solo acciones admitidas; validar dependencias y scopes
+  distintos. Evidencia: tests de constraints, relaciones y borrado protegido.
+- [ ] **Tarea 151: Implementar hábitos y registros** (45-75 min). Crear/editar
+  hábitos, ciclo de vida, upsert/delete de logs, notas y estadísticas sin
+  perder historial o fecha local. Evidencia: tests de reglas 003.
+- [ ] **Tarea 152: Implementar tareas recurrentes** (45-75 min). Administrar
+  definición, lifecycle, completar y reprogramar ocurrencias con avance
+  idempotente. Exponer delete solo si la web lo permite. Evidencia: pruebas de
+  recurrencia y no duplicación.
+- [ ] **Tarea 153: Asegurar borrados y conflictos** (45-60 min). Implementar
+  scopes delete, resumen de destino, confirmación segura para clientes sin
+  confirmación nativa, expected version y fallos de dependencia. Evidencia:
+  prueba de que una petición ambigua/obsoleta no borra ni sobrescribe.
+- [ ] **Tarea 154: Implementar flujos IA draft/save** (30-45 min). Reutilizar
+  servicios de borrador, validar esquemas y mantener generación separada de
+  persistencia. Evidencia: prueba negativa donde IA no produce mutación y
+  prueba positiva de guardado confirmado.
+- [ ] **Tarea 155: Implementar Canvas sync y revisión** (45-60 min). Reutilizar
+  función de sync y aplicar/ignorar revisión con scopes destino; pedir
+  conexión previa desde la web. No agregar endpoints de escritura a Canvas.
+  Evidencia: tests idempotencia, propuestas y límites Canvas.
+
+### Fase 5: Seguridad, Interoperabilidad Y Lanzamiento
+
+- [ ] **Tarea 156: Completar matriz de pruebas de autorización/RLS** (45-75
+  min). Ejercitar usuarios A/B, IDs ajenos y relaciones mezcladas en todas las
+  familias; scopes read/write/delete separados. Gate: CA-MCP-04/05.
+- [ ] **Tarea 157: Ejecutar revisión adversarial MCP/OAuth** (45-75 min).
+  Probar redirect manipulation, PKCE/state, audience, SSRF/metadata, Origin,
+  DNS rebinding, abuso de límites, inyección, replay, logs y filtraciones.
+  Corregir hallazgos antes de piloto. Evidencia: informe con severidad/cierre.
+- [ ] **Tarea 158: Ejecutar E2E en tres harnesses** (60-90 min). Instalar desde
+  guía limpia, autenticar, leer, editar/completar y revocar en staging para
+  Codex, Claude Code y OpenCode; verificar expiración y reconexión. Nunca
+  registrar credenciales de usuario. Gate: CA-MCP-02.
+- [ ] **Tarea 159: Preparar piloto y rollback** (45-60 min). Ejecutar suites
+  acordadas, lint/typecheck/build, auditoría de secretos/dependencias, migración
+  dry-run y runbook. Activar feature flag para piloto autorizado y revisar
+  métricas antes de ampliar. Evidencia: release checklist y rollback probado.
+- [ ] **Tarea 160: Cerrar trazabilidad MCP** (30-45 min). Adjuntar evidencia a
+  cada RF-MCP/CA-MCP, actualizar estado y documentar limitaciones conocidas.
+  No marcar terminada una familia que carezca de tests, RLS o evidencia E2E
+  requerida.
+- [x] **Tarea 161: Añadir selección masiva de scopes MCP** (20-30 min).
+  Permitir seleccionar todos los scopes presentados y quitar la selección sin
+  conceder acceso hasta la acción explícita de autorización. Evidencia:
+  `McpConsentPage.test.tsx` (1 prueba pasada), `npm run lint` y `npm run build`
+  pasaron; el deployment `aa3902df-7dde-481d-bd56-a12d39cfcf5b` quedó listo en
+  producción. Las rutas de consentimiento en ambos dominios responden 200 y el
+  bundle publicado contiene las acciones de seleccionar y quitar selección.
+
+## Tareas De Integración Canvas Y KOReader De PR #15
+
+Los IDs 162–181 reasignan las tareas 125–144 de la rama de release, para conservar su trazabilidad sin duplicar los IDs 125–161 de main.
+
+- [x] **Tarea 162: Hacer renovable la sesión de Canvas en Android** (20-30 min).
   Usar el flujo móvil de InsForge, restaurar el refresh token desde almacenamiento
   seguro y renovar el access token antes de consultar rutas autenticadas.
-- [x] **Tarea 126: Configurar ventana histórica y avisos de sincronización**
+- [x] **Tarea 163: Configurar ventana histórica y avisos de sincronización**
   (20-30 min). Permitir 7–365 días por conexión, reiniciar el cursor al cambiar
   el periodo y mostrar avisos parciales en el historial aunque la bandeja esté vacía.
-- [ ] **Tarea 127: Validar APK y sesión en dispositivo** (20-30 min). Instalar la
+- [ ] **Tarea 164: Validar APK y sesión en dispositivo** (20-30 min). Instalar la
   APK unificada, iniciar sesión con la cuenta Karenda y confirmar que Canvas se
   mantiene disponible tras expirar/renovar la sesión.
-- [x] **Tarea 128: Permitir Canvas desde el WebView Android** (20-30 min).
+- [x] **Tarea 165: Permitir Canvas desde el WebView Android** (20-30 min).
   Añadir `https://localhost` a la allowlist CORS de conexión, sincronización y
   revisión; desplegar las tres funciones y cubrir la regresión en la
   verificación del empaquetado.
-- [x] **Tarea 129: Detallar avisos de colecciones Canvas bloqueadas** (20-30 min).
+- [x] **Tarea 166: Detallar avisos de colecciones Canvas bloqueadas** (20-30 min).
   Identificar permisos, recursos inexistentes y respuestas temporales sin
   exponer detalles remotos, y normalizar nombres de cursos mal formados.
-- [x] **Tarea 130: Tratar colecciones Canvas ausentes como opcionales** (15-20 min).
+- [x] **Tarea 167: Tratar colecciones Canvas ausentes como opcionales** (15-20 min).
   No marcar como parcial una ejecución cuando Canvas responde `404` para un
   endpoint secundario no habilitado en el curso.
-- [x] **Tarea 131: Limitar Canvas a fuentes autorizadas** (20-30 min). No
+- [x] **Tarea 168: Limitar Canvas a fuentes autorizadas** (20-30 min). No
   consultar endpoints de quizzes que la cuenta piloto no puede leer; extraer
   fechas e indicaciones desde tareas, discusiones, eventos, anuncios y páginas,
   y reconocer un quiz cuando Canvas lo incluye dentro de una tarea.
-- [x] **Tarea 132: Permitir iniciar sesión nuevamente desde Android** (20-30 min).
+- [x] **Tarea 169: Permitir iniciar sesión nuevamente desde Android** (20-30 min).
   Limpiar tokens inválidos en memoria y almacenamiento seguro, ofrecer una
   acción accesible desde el error de sesión y conservar la ruta de retorno.
-- [x] **Tarea 133: Usar el planificador como respaldo de evaluaciones** (20-30
+- [x] **Tarea 170: Usar el planificador como respaldo de evaluaciones** (20-30
   min). Extraer tipo, título y fecha de tareas o quizzes visibles en
   `/api/v1/planner/items`, deduplicando los elementos ya recibidos por sus
   colecciones autorizadas y sin consultar APIs de quizzes.
-- [x] **Tarea 134: Enriquecer eventos desde anuncios con IA** (20-30 min).
+- [x] **Tarea 171: Enriquecer eventos desde anuncios con IA** (20-30 min).
   Pasar contenido HTML sanitizado a un esquema estricto, resolver fechas
   relativas con la fecha de publicación, conservar un resumen de indicaciones
   y usar el título/categoría propuestos al revisar el evento.
-- [x] **Tarea 135: Evitar fechas inferidas y filtrar ruido de anuncios** (20-30
+- [x] **Tarea 172: Evitar fechas inferidas y filtrar ruido de anuncios** (20-30
   min). No aplicar al evento una fecha derivada solo del día de publicación,
   permitir candidatos sin fecha por título/código y conservar únicamente
   indicaciones académicas relevantes en la descripción.
-- [x] **Tarea 136: Limpiar descripciones Canvas previas** (15-20 min). Detectar
+- [x] **Tarea 173: Limpiar descripciones Canvas previas** (15-20 min). Detectar
   cuando el evento contiene únicamente el extracto anterior de Canvas y
   reemplazarlo, al confirmar la revisión, por el resumen académico filtrado.
-## Fase 19: Coordinación De Estadísticas KOReader–Hábitos
+### Estadísticas KOReader–Hábitos
 
-- [x] **Tarea 137: Definir el contrato de métricas y vínculos** (20-30 min).
+- [x] **Tarea 174: Definir el contrato de métricas y vínculos** (20-30 min).
   Documentar páginas, minutos, libros terminados, cartas revisadas, unidades,
   precedencia diaria y backfill en la spec 005.
-- [x] **Tarea 138: Implementar persistencia y seguridad de estadísticas**
+- [x] **Tarea 175: Implementar persistencia y seguridad de estadísticas**
   (20-30 min). Añadir vínculos, `koreader_link_id`, scope de escritura, RPC,
   RLS y funciones Edge idempotentes.
-- [x] **Tarea 139: Integrar configuración web** (20-30 min). Permitir
+- [x] **Tarea 176: Integrar configuración web** (20-30 min). Permitir
   seleccionar dispositivo, reutilizar hábitos compatibles o crear hábitos con
   meta explícita, y pausar vínculos.
-- [x] **Tarea 140: Integrar estadísticas en Hábitos** (20-30 min). Mostrar
+- [x] **Tarea 177: Integrar estadísticas en Hábitos** (20-30 min). Mostrar
   datos diarios y totales día/mes/año con precedencia de KOReader y estado de
   última sincronización.
-- [x] **Tarea 141: Implementar sincronización del plugin** (20-30 min). Leer
+- [x] **Tarea 178: Implementar sincronización del plugin** (20-30 min). Leer
   SQLite, adaptar Anki opcionalmente, enviar lotes, guardar cola offline y
   sincronizar al reanudar sin tocar SimpleUI ni el snapshot.
-- [x] **Tarea 142: Añadir pruebas unitarias y trazabilidad** (20-30 min).
+- [x] **Tarea 179: Añadir pruebas unitarias y trazabilidad** (20-30 min).
   Cubrir precedencia, suma, formato, documentación y checks web.
-- [ ] **Tarea 143: Verificar backend en InsForge** (20-30 min). Aplicar la
+- [ ] **Tarea 180: Verificar backend en InsForge** (20-30 min). Aplicar la
   migración en una rama, validar políticas, desplegar funciones y ejecutar
   pruebas autenticadas de scope, RLS, idempotencia y aislamiento.
-- [ ] **Tarea 144: Verificar KOReader real** (20-30 min). Ejecutar specs Lua
+- [ ] **Tarea 181: Verificar KOReader real** (20-30 min). Ejecutar specs Lua
   con el runtime de KOReader y probar backfill, red ausente, Anki disponible y
   dispositivo real.
