@@ -91,8 +91,7 @@ function createMockCatalogClient(rows: Record<string, unknown>[]) {
   const insertedRows: Record<string, unknown>[] = [];
   const updatedRows: Record<string, unknown>[] = [];
   const responses = [...rows];
-  let query: MockQuery;
-  query = {
+  const query: MockQuery = {
     insert: (input) => {
       insertedRows.push(...input);
       return query;
