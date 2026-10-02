@@ -284,6 +284,69 @@ describe('domain services', () => {
     )
   })
 
+  it.each([
+    {
+      label: 'all-day event',
+      row: {
+        ...eventRow,
+        end_at: '2026-09-11T00:00:00.000Z',
+        is_all_day: true,
+        late_submission_days: 2,
+        late_submission_penalty_description: 'Se descuenta 10 %.',
+        start_at: '2026-08-31T00:00:00.000Z',
+      },
+      expectedEndAt: '2026-09-11',
+      expectedStartAt: '2026-08-31',
+    },
+    {
+      label: 'timed multi-day event',
+      row: {
+        ...eventRow,
+        end_at: '2026-09-11T17:00:00.000Z',
+        late_submission_days: 2,
+        late_submission_penalty_description: 'Se descuenta 10 %.',
+        start_at: '2026-09-10T13:00:00.000Z',
+      },
+      expectedEndAt: '2026-09-11T17:00:00.000Z',
+      expectedStartAt: '2026-09-10T13:00:00.000Z',
+    },
+  ])('RF-16 changes status while preserving the schedule of a $label', async ({
+    row,
+    expectedEndAt,
+    expectedStartAt,
+  }) => {
+    mocks.secondaryQuery.maybeSingle.mockResolvedValue({ data: row, error: null })
+    mocks.databaseFrom
+      .mockReturnValueOnce(mocks.secondaryQuery)
+      .mockReturnValueOnce(mocks.primaryQuery)
+    mocks.primaryQuery.single.mockResolvedValue({
+      data: { ...row, status: 'completed' },
+      error: null,
+    })
+
+    const updated = await updateEvent(eventId, { status: 'completed' })
+
+    expect(updated).toMatchObject({
+      endAt: expectedEndAt,
+      isAllDay: row.is_all_day,
+      lateSubmissionDays: 2,
+      lateSubmissionPenaltyDescription: 'Se descuenta 10 %.',
+      startAt: expectedStartAt,
+      status: 'completed',
+    })
+    expect(mocks.primaryQuery.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        end_at: row.end_at,
+        is_all_day: row.is_all_day,
+        late_submission_days: row.late_submission_days,
+        late_submission_penalty_description:
+          row.late_submission_penalty_description,
+        start_at: row.start_at,
+        status: 'completed',
+      }),
+    )
+  })
+
   it('RF-17 queries timed events by local boundaries and all-day events by date boundaries', async () => {
     mocks.primaryQuery.limit.mockResolvedValue({ data: [eventRow], error: null })
 

@@ -148,6 +148,18 @@ function comparableEventValue(value: string, isAllDay: boolean): number | string
   return isAllDay ? value.slice(0, 10) : Date.parse(value)
 }
 
+const lateSubmissionDaysSchema = z
+  .number({ error: 'Los días de atraso deben ser un número entero positivo.' })
+  .int('Los días de atraso deben ser un número entero positivo.')
+  .positive('Los días de atraso deben ser un número entero positivo.')
+  .nullable()
+const lateSubmissionPenaltyDescriptionSchema = z
+  .string()
+  .trim()
+  .max(1000, 'La descripción del descuento es demasiado larga.')
+  .transform((value) => value || null)
+  .nullable()
+
 const eventInputBaseSchema = z.object({
   kind: eventKindSchema,
   title: nonEmptyText('El título del evento es obligatorio.', 240),
@@ -163,19 +175,9 @@ const eventInputBaseSchema = z.object({
     .max(5000, 'La descripción es demasiado larga.')
     .nullable()
     .optional(),
-  lateSubmissionDays: z
-    .number({ error: 'Los días de atraso deben ser un número entero positivo.' })
-    .int('Los días de atraso deben ser un número entero positivo.')
-    .positive('Los días de atraso deben ser un número entero positivo.')
-    .nullable()
-    .default(null),
-  lateSubmissionPenaltyDescription: z
-    .string()
-    .trim()
-    .max(1000, 'La descripción del descuento es demasiado larga.')
-    .transform((value) => value || null)
-    .nullable()
-    .default(null),
+  lateSubmissionDays: lateSubmissionDaysSchema.default(null),
+  lateSubmissionPenaltyDescription:
+    lateSubmissionPenaltyDescriptionSchema.default(null),
   academicActivityType: academicActivityTypeSchema.nullable().optional(),
 })
 
@@ -286,6 +288,13 @@ export const eventInputSchema = eventInputBaseSchema.superRefine((value, context
 })
 
 export const eventPatchSchema = eventInputBaseSchema
+  .extend({
+    isAllDay: z.boolean().optional(),
+    status: eventStatusSchema.optional(),
+    lateSubmissionDays: lateSubmissionDaysSchema.optional(),
+    lateSubmissionPenaltyDescription:
+      lateSubmissionPenaltyDescriptionSchema.optional(),
+  })
   .partial()
   .refine(
     (value) => Object.keys(value).length > 0,

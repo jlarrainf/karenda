@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   aiEventDraftResponseSchema,
   entityIdSchema,
+  eventPatchSchema,
   eventInputSchema,
   eventRangeSchema,
   noteInputSchema,
@@ -98,6 +99,12 @@ describe('domain validation', () => {
         title: 'Rango inválido',
       }).success,
     ).toBe(false)
+  })
+
+  it('RF-16 keeps creation defaults out of a status-only event patch', () => {
+    expect(eventPatchSchema.parse({ status: 'completed' })).toEqual({
+      status: 'completed',
+    })
   })
 
   it('RF-29 accepts a positive late window and rejects invalid combinations', () => {
