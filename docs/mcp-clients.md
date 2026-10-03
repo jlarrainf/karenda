@@ -33,15 +33,16 @@ https://5zz5dxgt.function2.insforge.app/karenda-mcp/mcp
 ~~~
 
 El consentimiento usa `https://karenda.insforge.site/mcp/consent`. La web de
-producción responde `200` en `/` y `/mcp/consent`; el despliegue del 1 de
-octubre de 2026 es `f54c0480-451e-4ba2-9351-f8e302b0896c`. La variable de
-compilación `VITE_KARENDA_MCP_URL` contiene la base
+producción responde `200` en `/` y `/mcp/consent`; el despliegue integrado del
+2 de octubre de 2026 es `2f32de48-1f7c-40eb-82a1-26c679004041` (`READY`). La
+función `karenda-mcp` también se redeplegó desde el bundle integrado. La
+variable de compilación `VITE_KARENDA_MCP_URL` contiene la base
 `https://5zz5dxgt.function2.insforge.app/karenda-mcp`, sin el sufijo `/mcp`,
 porque la web usa esa base para consultar y decidir solicitudes OAuth.
 
-El smoke de producción confirma metadata OAuth y de recurso protegido `200`,
-endpoint MCP sin token `401` con challenge, CORS permitido para el origen web,
-bloqueo de origen externo y registro DCR `201`. Codex completó OAuth; después de
+El smoke de producción del 2 de octubre confirma metadata OAuth y de recurso
+protegido `200`, endpoint MCP sin token `401` con challenge y preflight CORS
+permitido `204` para el origen web. Codex completó OAuth; después de
 que un refresh indicara sesión vencida, `codex mcp login karenda` terminó con
 éxito y una sesión nueva de Codex descubrió el catálogo de herramientas. No se
 llamaron herramientas que leen o modifican datos de la cuenta. Para cargar el
