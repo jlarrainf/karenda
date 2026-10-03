@@ -323,17 +323,17 @@ por separado; las verificaciones incompletas mantienen sus gates abiertos.
 | RF-MCP-18 | IDs y relaciones filtrados por propietario con cliente InsForge de usuario | Revisión estática; pruebas A/B pendientes | Parcial |
 | RF-MCP-19 a RF-MCP-20 | Actualizaciones aceptan expectedUpdatedAt; las mutaciones exigen idempotencyKey y cachean respuesta por 30 días | Reintento, clave reutilizada con otra entrada y ejecución en curso cubiertos localmente; RPC aplicada a staging, E2E autenticado pendiente | Parcial |
 | RF-MCP-21 a RF-MCP-23 | Refresh rotativo, revocación individual/global y pantallas de conexiones/consentimiento | Suite de lifecycle, teclado/lector y navegador pendientes | Parcial |
-| RF-MCP-24 | Guía inicial en docs/mcp-clients.md, configuración local de Codex y servidor HTTP común | Codex OAuth, descubrimiento y lecturas autenticadas verificados; escritura de grupo corregida en la rama Git pero pendiente de integrar y desplegar; revocación y otros harnesses pendientes | Parcial |
+| RF-MCP-24 | Guía inicial en docs/mcp-clients.md, configuración local de Codex y servidor HTTP común | Corrección de grupos integrada por PR #19 y desplegada en el bundle MCP de producción; metadata y challenge comprobados; escritura autenticada, revocación y otros harnesses pendientes | Parcial |
 | RF-MCP-25 a RF-MCP-26 | Errores sanitizados, límites de body/rango/página, validación Origin y rate limits por IP/grant/tool | HMAC de IP, buckets y RPC aplicados; metadata/challenge/CORS/DCR pasan smoke en producción y staging; revisión adversarial pendiente | Parcial |
 | RF-MCP-27 | Contexto español, fecha local y zona indicada por el harness (por defecto America/Santiago) | Test de protocolo/scope pendiente | Parcial |
 | RF-MCP-28 | Selección masiva explícita de scopes solicitados en la pantalla de consentimiento; autorización final separada | `McpConsentPage.test.tsx`, lint y build pasan; despliegue `aa3902df-7dde-481d-bd56-a12d39cfcf5b`; ambas rutas de consentimiento responden 200 y el bundle contiene las acciones de selección y retiro | Desplegado |
-| CA-MCP-01 | SDK MCP 2.0.0 en Deno 2.9.6; rama limpia `karenda-mcp-release` creada desde el esquema actual; release integrada en `main` | 24 tests MCP locales, incluidas regresiones de grupos; metadata 200, challenge 401, CORS allow/deny y DCR 201 en producción; OAuth y lecturas autenticadas verificadas; escritura real pendiente de desplegar la corrección | Parcial |
-| CA-MCP-02 | Configuración global y local de Codex hacia producción; guía de setup para los tres harnesses | Codex reconectó OAuth y las lecturas autenticadas respondieron; la escritura de grupo reveló una proyección inválida en producción. La corrección y el smoke de escritura aún están pendientes | Parcial |
+| CA-MCP-01 | SDK MCP 2.0.0 en Deno 2.9.6; rama limpia `karenda-mcp-release` creada desde el esquema actual; release integrada en `main` | 24 tests MCP locales, incluidas regresiones de grupos; metadata 200, challenge 401 y CORS permitido 204 en producción; bundle actualizado el 2 de octubre; escritura autenticada pendiente de smoke | Parcial |
+| CA-MCP-02 | Configuración global y local de Codex hacia producción; guía de setup para los tres harnesses | La proyección específica de grupos se integró por PR #19 y está en el bundle desplegado; no se repitió una escritura autenticada en esta publicación; revocación y otros harnesses pendientes | Parcial |
 | CA-MCP-03 | Inventario parcial de familias del dominio y exclusiones de conexión Canvas | Falta auditar cada acción visible de las specs 001-006 | Parcial |
 | CA-MCP-04 a CA-MCP-05 | Migración OAuth aplicada y cobertura unitaria local | Usuarios A/B, emisión/rotación/revocación reales y RLS pendientes | Parcial |
-| CA-MCP-06 a CA-MCP-08 | Schemas cerrados, separaciones draft/save, idempotencia durable, rate limits y errores genéricos | 24 tests MCP; bundle, RPC y función desplegados en staging y producción; auditoría de logs y revisión adversarial pendientes | Parcial |
-| CA-MCP-09 a CA-MCP-11 | 179 pruebas web, 24 pruebas MCP, lint, typecheck y build; UI de consentimiento/revocación desplegada en staging y producción | Accesibilidad auditada, tres harnesses y rollback probado pendientes | Parcial |
-| CA-MCP-12 | Selección total/parcial de scopes solicitados y autorización explícita separada | Prueba de interacción, lint y build pasan; deployment `aa3902df-7dde-481d-bd56-a12d39cfcf5b` en producción; `karenda.insforge.site/mcp/consent` y dominio InsForge responden 200 con ambas acciones en el bundle | Desplegado |
+| CA-MCP-06 a CA-MCP-08 | Schemas cerrados, separaciones draft/save, idempotencia durable, rate limits y errores genéricos | 24 tests MCP; bundle y RPC desplegados; API OAuth/resource 200, challenge 401 y preflight CORS permitido 204; auditoría de logs y revisión adversarial pendientes | Parcial |
+| CA-MCP-09 a CA-MCP-11 | 179 pruebas web, 24 pruebas MCP, lint, typecheck y build; UI de consentimiento/revocación desplegada en staging y producción | Accesibilidad auditada, tres harnesses y rollback probado pendientes; publicación de producción actualizada el 2 de octubre | Parcial |
+| CA-MCP-12 | Selección total/parcial de scopes solicitados y autorización explícita separada | Prueba de interacción, lint y build pasan; deployment `2f32de48-1f7c-40eb-82a1-26c679004041` READY; `/mcp/consent` responde 200 y el bundle sirve ambas acciones de selección | Desplegado |
 
 Seguridad de ramas/datos: el trabajo se realizó en el worktree
 `C:\\Users\\juani\\Desktop\\Programacion\\karenda-wt-mcp-plan` sobre
@@ -364,8 +364,10 @@ Codex completó consentimiento y callback. Un refresh posterior devolvió
 y una sesión nueva descubrió el catálogo. Las lecturas autenticadas de perfil,
 grupos, eventos y hábitos respondieron. La creación del grupo personal falló
 porque el MCP solicitó `code` y `abbreviation`, columnas inexistentes en esa
-tabla; no se crearon filas. La corrección tiene pruebas locales y su despliegue
-en producción está pendiente. La rama antigua `karenda-mcp` se exportó fuera
+tabla; no se crearon filas. La proyección corregida se integró por PR #19 y se
+incluyó en el bundle MCP redeplegado el 2 de octubre. Esta publicación no hizo
+una escritura autenticada, por lo que la creación real del grupo aún requiere
+un smoke con la cuenta. La rama antigua `karenda-mcp` se exportó fuera
 del repositorio antes de considerar su reutilización: dump completo de base de
 datos y código de las 12 funciones. Ocho funciones coinciden con producción;
 el MCP, snapshot y gestión de tokens difieren, y `karenda-koreader-event-status`
@@ -373,11 +375,18 @@ solo aparece allí. Por esas diferencias no se reseteó ni borró la rama. La ra
 `karenda-mcp-release` y su worktree asociado permanecen intactos. No se requiere
 una rama InsForge nueva para este cambio de lógica cubierto por tests. Las
 pruebas RLS A/B, otros harnesses, revisión adversarial y rollback siguen
-pendientes. El esquema padre previo se exportó fuera del
+pendientes. Las migraciones que estaban sin seguimiento en worktrees se
+integraron por PR #15; producción confirma `20260905110000`, `20260909150000`
+y `20260922032151`. El esquema padre previo se exportó fuera del
 repositorio a
 `C:\\Users\\juani\\Desktop\\Programacion\\karenda-mcp-backups-20260923\\karenda-parent-schema.sql`
 (SHA-256 `28040BD02CDDA3090F2A66C9120D8A19AB319DD7C593A0D89CE14651C0739B7B`).
-Se conservaron sin staging tres migraciones untracked ajenas a esta rama.
+
+## Publicación integrada del 2 de octubre de 2026
+
+El PR #15 quedó integrado en `main` en el commit `b019523b69f26ee0f852cb52094c89aa1560eeac`; los dos checks de CI pasaron. `npm run build` produjo el bundle de producción. El deployment InsForge `2f32de48-1f7c-40eb-82a1-26c679004041` está `READY`; `https://karenda.insforge.site/calendar` y `/mcp/consent` responden 200. El bundle público contiene la sincronización con calendario del teléfono, la selección masiva de permisos y el permiso `write:event_status`.
+
+Se aplicó la migración `20261002232503_add-device-event-status-scope`; el constraint de `device_tokens` acepta `write:event_status`. Las nueve funciones Edge modificadas o añadidas por el release se desplegaron desde el árbol integrado y `functions list` las reportó activas. MCP devuelve metadata OAuth y de recurso protegido con 200, preflight web con 204 y challenge 401 para `initialize` sin credenciales. No se hicieron escrituras de calendario ni de grupos durante esta verificación; las pruebas de cuenta y de dispositivos siguen pendientes.
 
 ## Sincronización Con El Calendario Android
 
